@@ -2,7 +2,7 @@ const { lodash } = SillyTavern.libs;
 const _ = lodash
 
 import { global_const, objEventSource, objEventTypes, deMuh }  from './base.js';
-import { chat, getThumbnailUrl } from '/script.js';
+import { chat_metadata, chat, getThumbnailUrl } from '/script.js';
 import { getUserAvatars } from '/scripts/personas.js';
 import { power_user } from '/scripts/power-user.js';
 import { getContext } from '/scripts/extensions.js';
@@ -42,15 +42,12 @@ export async function getPersonsOfcurrentChat(){
             })
     }
 
-    // chars = chars.map(entry => {
-    //     return {
-    //         name: entry,
-    //         isUser: false
-    //     }
-    // })
+
 
     const personasInChat = _.uniq([...chat].filter(msg => (msg.is_user == true)).map(entry => entry.name ))
+    personasInChat.push(power_user.personas[chat_metadata.persona])
 
+   
     const allPersonas = await getUserAvatars(false);
     const personas = allPersonas.map(avatar => {
         return {
