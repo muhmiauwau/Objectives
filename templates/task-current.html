@@ -1,29 +1,26 @@
-<div>
+<div id="muhPanel_currentTask">
     
     <div class="flex-container m-t-1  m-b-1" >
-        <label for="muhPanel_currentTask" class="" style="display: block;margin-bottom: 5px;font-weight: bold;">
+        <label for="muhPanel_currentTask_description" class="" style="display: block;margin-bottom: 5px;font-weight: bold;">
         Current Task
         </label>
-        <textarea id="muhPanel_currentTask"  class="" resize="false" style="order: 2; resize: none;"">{{task.description}}</textarea>
+        <textarea id="muhPanel_currentTask_description"  class="" resize="false" style="order: 2; resize: none;"">{{task.description}}</textarea>
 
     </div>
     
-    <div class="flex-container m-b-1">
+
+    <div id="muhPanel_currentTask_sliders" class="flex-container m-b-1"></div>
+      <!-- <div class="flex-container m-b-1">
+        {{#each sliders}}
+            <div id="{{id}}" class="muhPanel-sliderNum">
+                <label>{{label}}</label>
+                <input type="range" min="{{min}}" max="{{max}}" step="1" {{#if disabled}} disabled{{/if}}>
+                <input type="number" min="{{min}}" max="{{max}}" step="1" {{#if disabled}} readonly{{/if}}>
+                <small>{{{desc}}}</small>
+            </div>
+        {{/each}}
+    </div> -->
     
-        <div id="adasd" class="alignitemscenter flex-container flexFlowColumn flexBasis48p flexGrow flexShrink gap0">
-            <label>Max rounds to complete</label>
-            <input class="neo-range-slider" value="5" type="range" min="0" max="30" step="1">
-            <input class="neo-range-input" value="5" type="number" min="0" max="30" step="1">
-            <small><span>0</span> muh</small>
-        </div>
-            <div id="adasds" class="alignitemscenter flex-container flexFlowColumn flexBasis48p flexGrow flexShrink gap0">
-            <label>Rounds already progressed</label>
-            <input class="neo-range-slider" value="5" type="range" min="0" max="5" step="1" disabled>
-            <input class="neo-range-input" value="5" type="number" min="0" max="30" step="1" readonly>
-            <small><span>0</span> muh</small>
-        </div>
-    
-    </div>
     
     <div class="flex-container gap10px m-t-1  m-b-1" >
         {{#each aiPromptbtns}}
@@ -32,4 +29,6 @@
             </button>
         {{/each}}
     </div>
+
+    <div id="muhPanel_currentTask_save"></div>
 </div>

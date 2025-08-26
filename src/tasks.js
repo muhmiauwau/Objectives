@@ -46,7 +46,17 @@ import { store }  from './store.js';
  * @property {string} description - Was ist der Task
  * @property {number} duration - Wie viele RP Runden hat man Zeit den Task fertig zu stellen
  * @property {number} roundsInProgress - Wie viele Runden man schon an diesem Task arbeitet ohne ihn fertig gestellt zu haben
- * @property {boolean} completed - Ob der Task erledigt ist
+ * @property {Date} createdAt - Wann wurde der Task erstellt
+ * @property {Date} completedAt - Wann wurde der Task abgeschlossen (nur bei completed tasks)
+ */
+
+/**
+ * User Data Struktur Definition
+ * @typedef {Object} UserData
+ * @property {Task|null} currentTask - Task die gerade bearbeitet wird
+ * @property {Array<Task>} upcomingTasks - Tasks die noch warten
+ * @property {Array<Task>} completedTasks - Abgeschlossene Tasks
+ * @property {Object} userInfo - Zusätzliche User-Daten
  */
 
 /**
@@ -60,75 +70,173 @@ export class TaskManager {
         this.name = name;
         this.storageKey = ["tasks", name];
         
-        // Initialisiere Tasks falls noch nicht vorhanden
-        if (!this.getTasks()) {
-            store.set(this.storageKey, []);
+        // Initialisiere User-Daten falls noch nicht vorhanden
+        if (!this.getUserData()) {
+            this.initializeUserData();
         }
     }
 
     /**
-     * Holt alle Tasks für diesen User/Charakter
-     * @returns {Array} Array von Tasks
+     * Initialisiert die User-Daten-Struktur
      */
-    getName() {
-        return  this.name;
+    initializeUserData() {
+        const userData = {
+            currentTask: null,
+            upcomingTasks: [],
+            completedTasks: [],
+            userInfo: {
+                createdAt: new Date().toISOString(),
+                lastActivity: new Date().toISOString()
+            }
+        };
+        store.set(this.storageKey, userData);
     }
 
     /**
-     * Holt alle Tasks für diesen User/Charakter
-     * @returns {Array} Array von Tasks
+     * Holt alle User-Daten
+     * @returns {UserData} User-Daten Objekt
      */
-    getTasks() {
+    getUserData() {
         return store.get(this.storageKey);
     }
 
     /**
-     * Setzt alle Tasks für diesen User/Charakter
-     * @param {Array} tasks - Array von Tasks
+     * Setzt User-Daten und löst Change-Event aus
+     * @param {UserData} userData - User-Daten Objekt
      */
-    setTasks(tasks) {
-        if (!_.isArray(tasks)) {
-            throw new Error('Tasks müssen ein Array sein');
+    setUserData(userData) {
+        if (!userData || typeof userData !== 'object') {
+            throw new Error('UserData muss ein Objekt sein');
         }
 
-        store.set(this.storageKey, tasks);
+        // Update lastActivity
+        userData.userInfo = userData.userInfo || {};
+        userData.userInfo.lastActivity = new Date().toISOString();
+
+        store.set(this.storageKey, userData);
         this.emitTasksChanged();
     }
 
     /**
-     * Fügt eine neue Task hinzu
+     * Holt den Namen des Users/Charakters
+     * @returns {string} Name
+     */
+    getName() {
+        return this.name;
+    }
+
+    /**
+     * Holt aktuelle Task
+     * @returns {Task|null} Die aktuelle Task oder null
+     */
+    getCurrentTask() {
+        const userData = this.getUserData();
+        return userData?.currentTask || null;
+    }
+
+    /**
+     * Holt kommende Tasks
+     * @returns {Array<Task>} Array von kommenden Tasks
+     */
+    getUpcomingTasks() {
+        const userData = this.getUserData();
+        return userData?.upcomingTasks || [];
+    }
+
+    /**
+     * Holt abgeschlossene Tasks
+     * @returns {Array<Task>} Array von abgeschlossenen Tasks
+     */
+    getCompletedTasks() {
+        const userData = this.getUserData();
+        return userData?.completedTasks || [];
+    }
+
+    /**
+     * Holt alle Tasks
+     * @returns {Array<Task>} Array aller Tasks
+     */
+    getTasks() {
+        const current = this.getCurrentTask();
+        const upcoming = this.getUpcomingTasks();
+        const completed = this.getCompletedTasks();
+        const allTasks = [...upcoming, ...completed];
+        if (current) allTasks.unshift(current);
+        return allTasks;
+    }
+
+    /**
+     * Setzt aktuelle Task
+     * @param {Task|null} task - Die aktuelle Task oder null
+     */
+    setCurrentTask(task) {
+        if (task !== null && (typeof task !== 'object' || !task.id)) {
+            throw new Error('CurrentTask muss null oder ein gültiges Task-Objekt sein');
+        }
+        const userData = this.getUserData();
+        userData.currentTask = task;
+        this.setUserData(userData);
+    }
+
+    /**
+     * Setzt kommende Tasks
+     * @param {Array<Task>} tasks - Array von Tasks
+     */
+    setUpcomingTasks(tasks) {
+        if (!_.isArray(tasks)) {
+            throw new Error('Tasks müssen ein Array sein');
+        }
+        const userData = this.getUserData();
+        userData.upcomingTasks = tasks;
+        this.setUserData(userData);
+    }
+
+    /**
+     * Setzt abgeschlossene Tasks
+     * @param {Array<Task>} tasks - Array von Tasks
+     */
+    setCompletedTasks(tasks) {
+        if (!_.isArray(tasks)) {
+            throw new Error('Tasks müssen ein Array sein');
+        }
+        const userData = this.getUserData();
+        userData.completedTasks = tasks;
+        this.setUserData(userData);
+    }
+
+    /**
+     * Fügt eine neue Task zu den kommenden Tasks hinzu
      * @param {string} description - Was ist der Task
      * @param {number} [duration=5] - Wie viele RP Runden hat man Zeit (Standard: 5)
-     * @param {number} [roundsInProgress=0] - Runden bereits in Bearbeitung (Standard: 0)
-     * @returns {Task} Die hinzugefügte Task mit ID
+     * @returns {Object} Objekt mit Task und Status: { task: Task, status: 'current'|'upcoming' }
      */
-    addTask(description, duration = 5, roundsInProgress = 0) {
-        // if (!description || typeof description !== 'string') {
-        //     throw new Error('Task benötigt eine gültige Beschreibung');
-        // }
-
+    addTask(description, duration = 5) {
         if (!_.isNumber(duration) || duration < 1) {
             throw new Error('Duration muss eine positive Zahl sein');
         }
 
-        if (!_.isNumber(roundsInProgress) || roundsInProgress < 0) {
-            throw new Error('RoundsInProgress muss eine nicht-negative Zahl sein');
-        }
-
-        const tasks = this.getTasks();
         const newTask = {
             id: this.generateTaskId(),
             description,
             duration,
-            roundsInProgress,
-            completed: false
+            roundsInProgress: 0,
+            createdAt: new Date().toISOString()
         };
 
-       
-        tasks.push(newTask);
-        this.setTasks(tasks);
-        
-        return newTask;
+        const userData = this.getUserData();
+
+        // Wenn keine aktuelle Task vorhanden ist, wird die neue Task automatisch zur aktuellen
+        if (!userData.currentTask) {
+            userData.currentTask = newTask;
+            this.setUserData(userData);
+            return { task: newTask, status: 'current' };
+        } else {
+            // Sonst zu upcoming hinzufügen
+            const upcomingTasks = this.getUpcomingTasks();
+            upcomingTasks.push(newTask);
+            this.setUpcomingTasks(upcomingTasks);
+            return { task: newTask, status: 'upcoming' };
+        }
     }
 
     /**
@@ -138,18 +246,36 @@ export class TaskManager {
      * @returns {Object|null} Die aktualisierte Task oder null wenn nicht gefunden
      */
     updateTask(taskId, updates) {
-        const tasks = this.getTasks();
-        const taskIndex = _.findIndex(tasks, { id: taskId });
-
-        if (taskIndex === -1) {
-            console.warn(`Task mit ID ${taskId} nicht gefunden`);
-            return null;
+        const userData = this.getUserData();
+        
+        // Suche in currentTask
+        if (userData.currentTask && userData.currentTask.id === taskId) {
+            const updatedTask = { ...userData.currentTask, ...updates };
+            userData.currentTask = updatedTask;
+            this.setUserData(userData);
+            return updatedTask;
         }
 
-        tasks[taskIndex] = { ...tasks[taskIndex], ...updates };
-        this.setTasks(tasks);
+        // Suche in upcomingTasks
+        let taskIndex = _.findIndex(userData.upcomingTasks, { id: taskId });
+        if (taskIndex !== -1) {
+            const updatedTask = { ...userData.upcomingTasks[taskIndex], ...updates };
+            userData.upcomingTasks[taskIndex] = updatedTask;
+            this.setUserData(userData);
+            return updatedTask;
+        }
 
-        return tasks[taskIndex];
+        // Suche in completedTasks
+        taskIndex = _.findIndex(userData.completedTasks, { id: taskId });
+        if (taskIndex !== -1) {
+            const updatedTask = { ...userData.completedTasks[taskIndex], ...updates };
+            userData.completedTasks[taskIndex] = updatedTask;
+            this.setUserData(userData);
+            return updatedTask;
+        }
+
+        console.warn(`Task mit ID ${taskId} nicht gefunden`);
+        return null;
     }
 
     /**
@@ -158,15 +284,35 @@ export class TaskManager {
      * @returns {boolean} True wenn gelöscht, false wenn nicht gefunden
      */
     deleteTask(taskId) {
-        const tasks = this.getTasks();
-        const filteredTasks = _.filter(tasks, task => task.id !== taskId);
+        const userData = this.getUserData();
+        let found = false;
 
-        if (filteredTasks.length === tasks.length) {
+        // Entferne aus currentTask
+        if (userData.currentTask && userData.currentTask.id === taskId) {
+            userData.currentTask = null;
+            found = true;
+        }
+
+        // Entferne aus upcomingTasks
+        const upcomingTasks = _.filter(userData.upcomingTasks, task => task.id !== taskId);
+        if (upcomingTasks.length !== userData.upcomingTasks.length) {
+            userData.upcomingTasks = upcomingTasks;
+            found = true;
+        }
+
+        // Entferne aus completedTasks
+        const completedTasks = _.filter(userData.completedTasks, task => task.id !== taskId);
+        if (completedTasks.length !== userData.completedTasks.length) {
+            userData.completedTasks = completedTasks;
+            found = true;
+        }
+
+        if (!found) {
             console.warn(`Task mit ID ${taskId} nicht gefunden`);
             return false;
         }
 
-        this.setTasks(filteredTasks);
+        this.setUserData(userData);
         return true;
     }
 
@@ -176,84 +322,241 @@ export class TaskManager {
      * @returns {Object|null} Die Task oder null wenn nicht gefunden
      */
     getTask(taskId) {
-        const tasks = this.getTasks();
-        return _.find(tasks, { id: taskId }) || null;
+        const userData = this.getUserData();
+        
+        // Suche in currentTask
+        if (userData.currentTask && userData.currentTask.id === taskId) {
+            return userData.currentTask;
+        }
+
+        // Suche in upcomingTasks
+        let task = _.find(userData.upcomingTasks, { id: taskId });
+        if (task) return task;
+
+        // Suche in completedTasks
+        task = _.find(userData.completedTasks, { id: taskId });
+        if (task) return task;
+
+        return null;
     }
 
     /**
-     * Markiert eine Task als erledigt/unerledigt
+     * Markiert eine Task als erledigt und verschiebt sie zu completedTasks
      * @param {string} taskId - ID der Task
-     * @param {boolean} completed - Erledigt-Status
-     * @returns {Object|null} Die aktualisierte Task oder null
+     * @returns {Object|null} Die abgeschlossene Task oder null
      */
-    toggleTaskCompletion(taskId, completed = undefined) {
-        const task = this.getTask(taskId);
-        if (!task) return null;
+    completeTask(taskId) {
+        const userData = this.getUserData();
+        let task = null;
 
-        const newCompletedStatus = completed !== undefined ? completed : !task.completed;
-        return this.updateTask(taskId, { 
-            completed: newCompletedStatus
-        });
+        // Suche in currentTask
+        if (userData.currentTask && userData.currentTask.id === taskId) {
+            task = userData.currentTask;
+            userData.currentTask = null;
+        }
+        // Suche in upcomingTasks
+        else {
+            const taskIndex = _.findIndex(userData.upcomingTasks, { id: taskId });
+            if (taskIndex !== -1) {
+                task = userData.upcomingTasks.splice(taskIndex, 1)[0];
+            }
+        }
+
+        if (!task) {
+            console.warn(`Task mit ID ${taskId} nicht gefunden oder bereits abgeschlossen`);
+            return null;
+        }
+
+        // Task als abgeschlossen markieren und zu completedTasks hinzufügen
+        const completedTask = {
+            ...task,
+            completedAt: new Date().toISOString()
+        };
+        userData.completedTasks.push(completedTask);
+
+        // Automatisch nächste Task starten wenn vorhanden
+        if (userData.upcomingTasks.length > 0 && !userData.currentTask) {
+            userData.currentTask = userData.upcomingTasks.shift();
+        }
+
+        this.setUserData(userData);
+        return completedTask;
     }
 
     /**
-     * Erhöht die Anzahl der Runden für eine Task
+     * Verschiebt eine Task von upcoming zu current (startet die Task)
      * @param {string} taskId - ID der Task
+     * @returns {Object|null} Die gestartete Task oder null
+     */
+    startTask(taskId) {
+        const userData = this.getUserData();
+        
+        const taskIndex = _.findIndex(userData.upcomingTasks, { id: taskId });
+        if (taskIndex === -1) {
+            console.warn(`Task mit ID ${taskId} nicht in upcomingTasks gefunden`);
+            return null;
+        }
+
+        // Prüfe ob bereits eine aktuelle Task vorhanden ist
+        if (userData.currentTask) {
+            console.warn(`Es gibt bereits eine aktuelle Task: ${userData.currentTask.description}`);
+            return null;
+        }
+
+        // Task aus upcomingTasks entfernen und zu currentTask machen
+        const task = userData.upcomingTasks.splice(taskIndex, 1)[0];
+        userData.currentTask = task;
+
+        this.setUserData(userData);
+        return task;
+    }
+
+    /**
+     * Verschiebt die aktuelle Task zurück zu upcoming (pausiert sie)
+     * @param {string} taskId - ID der Task
+     * @returns {Object|null} Die pausierte Task oder null
+     */
+    pauseTask(taskId) {
+        const userData = this.getUserData();
+        
+        if (!userData.currentTask || userData.currentTask.id !== taskId) {
+            console.warn(`Task mit ID ${taskId} ist nicht die aktuelle Task`);
+            return null;
+        }
+
+        // Task aus currentTask entfernen
+        const task = userData.currentTask;
+        userData.currentTask = null;
+        
+        // roundsInProgress zurücksetzen
+        task.roundsInProgress = 0;
+        
+        // Task zu upcomingTasks hinzufügen (am Anfang für Priorität)
+        userData.upcomingTasks.unshift(task);
+
+        this.setUserData(userData);
+        return task;
+    }
+
+    /**
+     * Verschiebt eine abgeschlossene Task zurück zu upcoming
+     * @param {string} taskId - ID der Task
+     * @returns {Object|null} Die reaktivierte Task oder null
+     */
+    reopenTask(taskId) {
+        const userData = this.getUserData();
+        
+        const taskIndex = _.findIndex(userData.completedTasks, { id: taskId });
+        if (taskIndex === -1) {
+            console.warn(`Task mit ID ${taskId} nicht in completedTasks gefunden`);
+            return null;
+        }
+
+        // Task aus completedTasks entfernen
+        const task = userData.completedTasks.splice(taskIndex, 1)[0];
+        
+        // completedAt entfernen und roundsInProgress zurücksetzen
+        delete task.completedAt;
+        task.roundsInProgress = 0;
+        
+        // Task zu upcomingTasks hinzufügen
+        userData.upcomingTasks.push(task);
+
+        this.setUserData(userData);
+        return task;
+    }
+
+    /**
+     * Erhöht die Anzahl der Runden für die aktuelle Task
      * @param {number} rounds - Anzahl der zu erhöhenden Runden (Standard: 1)
      * @returns {Object|null} Die aktualisierte Task oder null
      */
-    incrementRoundsInProgress(taskId, rounds = 1) {
-        const task = this.getTask(taskId);
-        if (!task) return null;
+    incrementRoundsInProgress(rounds = 1) {
+        const userData = this.getUserData();
+        
+        if (!userData.currentTask) {
+            console.warn('Keine aktuelle Task vorhanden');
+            return null;
+        }
 
-        const newRounds = (task.roundsInProgress || 0) + rounds;
-        return this.updateTask(taskId, { roundsInProgress: newRounds });
+        userData.currentTask.roundsInProgress = (userData.currentTask.roundsInProgress || 0) + rounds;
+        
+        this.setUserData(userData);
+        return userData.currentTask;
     }
 
     /**
-     * Setzt die Runden für eine Task zurück
-     * @param {string} taskId - ID der Task
+     * Setzt die Runden für die aktuelle Task zurück
      * @returns {Object|null} Die aktualisierte Task oder null
      */
-    resetRoundsInProgress(taskId) {
-        return this.updateTask(taskId, { roundsInProgress: 0 });
+    resetRoundsInProgress() {
+        const userData = this.getUserData();
+        
+        if (!userData.currentTask) {
+            console.warn('Keine aktuelle Task vorhanden');
+            return null;
+        }
+
+        userData.currentTask.roundsInProgress = 0;
+        
+        this.setUserData(userData);
+        return userData.currentTask;
     }
 
     /**
-     * Holt Tasks die ihre Zeit überschritten haben
-     * @returns {Array} Überfällige Tasks
+     * Startet automatisch die nächste Task wenn keine aktuelle Task vorhanden ist
+     * @returns {Object|null} Die gestartete Task oder null
      */
-    getOverdueTasks() {
-        return _.filter(this.getTasks(), task => 
-            !task.completed && 
-            task.roundsInProgress >= task.duration
-        );
+    startNextTask() {
+        const userData = this.getUserData();
+        
+        // Nur starten wenn keine aktuelle Task und upcoming Tasks vorhanden sind
+        if (userData.currentTask || userData.upcomingTasks.length === 0) {
+            return null;
+        }
+
+        // Erste Task aus upcoming nehmen und zur aktuellen machen
+        userData.currentTask = userData.upcomingTasks.shift();
+        
+        this.setUserData(userData);
+        return userData.currentTask;
     }
 
     /**
-     * Holt Tasks die bald überfällig werden (innerhalb der nächsten N Runden)
+     * Prüft ob die aktuelle Task überfällig ist
+     * @returns {boolean} True wenn überfällig
+     */
+    isCurrentTaskOverdue() {
+        const currentTask = this.getCurrentTask();
+        return currentTask ? currentTask.roundsInProgress >= currentTask.duration : false;
+    }
+
+    /**
+     * Prüft ob die aktuelle Task bald überfällig wird
      * @param {number} warningThreshold - Anzahl Runden vor Ablauf (Standard: 1)
-     * @returns {Array} Tasks mit Warnung
+     * @returns {boolean} True wenn Warnung
      */
-    getTasksNearDeadline(warningThreshold = 1) {
-        return _.filter(this.getTasks(), task => 
-            !task.completed && 
-            (task.duration - task.roundsInProgress) <= warningThreshold &&
-            task.roundsInProgress < task.duration
-        );
+    isCurrentTaskNearDeadline(warningThreshold = 1) {
+        const currentTask = this.getCurrentTask();
+        if (!currentTask) return false;
+        
+        const remainingRounds = currentTask.duration - currentTask.roundsInProgress;
+        return remainingRounds <= warningThreshold && remainingRounds > 0;
     }
 
     /**
-     * Neuordnung der Tasks (für jQuery UI Sortable)
+     * Neuordnung der kommenden Tasks
      * @param {Array} orderedTaskIds - Array von Task-IDs in neuer Reihenfolge
      */
-    reorderTasks(orderedTaskIds) {
+    reorderUpcomingTasks(orderedTaskIds) {
         if (!_.isArray(orderedTaskIds)) {
             throw new Error('orderedTaskIds muss ein Array sein');
         }
 
-        const tasks = this.getTasks();
-        const taskMap = _.keyBy(tasks, 'id');
+        const userData = this.getUserData();
+        const originalTasks = userData.upcomingTasks;
+        
+        const taskMap = _.keyBy(originalTasks, 'id');
         
         const reorderedTasks = _.map(orderedTaskIds, taskId => {
             const task = taskMap[taskId];
@@ -268,36 +571,11 @@ export class TaskManager {
         const validTasks = _.compact(reorderedTasks);
         
         // Füge Tasks hinzu, die nicht in der Neuordnung enthalten waren
-        const missingTasks = _.filter(tasks, task => !_.includes(orderedTaskIds, task.id));
+        const missingTasks = _.filter(originalTasks, task => !_.includes(orderedTaskIds, task.id));
         const finalTasks = [...validTasks, ...missingTasks];
 
-        this.setTasks(finalTasks);
-    }
-
-    /**
-     * Filtert Tasks basierend auf Kriterien
-     * @param {Object} criteria - Filterkriterien
-     * @returns {Array} Gefilterte Tasks
-     */
-    filterTasks(criteria = {}) {
-        const tasks = this.getTasks();
-        return _.filter(tasks, criteria);
-    }
-
-    /**
-     * Holt erledigte Tasks
-     * @returns {Array} Erledigte Tasks
-     */
-    getCompletedTasks() {
-        return this.filterTasks({ completed: true });
-    }
-
-    /**
-     * Holt unerledigte Tasks
-     * @returns {Array} Unerledigte Tasks
-     */
-    getIncompleteTasks() {
-        return this.filterTasks({ completed: false });
+        userData.upcomingTasks = finalTasks;
+        this.setUserData(userData);
     }
 
     /**
@@ -305,33 +583,11 @@ export class TaskManager {
      * @returns {number} Anzahl der gelöschten Tasks
      */
     clearCompletedTasks() {
-        const incompleteTasks = this.getIncompleteTasks();
-        const deletedCount = this.getTasks().length - incompleteTasks.length;
-        this.setTasks(incompleteTasks);
+        const userData = this.getUserData();
+        const deletedCount = userData.completedTasks.length;
+        userData.completedTasks = [];
+        this.setUserData(userData);
         return deletedCount;
-    }
-
-    /**
-     * Holt Task-Statistiken
-     * @returns {Object} Statistiken
-     */
-    getStatistics() {
-        const tasks = this.getTasks();
-        const completed = this.getCompletedTasks();
-        const incomplete = this.getIncompleteTasks();
-        const overdue = this.getOverdueTasks();
-        const nearDeadline = this.getTasksNearDeadline();
-
-        return {
-            total: tasks.length,
-            completed: completed.length,
-            incomplete: incomplete.length,
-            overdue: overdue.length,
-            nearDeadline: nearDeadline.length,
-            completionRate: tasks.length > 0 ? (completed.length / tasks.length * 100).toFixed(1) : 0,
-            averageRoundsInProgress: tasks.length > 0 ? 
-                (_.sumBy(incomplete, 'roundsInProgress') / incomplete.length).toFixed(1) : 0
-        };
     }
 
     /**
@@ -349,51 +605,10 @@ export class TaskManager {
         if (objEventSource) {
             objEventSource.emit(objEventTypes.TASKS_CHANGED, {
                 name: this.name,
-                tasks: this.getTasks(),
-                statistics: this.getStatistics()
+                currentTask: this.getCurrentTask(),
+                upcomingTasks: this.getUpcomingTasks(),
+                completedTasks: this.getCompletedTasks()
             });
-        }
-    }
-
-    /**
-     * Exportiert alle Tasks als JSON
-     * @returns {string} JSON String der Tasks
-     */
-    exportTasks() {
-        return JSON.stringify({
-            name: this.name,
-            tasks: this.getTasks(),
-            exportedAt: new Date().toISOString()
-        }, null, 2);
-    }
-
-    /**
-     * Importiert Tasks aus JSON
-     * @param {string} jsonData - JSON String mit Tasks
-     * @param {boolean} merge - Ob Tasks zusammengeführt oder ersetzt werden sollen
-     * @returns {number} Anzahl der importierten Tasks
-     */
-    importTasks(jsonData, merge = false) {
-        try {
-            const data = JSON.parse(jsonData);
-            if (!_.isArray(data.tasks)) {
-                throw new Error('Ungültiges Task-Format');
-            }
-
-            let tasks = merge ? this.getTasks() : [];
-            const importedTasks = _.map(data.tasks, task => ({
-                ...task,
-                id: this.generateTaskId(), // Neue ID generieren um Konflikte zu vermeiden
-                importedAt: new Date().toISOString()
-            }));
-
-            tasks = [...tasks, ...importedTasks];
-            this.setTasks(tasks);
-
-            return importedTasks.length;
-        } catch (error) {
-            console.error('Fehler beim Importieren der Tasks:', error);
-            throw new Error(`Import fehlgeschlagen: ${error.message}`);
         }
     }
 }

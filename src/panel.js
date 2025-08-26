@@ -2,7 +2,7 @@ const { lodash } = SillyTavern.libs;
 const _ = lodash
 
 import { global_const, objEventSource, objEventTypes, deMuh }  from './base.js';
-import { getContext, renderExtensionTemplateAsync } from '/scripts/extensions.js';
+import { getContext, renderExtensionTemplateAsync ,renderExtensionTemplate} from '/scripts/extensions.js';
 import { store }  from './store.js';
 import { getPersonsOfcurrentChat }  from './utils.js';
 
@@ -88,6 +88,11 @@ export async function initPanel(){
     })
 
 
+    $(document).on("keyup", ".muhPanel textarea", _.debounce(function(){
+             $(this).css("height","auto").css("height", (Math.min( $(this).prop('scrollHeight'), 100) + 2) + 'px')
+        }, 100)
+    )
+
 }
 
 async function setPanelContent(){  
@@ -164,9 +169,38 @@ async function listView(personsSelected){
 
 async function detailView(personsSelected){ 
     const taskManager = new TaskManager(personsSelected);
-    const incompleteTasks = taskManager.getIncompleteTasks();
+    const completedTasks = taskManager.getCompletedTasks();
+    const currentTask = taskManager.getCurrentTask();
+    const upcomingTasks = taskManager.getUpcomingTasks();
+    console.log("completedTasks", completedTasks)
+    console.log("currentTask", currentTask)
+    console.log("upcomingTasks", upcomingTasks)
 
-    console.log("incompleteTasks", incompleteTasks)
+
+   
+
+    const currentTaskHtml = await renderExtensionTemplateAsync(global_const.TEMPLATE_PATH, 'task-current', {
+        sliders: [
+            {
+                id: `muhPanel_currentTask_duration`,
+                label: `Duration`,
+                disabled: false,
+                min: 1,
+                max: 30,
+                desc: 'Max <span class="val"></span>  rounds to complete'
+            },
+            {
+                id: `muhPanel_currentTask_progress`,
+                label: `Progress`,
+                disabled: true,
+                min: 0,
+                max: 30,
+                desc: '<span class="val"></span> Rounds already progressed'
+            }
+        ],
+    })
+
+
     const taskHtml = await renderExtensionTemplateAsync(global_const.TEMPLATE_PATH, 'task-item', {
         // task,
         buttons: [
@@ -210,7 +244,9 @@ async function detailView(personsSelected){
 
     const myConfig = {
         data: {
-            incompleteTasks: incompleteTasks
+            completedTasks,
+            currentTask,
+            upcomingTasks,
         },
         ui:{
             '.my-muhPanel-backtoList': {
@@ -239,13 +275,22 @@ async function detailView(personsSelected){
                 },
                 events:'click.my'
             },
+
+            "#muhPanel_currentTask_holder":{
+                bind:"currentTask",
+                manifest: "CurrentTask",
+                 init: function ($form, form) {
+                   console.log("currentTask dddd")
+                },
+            }
+            ,
              "#muhPanel_tasksList":{
-                bind:"incompleteTasks",
+                bind:"upcomingTasks",
                 manifest:"Task",
-                // list:'> div.flex-container',
-                list:'<div class="wide100p"></div>',
+                list:'> div',
+                // list:'<div class="wide100p"></div>',
                 init: function ($form, form) {
-                    if(form.data.incompleteTasks.length == 0){
+                    if(form.data.upcomingTasks.length == 0){
                         $("#muhPanel_tasks").find('[data-id="empty_add"]').show()
                     }
 
@@ -258,31 +303,133 @@ async function detailView(personsSelected){
                         axis: 'y', 
                         tolerance: 'pointer',
                         update: function (event, ui) {
-                            deMuh("update")
+                            const items = $(this).sortable('toArray', { attribute: 'id' });
+                            taskManager.reorderUpcomingTasks(items)
                         }
                     })
                 },
             },
 
-            '[data-id="empty_add"]':{
+            '#muhPanel_addTask':{
                 bind: function(task, value, $element){ 
                     if (value == null) return; 
-                    deMuh("add", this.my.root())  
-                    const data = taskManager.addTask("")
-                    this.my.insert("#muhPanel_tasksList", data)
-                    $element.hide()
+                    deMuh("add",)  
+                    const result = taskManager.addTask("")
+                    if (result.status === 'current') {
+                        console.log('Task ist jetzt aktiv!');
+                        // UI: Zeige als aktuelle Task
+                    } else {
+                        console.log('Task wurde zur Warteschlange hinzugefügt');
+                        this.my.insert("#muhPanel_tasksList", result.task)
+                    }
+                    // $element.hide()
                    
                 },
                 events:'click.my'
             }
         },
 
+        CurrentTask:{
+            data: {
+
+                // sliders: [
+                //     {
+                //         id: `muhPanel_currentTask_duration`,
+                //         label: `Duration`,
+                //         disabled: false,
+                //         value: currentTask.duration,
+                //         min: 1,
+                //         max: 30,
+                //         desc: 'Max <span class="val"></span>  rounds to complete'
+                //     },
+                //     {
+                //         id: `muhPanel_currentTask_progress`,
+                //         label: `Progress`,
+                //         disabled: false,
+                //         value: currentTask.roundsInProgress,
+                //         min: 0,
+                //         max: 30,
+                //         desc: '<span class="val"></span> Rounds already progressed'
+                //     }
+                // ],
+            },
+
+            init: function ($form){
+                $form.html(currentTaskHtml);
+            },
+            ui:{
+                '#muhPanel_currentTask_description':{
+                    bind: 'description',
+                    events:'blur.my',                    
+                },
+                "#muhPanel_currentTask_sliders":{
+                    bind:"sliders",
+                    manifest: "Slider",
+                    list:'<div></div>',
+                    init: function ($form, form) {
+                        console.log("duration dddd")
+                    }
+                },
+                '#muhPanel_currentTask_save':{
+                    bind: _.debounce(function(data, value, $element) { 
+                        // if (data.slk == null) return; 
+                        deMuh("muhPanel_currentTask_save before", data)
+
+                        taskManager.updateTask(data.id, {
+                            description: data.description,
+                            duration: parseInt(data.sliders[0].value),
+                            durationroundsInProgress: parseInt(data.sliders[1].value)
+                        })
+                    }, 150),
+                    watch: '#muhPanel_currentTask_description, #muhPanel_currentTask_sliders'
+                },  
+            },
+            Slider:{
+                
+                init: function ($form, form){
+                    const html = renderExtensionTemplate(global_const.TEMPLATE_PATH, 'task-slider', this.data)
+                    $form.html(html)
+                    $form.attr("id", this.data.id)
+                    $form.addClass("muhPanel-sliderNum")
+                },
+                ui:{
+                    '.save': {
+                        bind:  (data, value, $element) => { 
+                            if (data == null) return; 
+                            
+                            if( typeof data.value == "string" && data.value.trim() == "") data.value = data.min;
+                            if(parseInt(data.value) > data.max) data.value = data.max;
+                            if(parseInt(data.value) < data.min) data.value = data.min;
+                            deMuh(data.id, value, data.max, (value > data.max), value, data)
+
+                            // taskManager.updateTask(task.id, task)
+                            // const {completed} = task
+                            // data.value = value
+                            //   deMuh("all",   taskManager.updateTask(task.id, {completed}))
+                            // return value
+                        },
+                        events:'change.my',    
+                        watch: 'input[type="range"], input[type="number"], .val',              
+                        recalc: 'input[type="range"], input[type="number"], .val',           
+                        delay: 150   
+                    },
+                    'input[type="range"]':{
+                        bind: 'value',
+                        events:'change.my',
+                        delay: 150                    
+                    },
+                    'input[type="number"]': 'value',
+                    '.val': 'value',
+                }
+
+            }
+        },
         Task:{
             init: function ($form){
                 $form.html(taskHtml);
+                $form.attr("id", this.data.id)
             },
             ui:{
-                '[data-id="roundsInProgress"]':'roundsInProgress',
                 '[data-id="task"]':'description',
                 '[data-id="duration"]':{
                     bind: 'duration',
@@ -294,9 +441,9 @@ async function detailView(personsSelected){
                     bind: function (task, value, $element){ 
                         if (value == null) return; 
                         if(taskManager.deleteTask(task.id)){
-                            console.log(this.my.parent().data.incompleteTasks, this.my.parent().data.incompleteTasks.length);
+                            console.log(this.my.parent().data.upcomingTasks, this.my.parent().data.upcomingTasks.length);
                             
-                            if(this.my.parent().data.incompleteTasks.length <= 1){
+                            if(this.my.parent().data.upcomingTasks.length <= 1){
                                 $("#muhPanel_tasks").find('[data-id="empty_add"]').show()
                             } 
                             this.my.remove();
@@ -315,9 +462,9 @@ async function detailView(personsSelected){
                 '[data-id="task"]':{
                     bind: function(task, value, $element) { 
                         if (value == null) return task.description; 
-                        $element.css("height","auto")
-                        const newHeight = Math.min($element.prop('scrollHeight'), 100);
-                        $element.css("height", newHeight + 'px')
+                        // $element.css("height","auto")
+                        // const newHeight = Math.min($element.prop('scrollHeight'), 100);
+                        // $element.css("height", newHeight + 'px')
 
                         taskManager.updateTask(task.id, {
                             description: value
