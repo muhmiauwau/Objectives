@@ -1,0 +1,38 @@
+<!-- Beispiel: Integration der Angular Custom Elements in bestehende Templates -->
+
+<!-- In panel.html - Beispiel -->
+<div class="muhPanel drawer-content fillLeft {{#if muhPanelPin}}open{{/if}}">
+    <h3 class="muhPanel-headline flex1 flex-container alignItemsCenter gap5px m-b-1">
+        <div class="muhPanel-pin" title="Locked = {{headline}} panel will stay open" data-i18n="[title]{{headline}} panel will stay open">
+            <input id="muhPanel_pin" type="checkbox" {{#if muhPanelPin}}checked{{/if}}>
+            <label for="muhPanel_pin">
+                <div class="unchecked fa-solid fa-unlock right_menu_button"></div>
+                <div class="checked fa-solid fa-lock right_menu_button"></div>
+            </label>
+        </div>
+        <div>{{headline}} </div>
+        <div class="inline-drawer-maximize" style="margin-left: auto;">
+            <i class="floating_panel_maximize fa-fw fa-solid fa-window-maximize"></i>
+        </div>
+        <div class="fa-fw fa-solid fa-circle-xmark floating_panel_close"></div>
+    </h3>
+
+    <!-- HIER: Angular Panel Custom Element einbinden -->
+    <div class="muhPanel-content">
+        <objectives-panel></objectives-panel>
+    </div>
+</div>
+
+<!-- Settings Modal - Beispiel -->
+<div id="objectives-settings-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Objectives Settings</h2>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <!-- HIER: Angular Settings Custom Element einbinden -->
+            <objectives-settings></objectives-settings>
+        </div>
+    </div>
+</div>

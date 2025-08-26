@@ -177,14 +177,13 @@ async function detailView(personsSelected){
     console.log("upcomingTasks", upcomingTasks)
 
 
-   
-
-    const currentTaskHtml = await renderExtensionTemplateAsync(global_const.TEMPLATE_PATH, 'task-current', {
+    const currentTaskData = {
         sliders: [
             {
                 id: `muhPanel_currentTask_duration`,
                 label: `Duration`,
                 disabled: false,
+                value: currentTask?.duration,
                 min: 1,
                 max: 30,
                 desc: 'Max <span class="val"></span>  rounds to complete'
@@ -192,13 +191,30 @@ async function detailView(personsSelected){
             {
                 id: `muhPanel_currentTask_progress`,
                 label: `Progress`,
-                disabled: true,
+                disabled: false,
+                value: currentTask?.roundsInProgress,
                 min: 0,
                 max: 30,
                 desc: '<span class="val"></span> Rounds already progressed'
             }
         ],
-    })
+        actions: [
+            {
+                id: `muhPanel_currentTask_complete`,
+                icon: "check",
+                label: `Mark as complete`
+            },
+            {
+                id: `muhPanel_currentTask_delete`,
+                icon: "eraser",
+                label: `Delete`
+            }
+        ],
+        
+    }
+   
+
+    const currentTaskHtml = await renderExtensionTemplateAsync(global_const.TEMPLATE_PATH, 'task-current', currentTaskData)
 
 
     const taskHtml = await renderExtensionTemplateAsync(global_const.TEMPLATE_PATH, 'task-item', {
@@ -241,13 +257,12 @@ async function detailView(personsSelected){
 
 
    
-
-    const myConfig = {
-        data: {
+    const myData = {
             completedTasks,
-            currentTask,
+            currentTask: [currentTask],
             upcomingTasks,
-        },
+        };
+    const myConfig = {
         ui:{
             '.my-muhPanel-backtoList': {
                 bind: (data, value) => { 
@@ -278,12 +293,14 @@ async function detailView(personsSelected){
 
             "#muhPanel_currentTask_holder":{
                 bind:"currentTask",
+                list: ">div", 
                 manifest: "CurrentTask",
-                 init: function ($form, form) {
+                init: function ($form, form) {
+                    // return;
+
                    console.log("currentTask dddd")
-                },
-            }
-            ,
+                }
+             },
              "#muhPanel_tasksList":{
                 bind:"upcomingTasks",
                 manifest:"Task",
@@ -331,36 +348,17 @@ async function detailView(personsSelected){
 
         CurrentTask:{
             data: {
-
-                // sliders: [
-                //     {
-                //         id: `muhPanel_currentTask_duration`,
-                //         label: `Duration`,
-                //         disabled: false,
-                //         value: currentTask.duration,
-                //         min: 1,
-                //         max: 30,
-                //         desc: 'Max <span class="val"></span>  rounds to complete'
-                //     },
-                //     {
-                //         id: `muhPanel_currentTask_progress`,
-                //         label: `Progress`,
-                //         disabled: false,
-                //         value: currentTask.roundsInProgress,
-                //         min: 0,
-                //         max: 30,
-                //         desc: '<span class="val"></span> Rounds already progressed'
-                //     }
-                // ],
+                sliders: {...currentTaskData.sliders}
             },
-
-            init: function ($form){
+            init: function ($form, form){
+                console.log("CurrentTask", form);
+                if(!currentTask) return;
                 $form.html(currentTaskHtml);
             },
             ui:{
                 '#muhPanel_currentTask_description':{
                     bind: 'description',
-                    events:'blur.my',                    
+                    events:'blur.my',                 
                 },
                 "#muhPanel_currentTask_sliders":{
                     bind:"sliders",
@@ -370,16 +368,41 @@ async function detailView(personsSelected){
                         console.log("duration dddd")
                     }
                 },
+                '#muhPanel_currentTask_delete':{
+                    bind: function (data, value, $element){ 
+                        if (value == null) return; 
+                        // this.my.parent().data.currentTask = [];
+                        const newtask = taskManager.deleteCurrentTask()
+                        if(newtask){
+                            newtask.sliders = currentTaskData.sliders
+                            deMuh("muhPanel_currentTask_delete IDNNN",  newtask)
+                            
+                           this.my.parent().data.currentTask = [newtask];
+                           this.my.parent().data.upcomingTasks.filter((entry) => (entry.id !== newtask.id))
+                
+                           this.my.trigger(`#muhPanel_tasksList #${newtask.id}`, "remove")
+                        }else{
+                              deMuh("muhPanel_currentTask_delete delete")
+                            this.my.parent().data.currentTask = [];
+                        }
+
+                        deMuh("muhPanel_currentTask_delete",  this.my.parent().data.currentTask)
+                        this.my.trigger("#muhPanel_currentTask_holder", "redraw")
+                    },
+                    events:'click.my',
+                    // recalc: '#muhPanel_currentTask_save',   
+                },
                 '#muhPanel_currentTask_save':{
                     bind: _.debounce(function(data, value, $element) { 
-                        // if (data.slk == null) return; 
-                        deMuh("muhPanel_currentTask_save before", data)
-
+                        if (!data) return;
+                        if (data.sliders.length == 0) return;
+                         deMuh("muhPanel_currentTask_save", data)
                         taskManager.updateTask(data.id, {
                             description: data.description,
                             duration: parseInt(data.sliders[0].value),
                             durationroundsInProgress: parseInt(data.sliders[1].value)
                         })
+
                     }, 150),
                     watch: '#muhPanel_currentTask_description, #muhPanel_currentTask_sliders'
                 },  
@@ -387,6 +410,9 @@ async function detailView(personsSelected){
             Slider:{
                 
                 init: function ($form, form){
+                    if (!this.data) return;
+                    console.log("currentTaskData.sliders", this.data);
+                    
                     const html = renderExtensionTemplate(global_const.TEMPLATE_PATH, 'task-slider', this.data)
                     $form.html(html)
                     $form.attr("id", this.data.id)
@@ -494,7 +520,7 @@ async function detailView(personsSelected){
 
     $panelContent = $(await renderExtensionTemplateAsync(global_const.TEMPLATE_PATH, 'panel-content-detail', templateData))
     $('.muhPanel-content').html($panelContent);
-    $panelContent.my(myConfig);
+    $panelContent.my(myConfig, myData);
 }
 
 

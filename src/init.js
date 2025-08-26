@@ -12,6 +12,8 @@ import { initWand }  from './wand.js';
 import { store }  from './store.js';
 import { initPanel }  from './panel.js';
 
+// Angular Custom Elements Helper
+// import { createObjectivesPanel, createObjectivesSettings, areCustomElementsReady } from './angularElements.js';
 
 import { ConnectionManagerRequestService } from '/scripts/extensions/shared.js';
 
@@ -67,24 +69,34 @@ async function test(){
 }
 
 export async function init() {
-    $('body').append(`<script src="/scripts/extensions/third-party/Objectives/libs/sugar.min.js"></script><script src="/scripts/extensions/third-party/Objectives/libs/jquerymy.min.js"></script>`);
+
+    // Lade externe Libraries
+    // jQuery('body').append(`<script src="/scripts/extensions/third-party/Objectives/libs/sugar.min.js"></script><script src="/scripts/extensions/third-party/Objectives/libs/jquerymy.min.js"></script>`);
+    
     initWand()
-    loadInsertInChat()
-    initSettings()
-    initPanel()
+    // loadInsertInChat()
+    // initSettings()
+    // initPanel()
+
+    
+
+
+
+    
     const bla = setInterval(() => { 
         $(".recentChat:first-child").click()
         // console.clear()
-          
+        // $= jQuery
     }, 100);
 
-    // setTimeout(() => {
-    //     //  test()
-    // }, 2000)
+        
 
     setTimeout(() => {
         deMuh("#########, clearInterval")
         clearInterval(bla)
-        
+        $('#movingDivs').append('<objectives-panel></objectives-panel>');
+       
     }, 3000)
 }
+
+

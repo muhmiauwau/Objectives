@@ -317,6 +317,45 @@ export class TaskManager {
     }
 
     /**
+     * Löscht die aktuelle Task und setzt automatisch den nächsten upcoming task als current task
+     * @param {string} taskId - ID der aktuellen Task (optional, zur Sicherheitsprüfung)
+     * @returns {Object|null} Die neue aktuelle Task oder null wenn keine upcoming tasks vorhanden
+     */
+    deleteCurrentTask(taskId = null) {
+        const userData = this.getUserData();
+        
+        // Prüfe ob eine aktuelle Task vorhanden ist
+        if (!userData.currentTask) {
+            console.warn('Keine aktuelle Task vorhanden zum Löschen');
+            return null;
+        }
+
+        // Sicherheitsprüfung: Wenn taskId angegeben, prüfe ob es die aktuelle Task ist
+        if (taskId && userData.currentTask.id !== taskId) {
+            console.warn(`Task mit ID ${taskId} ist nicht die aktuelle Task`);
+            return null;
+        }
+
+        const deletedTask = userData.currentTask;
+        
+        // Lösche aktuelle Task
+        userData.currentTask = null;
+
+        // Starte automatisch nächste Task wenn vorhanden
+        let nextTask = null;
+        if (userData.upcomingTasks.length > 0) {
+            nextTask = userData.upcomingTasks.shift();
+            userData.currentTask = nextTask;
+        }
+
+        this.setUserData(userData);
+        
+        console.log(`Task "${deletedTask.description}" gelöscht.`, nextTask ? `Nächste Task "${nextTask.description}" gestartet.` : 'Keine weiteren Tasks vorhanden.');
+        
+        return nextTask;
+    }
+
+    /**
      * Holt eine spezifische Task
      * @param {string} taskId - ID der Task
      * @returns {Object|null} Die Task oder null wenn nicht gefunden
