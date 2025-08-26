@@ -98,3 +98,32 @@ button.muhPanel-personHead:hover{
 .muhPanel  .ui-sortable-placeholder{
     height: 50px;
 }
+
+
+.muhPanel-currentTask-numInputs{
+    display: flex;
+    gap: 10px;
+}
+
+.muhPanel-currentTask-numInputs > div{
+    display: flex;
+    min-width: 50%;
+    max-width: 50%;
+    gap: 10px;
+}
+
+.muhPanel-currentTask-numInputs > div > label{
+    flex: 1 1 auto;
+    min-width: 50%;
+    /* display: flex;
+    min-width: 50%;
+    gap: 10px; */
+}
+
+.muhPanel-currentTask-numInputs > div > div{
+    min-width: 50%;
+    flex: 1 1 auto;
+    /* display: flex;
+    min-width: 50%;
+    gap: 10px; */
+}

@@ -126,7 +126,6 @@ export class TaskManager {
 
        
         tasks.push(newTask);
-  console.log("##dd## tasks",tasks)
         this.setTasks(tasks);
         
         return newTask;

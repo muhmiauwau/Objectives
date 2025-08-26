@@ -163,8 +163,27 @@ async function listView(personsSelected){
 
 
 async function detailView(personsSelected){ 
-    
+    const taskManager = new TaskManager(personsSelected);
+    const incompleteTasks = taskManager.getIncompleteTasks();
 
+    console.log("incompleteTasks", incompleteTasks)
+    const taskHtml = await renderExtensionTemplateAsync(global_const.TEMPLATE_PATH, 'task-item', {
+        // task,
+        buttons: [
+            {
+                id: "drag",
+                icon: "grip-vertical",
+            },
+            {
+                id: "delete",
+                icon: "xmark",
+            },
+            {
+                id: "add",
+                icon: "plus",
+            }
+        ]
+    })
 
     const templateData = {
         viewHeadline: `${personsSelected}` ,
@@ -187,11 +206,12 @@ async function detailView(personsSelected){
     }
 
 
-    const myData = {
-        viewHeadline: `${personsSelected}` 
-    }
+   
 
     const myConfig = {
+        data: {
+            incompleteTasks: incompleteTasks
+        },
         ui:{
             '.my-muhPanel-backtoList': {
                 bind: (data, value) => { 
@@ -219,67 +239,13 @@ async function detailView(personsSelected){
                 },
                 events:'click.my'
             },
-        }
-    }
-
-
-    $panelContent = $(await renderExtensionTemplateAsync(global_const.TEMPLATE_PATH, 'panel-content-detail', templateData))
-    $('.muhPanel-content').html($panelContent);
-//    deMuh("muhPanel_aiPromptbtns_AutoGenerateTasks", $panelContent)
-    $panelContent.my(myConfig, myData);
-    renderTasks(personsSelected)
-}
-
-
-
-
-
-async function renderTasks(personsSelected){ 
-    const taskManager = new TaskManager(personsSelected);
-
-    
-
-
-    const templateData = {
-        viewHeadline: taskManager.getName() ,
-        
-    }
-
-
-const existingTasks = taskManager.getTasks();
- 
-   
-    const taskHtml = await renderExtensionTemplateAsync(global_const.TEMPLATE_PATH, 'task-item', {
-        // task,
-        buttons: [
-            {
-                id: "drag",
-                icon: "grip-vertical",
-            },
-            {
-                id: "delete",
-                icon: "xmark",
-            },
-            {
-                id: "add",
-                icon: "plus",
-            }
-        ]
-    })
-
-    const myConfig = {
-        data: {
-            bla: "muh", 
-            tasks: existingTasks
-        },
-        ui:{
-            '#test':'bla',
-            "#muhPanel_tasksList":{
-                bind:"tasks",
+             "#muhPanel_tasksList":{
+                bind:"incompleteTasks",
                 manifest:"Task",
-                list:'> div',
+                // list:'> div.flex-container',
+                list:'<div class="wide100p"></div>',
                 init: function ($form, form) {
-                    if(form.data.tasks.length == 0){
+                    if(form.data.incompleteTasks.length == 0){
                         $("#muhPanel_tasks").find('[data-id="empty_add"]').show()
                     }
 
@@ -328,9 +294,9 @@ const existingTasks = taskManager.getTasks();
                     bind: function (task, value, $element){ 
                         if (value == null) return; 
                         if(taskManager.deleteTask(task.id)){
-                            console.log(this.my.parent().data.tasks, this.my.parent().data.tasks.length);
+                            console.log(this.my.parent().data.incompleteTasks, this.my.parent().data.incompleteTasks.length);
                             
-                            if(this.my.parent().data.tasks.length <= 1){
+                            if(this.my.parent().data.incompleteTasks.length <= 1){
                                 $("#muhPanel_tasks").find('[data-id="empty_add"]').show()
                             } 
                             this.my.remove();
@@ -363,143 +329,27 @@ const existingTasks = taskManager.getTasks();
                     events:'keyup.my',
                     delay: 150
                 },
+                
+                '[data-id="drag"]':{
+                    bind: (task, value, $element) => { 
+                        //  if (task == null) return; 
+                        deMuh("all", value, task, $('[data-id="duration"]').val())
+                        // taskManager.updateTask(task.id, task)
+                        // const {completed} = task
+                        //   deMuh("all",   taskManager.updateTask(task.id, {completed}))
+                    },
+                    watch: '[data-id="completed"]'
+                },  
             }
         },
-  
     }
-     
-     $('#muhPanel_tasks').my(myConfig);
 
+
+    $panelContent = $(await renderExtensionTemplateAsync(global_const.TEMPLATE_PATH, 'panel-content-detail', templateData))
+    $('.muhPanel-content').html($panelContent);
+    $panelContent.my(myConfig);
 }
 
-async function renderTask(taskManager, task){ 
-    deMuh("renderTask")
 
 
-    const templateData = {
-        // task,
-        buttons: [
-            {
-                id: "drag",
-                icon: "grip-vertical",
-            },
-            {
-                id: "delete",
-                icon: "xmark",
-            },
-            {
-                id: "add",
-                icon: "plus",
-            },
-            {
-                id: "branch",
-                icon: "code-fork",
-            }
-        ]
-    }
-
-   const html = await renderExtensionTemplateAsync(global_const.TEMPLATE_PATH, 'task-item', templateData)
-         
-    
- deMuh("init all, $",task)
-    const myConfig = {
-        data: task,
-        init: function ($form, form) {    
-    
-               deMuh("init all, $sss", $form)
-            $form.html(html )      // Draw HTML
-         
-            
-            $form.then (function () {              // Fade when start succeds
-                deMuh("init all, $form", $form)
-            });
-        },
-        ui:{
-            '[data-id="roundsInProgress"]':'roundsInProgress',
-            '[data-id="task"]':'task',
-            '[data-id="duration"]':{
-                bind: 'duration',
-                events:'change.my',
-                // recalc: '[data-id="drag"]'
-                
-            },  
-            '[data-id="completed"]':{
-                bind: (task, value, $element) => { 
-                     if (value == null) return; 
-                     deMuh("completed", value, $element)
-                     const state = !!(value[0] == "on")
-                     task.completed = state
-                    return state? ["on"]:[];
-                },
-                events:'change.my',
-                // recalc: '[data-id="drag"]'
-                
-            },  
-            
-            '[data-id="drag"]':{
-                bind: (task, value, $element) => { 
-                    //  if (task == null) return; 
-                    deMuh("all", value, task, $('[data-id="duration"]').val())
-                    // taskManager.updateTask(task.id, task)
-                    // const {completed} = task
-                    //   deMuh("all",   taskManager.updateTask(task.id, {completed}))
-                },
-                watch: '[data-id="completed"]'
-            },   
-            '[data-id="delete"]':{
-                bind: (task, value, $element) => { 
-                    if (value == null) return; 
-                    if(taskManager.deleteTask(task.id)){
-                        $element.parents(`#${task.id}`).remove()
-                    }
-                },
-                events:'click.my'
-            },
-            '[data-id="duration"]':{
-                bind: (data, value) => { 
-                    if (value == null) return; 
-                    deMuh("duration", data)
-                    // store.setUI("personsSelected", "")
-                    // setPanelContent()
-                },
-                events:'click.my'
-            },
-            '[data-id="add"]':{
-                bind: (task, value, $element) => { 
-                     if (value == null) return; 
-                     taskManager.addTask("test task")
-                },
-                events:'click.my'
-            },
-
-            // '[data-id="task"]':{
-            //     bind: (task, value, $element) => { 
-            //         $element.css("height","auto")
-            //         const newHeight = Math.min($element.prop('scrollHeight'), 100);
-            //         $element.css("height", newHeight + 'px')
-
-            //          if (value == null) return; 
-            //          taskManager.updateTask(task.id, {
-            //             description: value
-            //          })
-            //     },
-            //     events:'keyup.my'
-            // },
-        }
-    }
-
-
-    deMuh("rsssenderExtensionTemplateAsync", task)
-    
-    // const $task = $(await renderExtensionTemplateAsync(global_const.TEMPLATE_PATH, 'task-item', templateData))
-    deMuh("myConfig all", task)
-    const $task = $("<div>dd</div>")
-
-    $task.my(myConfig);
- deMuh("myConfig all", $task)
-
-    $('.muhPanel-viewHeadline').append( $task)
-
-    return $task
-}
 

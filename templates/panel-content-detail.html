@@ -16,7 +16,7 @@
         </label>
         <textarea id="muhPanel_aiPrompt" type="text" rows="4"></textarea>
         <small>{{aiPrompt.desc}}</small>
-        <div class="flex-container m-t-1">
+        <div class="flex-container gap10px m-t-1  m-b-1" >
             {{#each aiPromptbtns}}
                 <button id="{{id}}" class="menu_button menu_button_icon interactable" >
                     <i class="fa-solid fa-{{icon}}"></i> {{label}}
@@ -24,25 +24,38 @@
             {{/each}}
         </div>
 
-        <!-- <div class="flex-container">
-            <input id="objective-generate" class="menu_button" type="submit" value="Auto-Generate Tasks" />
-            <input id="objective-generate-more" class="menu_button" type="submit" value="Generate More Tasks" />
-            <input id="objective-clear" class="menu_button" type="submit" value="Clear Tasks" />
-            <label class="checkbox_label"><input id="objective-hide-tasks" type="checkbox">Hide Tasks</label>
+      
+
+       <div class="inline-drawer flex-container flexFlowColumn flexNoGap">
+            <div class="inline-drawer-toggle inline-drawer-header  standoutHeader">
+                <div  class="">
+                    Creator's Notes
+                 </div>
+               <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down interactable"></div>
+            </div>
+            <div class="inline-drawer-content">
+                <div></div>
+                <div class="-my-empty-incomplete" >
+                    empty
+                </div>
+            </div>
+        </div>
+<!-- 
+        <div class="standoutHeader m-t-1">
+           Current Task
         </div> -->
+       
+        <div id="muhPanel_currentTask"></div>
 
-        <!-- <div id="objective-parent" class="objective_block flex-container">
-            <i class="objective-task-button fa-solid fa-circle-left fa-2x" title="Go to Parent"></i>
-            <small>Go to parent task</small>
-        </div> -->
+        
 
-        <!-- Progress bar will be inserted here by JavaScript -->
 
-        <!-- Filter and sort controls will be inserted here by JavaScript -->
-
-        <div id="muhPanel_tasks" class="flex-container gap10px m-t-1 m-b-1 " style="flex-direction: row;">
-            <div id="muhPanel_tasksList" class="flex-container gap10px m-t-1 m-b-1 "></div>
-            <div class="flex-container m-t-1">
+        <div class=" m-t-1  m-b-1" style="font-weight: bold;">
+           Incomplete Tasks
+        </div>
+        <div id="muhPanel_tasks" class="flex-container gap10px  m-b-1" style="flex-direction: row;">
+            <div id="muhPanel_tasksList" class="flex-container gap10px wide100p "></div>
+            <div class="flex-container">
                 <button data-id="empty_add" class="menu_button menu_button_icon interactable" style="display: none;" >
                     <i class="fa-solid fa-add"></i> Add Task
                 </button>
