@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { StoreService } from '../services/store.service';
 
 @Component({
   selector: 'app-panel',
@@ -8,6 +9,12 @@ import { Component } from '@angular/core';
   styleUrl: './panel.less'
 })
 export class Panel {
-  
-    headline= "lala"
+    private store = inject(StoreService);
+    headline = "lala";
+    
+    constructor(){
+
+        // console.log("angular ui", this.store.get("tasks"))
+    }
+
 }

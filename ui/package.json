@@ -29,7 +29,9 @@
     "@angular/forms": "^20.2.0",
     "@angular/platform-browser": "^20.2.0",
     "@angular/router": "^20.2.0",
+    "lodash-es": "^4.17.21",
     "rxjs": "~7.8.0",
+    "sillytavern": "^1.13.3",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
@@ -37,6 +39,7 @@
     "@angular/cli": "^20.2.0",
     "@angular/compiler-cli": "^20.2.0",
     "@types/jasmine": "~5.1.0",
+    "@types/lodash-es": "^4.17.12",
     "jasmine-core": "~5.9.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
