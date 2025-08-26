@@ -1,0 +1,47 @@
+<div>
+    <div class="muhPanel-viewHeadline">
+        <button class="my-muhPanel-backtoList" tabindex="0">
+            <i class="fa-solid fa-list-ul"></i>
+        </button> 
+        <div>{{viewHeadline}}</div>
+    </div>
+
+
+
+    <div class="muhPanel-contentScroll">
+
+        <label for="muhPanel_aiPrompt" class="" style="display: block;margin-bottom: 5px;">
+            {{aiPrompt.label}}
+            <i class="editor_maximize fa-solid fa-maximize interactable" data-for="muhPanel_aiPrompt" title="Expand the editor" data-i18n="[title]Expand the editor" tabindex="0"></i>
+        </label>
+        <textarea id="muhPanel_aiPrompt" type="text" rows="4"></textarea>
+        <small>{{aiPrompt.desc}}</small>
+        <div class="flex-container m-t-1">
+            {{#each aiPromptbtns}}
+                <button id="{{id}}" class="menu_button menu_button_icon interactable" >
+                    <i class="fa-solid fa-{{icon}}"></i> {{label}}
+                </button>
+            {{/each}}
+        </div>
+
+        <!-- <div class="flex-container">
+            <input id="objective-generate" class="menu_button" type="submit" value="Auto-Generate Tasks" />
+            <input id="objective-generate-more" class="menu_button" type="submit" value="Generate More Tasks" />
+            <input id="objective-clear" class="menu_button" type="submit" value="Clear Tasks" />
+            <label class="checkbox_label"><input id="objective-hide-tasks" type="checkbox">Hide Tasks</label>
+        </div> -->
+
+        <!-- <div id="objective-parent" class="objective_block flex-container">
+            <i class="objective-task-button fa-solid fa-circle-left fa-2x" title="Go to Parent"></i>
+            <small>Go to parent task</small>
+        </div> -->
+
+        <!-- Progress bar will be inserted here by JavaScript -->
+
+        <!-- Filter and sort controls will be inserted here by JavaScript -->
+
+        <div id="muhPanel_tasks" class="flex-container gap10px m-t-1 m-b-1 ">
+            <div id="muhPanel_tasksList" class="flex-container gap10px m-t-1 m-b-1 "></div>
+        </div>
+    </div>
+</div>

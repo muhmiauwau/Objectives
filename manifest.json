@@ -1,0 +1,12 @@
+{
+    "display_name": "Objectives",
+    "loading_order": 5,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "muhmiauwau",
+    "version": "1.0.0",
+    "homePage": "https://github.com/muhmiauwau/Objectives",
+    "auto_update": true
+}

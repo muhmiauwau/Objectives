@@ -1,0 +1,13 @@
+<div id="{{task.id}}" class="flex-container wide100p">
+    <div class="flex1 checkbox_label alignItemsCenter">
+        <input type="checkbox" data-id="completed"  style="order: 2" {{#if task.completed}}checked{{/if}}>
+        <textarea id="textarea" data-id="task" class="" resize="false" style="order: 2; resize: none;"">{{task.description}}</textarea>
+        {{#each buttons}}
+            <button class="" data-id="{{id}}" title="{{id}} Task" style="order: {{@index}}"">
+                <i class="fa-solid fa-{{icon}} fa-fw fa-lg"></i> 
+            </button>
+        {{/each}}
+        <input type="number" class="text_pole textarea_compact" data-id="duration" value="" style="order: 99; width: 50px;" >
+        <div data-id="roundsInProgress" style="order: 199" >{{task.roundsInProgress}}</div>
+    </div>
+</div>

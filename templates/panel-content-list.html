@@ -1,0 +1,25 @@
+
+
+<div class="muhPanel-viewHeadline">
+    <div>{{viewHeadline}}</div>
+</div>
+
+
+<div class="muhPanel-contentScroll">
+    {{#each persons}}
+        <button class="muhPanel-personHead " data-name="{{name}}" type="button">
+            <div class="avatar">
+                <img src="{{avatar}}">
+            </div>
+            <div class="muhPanel-personHead-content">
+                <div class="muhPanel-personHead-name">{{name}}</div>
+            </div>
+            <div>
+                {{#if isUser}}
+                    <i class="fa-solid fa-user"></i>
+                {{/if}}
+            </div>
+
+        </button>
+    {{/each}}
+</div>

@@ -1,0 +1,30 @@
+<div class="muhPanel drawer-content fillLeft {{#if muhPanelPin}}open{{/if}}">
+    <h3 class="muhPanel-headline flex1 flex-container alignItemsCenter gap5px m-b-1">
+        <div class="muhPanel-pin" title="Locked = {{headline}} panel will stay open" data-i18n="[title]{{headline}} panel will stay open">
+            <input id="muhPanel_pin" type="checkbox" {{#if muhPanelPin}}checked{{/if}}>
+            <label for="muhPanel_pin">
+                <div class="unchecked fa-solid fa-unlock right_menu_button"></div>
+                <div class="checked fa-solid fa-lock right_menu_button"></div>
+            </label>
+        </div>
+        <div>{{headline}} </div>
+        <div class="inline-drawer-maximize" style="margin-left: auto;">
+            <i class="floating_panel_maximize fa-fw fa-solid fa-window-maximize"></i>
+        </div>
+        <div class="fa-fw fa-solid fa-circle-xmark floating_panel_close"></div>
+    </h3>
+
+    
+
+
+    <!-- <span id="span-test">{{test}}</span>
+    <button id="btn-addBlock" class="muhPanel-test" type="button">
+        {{testLabel}}
+    </button> -->
+
+
+
+    <div class="muhPanel-content"></div>
+
+
+</div>

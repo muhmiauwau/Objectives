@@ -1,0 +1,100 @@
+.muhPanel{
+   
+}
+.muhPanel.open{
+    display: block; 
+}
+
+
+.muhPanel button:not(.menu_button ){
+   background: none;
+   color: inherit;
+   border: none;
+   padding: 0;
+   font: inherit;
+   cursor: pointer;
+   outline: inherit;
+   text-align: inherit;
+   display: block;
+}
+
+.muhPanel-headline{
+    align-items: center;
+}
+
+.muhPanel-headline > *{
+    display: block;
+}
+
+.muhPanel-pin input,
+.muhPanel-pin .checked,
+.muhPanel-pin .unchecked{
+    display: none;
+}
+
+#muhPanel_pin:not(:checked)+label .unchecked{
+    display: inline;
+}
+
+#muhPanel_pin:checked+label .checked{
+    display: inline;
+}
+
+
+
+
+.muhPanel button.muhPanel-personHead{
+    display: flex;
+    width: 100%;
+    gap: 1em;
+    padding: .5em;
+    border-radius: 10px;
+    
+
+}
+
+button.muhPanel-personHead:hover{    
+    background-color: var(--white30a);
+}
+
+.muhPanel-personHead-content{
+    display: flex;
+    flex-direction: row;
+    min-height: 50px;
+    flex: 1 1 auto;
+    width: 100%;
+}
+
+.muhPanel-personHead-name{
+    font-weight: bold;
+    margin-bottom: auto;
+}
+
+
+
+.muhPanel-contentScroll{
+    overflow: hidden;
+    overflow-y: auto;
+    max-height: calc(100vh - 148px)
+}
+
+.muhPanel-viewHeadline{
+    display: flex;
+    gap: 1em;
+    /* padding: .5em 0; */
+    align-items: baseline;
+     font-size: 1.17em;
+     margin-bottom: 10px;
+     padding-left: 3px;
+}
+
+.muhPanel-viewHeadline button{
+}
+
+.muhPanel button[data-id="drag"]{
+    pointer-events: none;
+}
+
+.muhPanel  .ui-sortable-placeholder{
+    height: 50px;
+}

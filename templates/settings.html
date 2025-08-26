@@ -1,0 +1,41 @@
+<div id="{{id}}" class="expression_settings">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <b data-i18n="{{title}}">{{title}}</b>
+            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        </div>
+
+        <div class="inline-drawer-content">
+
+
+            <div class="flex-container m-b-1">
+                {{#each sliders}}
+                    <div id="{{id}}" class="alignitemscenter flex-container flexFlowColumn flexBasis48p flexGrow flexShrink gap0">
+                        <label>{{label}}</label>
+                        <input class="neo-range-slider" value="{{value}}" type="range" min="{{min}}" max="{{max}}" step="1">
+                        <input class="neo-range-input" value="{{value}}" type="number" min="{{min}}" max="{{max}}" step="1">
+                        <small><span data-bind='{{id}}:value'>{{value}}</span> {{desc}}</small>
+                    </div>
+                {{/each}}
+            </div>
+
+            <!-- Task management buttons -->
+            <div class="flex-container flexWrap justifyContentSpaceAround">
+                 {{#each btnRow1}}
+                    <div id="{{id}}" class="menu_button menu_button_icon interactable" >
+                        <i class="fa-solid fa-{{icon}}"></i> {{label}}
+                    </div>
+                {{/each}}
+            </div>
+
+            <!-- Export/Import and Statistics buttons -->
+            <div class="flex-container flexWrap justifyContentSpaceAround">
+                {{#each btnRow2}}
+                    <div id="{{id}}" class="menu_button menu_button_icon interactable" >
+                        <i class="fa-solid fa-{{icon}}"></i> {{label}}
+                    </div>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+</div>

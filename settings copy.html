@@ -1,0 +1,117 @@
+<div id="objective_contents" class="objective-settings">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <div class="flex-container alignitemscenter margin0">
+                <b data-i18n="ext_obj_title">SuperObjective</b>
+                <i id="objectiveExtensionPopoutButton" class="fa-solid fa-window-restore menu_button margin0"></i>
+            </div>
+            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        </div>
+        <div class="inline-drawer-content">
+            <div id="objectiveExtensionDrawerContents">
+                <div id="objectiveExtensionPersonDropdown"> </div>
+                <div id="objectiveExtensionPersonContents" style="display:none; padding:10px; opacity:0.9;">
+                </div>
+
+                <!-- Message shown when no chat is active -->
+                <div id="objective-no-chat-message">
+                    No active chat. Please select a chat so tasks can be created for this person.
+                </div>
+
+                <!-- superobjective-style settings toggle button (superobjectiveSettingsBlockToggle) -->
+                <div class="superobjective_contents_controls">
+                    <div id="superobjectiveSettingsBlockToggle" class="menu_button menu_button_icon" title="Edit settings">
+                        <i class="fa-solid fa-cog"></i>
+                        <span>Settings</span>
+                    </div>
+                </div>
+
+                <!-- Advanced settings hidden by default; toggled by superobjectiveSettingsBlockToggle -->
+                <div id="superobjectiveSettingsBlock" style="display: none;">
+                <div class="objective_block marginBottom10">
+                    <div class="objective_block objective_block_control flex1 flexFlowColumn">
+                        <label for="objective-chat-depth">Position in Chat</label>
+                        <input id="objective-chat-depth" class="text_pole widthUnset" type="number" min="0" max="99" />
+                    </div>
+                    <br>
+                    <div class="objective_block objective_block_control flex1">
+                        <label for="objective-check-frequency">Task Check Frequency</label>
+                        <input id="objective-check-frequency" class="text_pole widthUnset" type="number" min="0"
+                            max="99" />
+                        <small>(0 = disabled)</small>
+                    </div>
+                </div>
+
+
+                <div class="objective_block_control flex-container alignitemscenter marginBottom10">
+                    <label class="checkbox_label"><input id="objective-swipes-decrement" type="checkbox">Count swipes
+                        toward task check frequency</label>
+                </div>
+
+                <span> Messages until next AI task completion check <span id="objective-counter">0</span></span>
+
+                <div class="objective_block objective_block_control flex1 marginBottom10">
+                    <label for="objective-injection-frequency">Task Injection Frequency</label>
+                    <input id="objective-injection-frequency" class="text_pole widthUnset" type="number" min="1"
+                        max="99" value="1" />
+                    <small>(messages between task injections)</small>
+                </div>
+
+                <div class="objective_block objective_block_control flex1 marginBottom10">
+                    <label for="objective-prompt-role">Task Prompt Role</label>
+                    <select id="objective-prompt-role" class="text_pole">
+                        <option value="assistant">Assistant</option>
+                        <option value="user">User</option>
+                        <option value="system">System</option>
+                    </select>
+                    <small>(how tasks are injected into the context)</small>
+                </div>
+
+                <!-- Recently completed tasks settings -->
+                <div class="objective_block marginTop10">
+                    <div class="objective_block_control flex-container alignitemscenter">
+                        <label class="checkbox_label"><input id="objective-show-completed" type="checkbox">Include
+                            completed tasks in prompt</label>
+                    </div>
+                    <div class="objective_block_control flex-container alignitemscenter">
+                        <label for="objective-completed-count">Number of completed tasks to include:</label>
+                        <input id="objective-completed-count" class="text_pole widthUnset" type="number" min="1"
+                            max="10" value="3" />
+                        <input id="objective-view-completed" class="menu_button" type="button" value="View Tasks" />
+                        <input id="objective-purge-completed" class="menu_button" type="button" value="Purge Tasks" />
+                    </div>
+                </div>
+
+                <!-- Upcoming tasks settings -->
+                <div class="objective_block marginTop10">
+                    <div class="objective_block_control flex-container alignitemscenter">
+                        <label class="checkbox_label"><input id="objective-show-upcoming" type="checkbox">Include
+                            upcoming tasks in prompt</label>
+                    </div>
+                    <div class="objective_block_control flex-container alignitemscenter">
+                        <label for="objective-upcoming-count">Number of upcoming tasks to include:</label>
+                        <input id="objective-upcoming-count" class="text_pole widthUnset" type="number" min="1" max="10"
+                            value="3" />
+                        <input id="objective-view-upcoming" class="menu_button" type="button" value="View Tasks" />
+                        <input id="objective-purge-upcoming" class="menu_button" type="button" value="Purge Tasks" />
+                    </div>
+                </div>
+
+                <!-- Task management buttons -->
+                <div class="objective_block flex-container flexWrap">
+                    <input id="objective_prompt_edit" class="menu_button" type="submit" value="Manage Prompts" />
+                    <input id="objective_templates" class="menu_button" type="submit" value="Manage Templates" />
+                </div>
+
+                <!-- Export/Import and Statistics buttons -->
+                <div class="objective_block flex-container flexWrap marginTop10">
+                    <input id="objective_export" class="menu_button" type="submit" value="Export Tasks" />
+                    <input id="objective_import" class="menu_button" type="submit" value="Import Tasks" />
+                    <input id="objective_statistics" class="menu_button" type="submit" value="Statistics" />
+                </div>
+
+                </div> <!-- #objective-advanced-settings -->
+            </div>
+        </div>
+    </div>
+</div>
