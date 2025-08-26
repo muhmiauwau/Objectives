@@ -40,8 +40,13 @@
 
         <!-- Filter and sort controls will be inserted here by JavaScript -->
 
-        <div id="muhPanel_tasks" class="flex-container gap10px m-t-1 m-b-1 ">
+        <div id="muhPanel_tasks" class="flex-container gap10px m-t-1 m-b-1 " style="flex-direction: row;">
             <div id="muhPanel_tasksList" class="flex-container gap10px m-t-1 m-b-1 "></div>
+            <div class="flex-container m-t-1">
+                <button data-id="empty_add" class="menu_button menu_button_icon interactable" style="display: none;" >
+                    <i class="fa-solid fa-add"></i> Add Task
+                </button>
+            </div>
         </div>
     </div>
 </div>

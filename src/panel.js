@@ -227,7 +227,6 @@ async function detailView(personsSelected){
     $('.muhPanel-content').html($panelContent);
 //    deMuh("muhPanel_aiPromptbtns_AutoGenerateTasks", $panelContent)
     $panelContent.my(myConfig, myData);
-
     renderTasks(personsSelected)
 }
 
@@ -248,9 +247,8 @@ async function renderTasks(personsSelected){
 
 
 const existingTasks = taskManager.getTasks();
-
-
-    // const $tasks = $('#muhPanel_tasks')//.clone()
+ 
+   
     const taskHtml = await renderExtensionTemplateAsync(global_const.TEMPLATE_PATH, 'task-item', {
         // task,
         buttons: [
@@ -265,41 +263,59 @@ const existingTasks = taskManager.getTasks();
             {
                 id: "add",
                 icon: "plus",
-            },
-            {
-                id: "branch",
-                icon: "code-fork",
             }
         ]
     })
-    // $('#muhPanel_tasksList').append(taskHtml)
 
     const myConfig = {
         data: {
             bla: "muh", 
             tasks: existingTasks
-            
         },
         ui:{
             '#test':'bla',
             "#muhPanel_tasksList":{
                 bind:"tasks",
-                manifest:"task",
-                list:'>div',
-                init: function ($control) {
-                    // $control.sortable({ handle: ".fi-list" });
-                }
+                manifest:"Task",
+                list:'> div',
+                init: function ($form, form) {
+                    if(form.data.tasks.length == 0){
+                        $("#muhPanel_tasks").find('[data-id="empty_add"]').show()
+                    }
+
+                    $('#muhPanel_tasks').sortable({
+                        items: '.my-form ',
+                        // handle: 'button[data-id="drag"]',
+                        placeholder: 'ui-sortable-placeholder',
+                        opacity: 0.7,
+                        cursor: 'grabbing',
+                        axis: 'y', 
+                        tolerance: 'pointer',
+                        update: function (event, ui) {
+                            deMuh("update")
+                        }
+                    })
+                },
             },
+
+            '[data-id="empty_add"]':{
+                bind: function(task, value, $element){ 
+                    if (value == null) return; 
+                    deMuh("add", this.my.root())  
+                    const data = taskManager.addTask("")
+                    this.my.insert("#muhPanel_tasksList", data)
+                    $element.hide()
+                   
+                },
+                events:'click.my'
+            }
         },
-        
-        task:{
-           
-            // data: { description:"", duration:"5", roundsInProgress: "0" },
+
+        Task:{
             init: function ($form){
                 $form.html(taskHtml);
             },
             ui:{
-                // '#textarea': "task",
                 '[data-id="roundsInProgress"]':'roundsInProgress',
                 '[data-id="task"]':'description',
                 '[data-id="duration"]':{
@@ -309,10 +325,15 @@ const existingTasks = taskManager.getTasks();
                     
                 },  
                 '[data-id="delete"]':{
-                    bind: function (task, value){ 
+                    bind: function (task, value, $element){ 
                         if (value == null) return; 
                         if(taskManager.deleteTask(task.id)){
-                                this.my.remove();
+                            console.log(this.my.parent().data.tasks, this.my.parent().data.tasks.length);
+                            
+                            if(this.my.parent().data.tasks.length <= 1){
+                                $("#muhPanel_tasks").find('[data-id="empty_add"]').show()
+                            } 
+                            this.my.remove();
                         }
                     },
                     events:'click.my'
@@ -321,21 +342,13 @@ const existingTasks = taskManager.getTasks();
                     bind: function(task, value, $element) { 
                         if (value == null) return; 
                         const data = taskManager.addTask("", 5)
-                        // this.my.insert()
-                        // this.my.insert("#muhPanel_tasksList", null,data)
-                        $element.my("insert", "after", data);
-                        console.log("sortable", data)
-
-                        // taskManager.addTask("test task")
-                        // return ""
+                        this.my.insert("#muhPanel_tasksList",  data)
                     },
                     events:'click.my'
                 },
                 '[data-id="task"]':{
                     bind: function(task, value, $element) { 
-                      
                         if (value == null) return task.description; 
-                        // const $element = this
                         $element.css("height","auto")
                         const newHeight = Math.min($element.prop('scrollHeight'), 100);
                         $element.css("height", newHeight + 'px')
@@ -345,10 +358,6 @@ const existingTasks = taskManager.getTasks();
                         })
 
                         task.description = value
-
-
-                          console.log("sortable", this.container())
-
                         return task.description
                     },
                     events:'keyup.my',
@@ -359,29 +368,7 @@ const existingTasks = taskManager.getTasks();
   
     }
      
-    // $('#muhPanel_tasks').replaceWith($tasks)
      $('#muhPanel_tasks').my(myConfig);
-
-    // if ($.fn.sortable) {
-
-    //     setTimeout(() =>{
-    //         deMuh("sortable")
-    //         $('#muhPanel_tasks').sortable({
-    //             items: '.my-form ',
-    //             // handle: 'button[data-id="drag"]',
-    //             placeholder: 'ui-sortable-placeholder',
-    //             opacity: 0.7,
-    //             cursor: 'grabbing',
-    //             axis: 'y', 
-    //             tolerance: 'pointer',
-    //             update: function (event, ui) {
-    //                 deMuh("update")
-    //             }
-    //         })
-
-    //     },1000)
-         
-    // }
 
 }
 
