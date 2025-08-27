@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef,  Component, signal, inject } from '@angular/core';
-import { chatMetadata, chat,powerUserSettings, eventSource, eventTypes} from 'data/SillyTavern';
+import ST from 'data/SillyTavern';
 
 import { UtilsService } from 'services/utils.service';
 
@@ -14,23 +14,33 @@ export class PanelList {
   private cdr = inject(ChangeDetectorRef);
 
   viewHeadline = "List";
-  protected readonly persons = signal(this.utilsServie.getPersonsOfcurrentChat());
+  personsSignal = signal<any[]>(this.utilsServie.getPersonsOfcurrentChat());
 
   constructor(){
-      // console.log("angular ui", chatMetadata,this.store.get("test"))
-      // this.store.set("test", "test22")
-      console.log("dddd", chatMetadata);
-      eventSource.on(eventTypes.CHAT_CHANGED, (e:any,b :any) => {
-          // store.setUI("personsSelected", "")
-          // setPanelContent()
-  
-          console.log("dddd", chat , e,b, this.utilsServie.getPersonsOfcurrentChat());
-          // this.persons.set(this.utilsServie.getPersonsOfcurrentChat())
-          console.log("ddddd", powerUserSettings.personas[chatMetadata.persona])
-          this.cdr.detectChanges();
-          
-      })
-  
-  
-    }
+
+    // setTimeout(() =>{
+    //     this.persons.set([]);
+
+    //       console.log("dddd newPersons", this.persons());
+    //   },1000)
+
+
+    // console.log("dddd", ST().chatMetadata);
+    ST().eventSource.on(ST().eventTypes.CHAT_CHANGED,  (e:any, b:any)=>{
+      console.log("dddd chat_id_hash", ST().chatMetadata?.chat_id_hash);
+    
+      // if ((ST().chatMetadata?.chat_id_hash === 0)) return [];
+      console.log("dddd chat_id_hash OK");
+        const newPersons =  this.utilsServie.getPersonsOfcurrentChat()
+        this.personsSignal.set([...newPersons]);
+        // //
+        console.log("dddd newPersons",newPersons, this.personsSignal());
+        this.cdr.detectChanges();
+        return
+    });
+  }
+
+  hasActiveChat(){
+    return !!(ST().chatMetadata?.chat_id_hash !== 0);
+  }
 }

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal } from '@angular/core';
 import { StoreService } from '../services/store.service';
 import { global_const } from 'data/base';
-import { chatMetadata, eventSource, eventTypes} from 'data/SillyTavern';
+import ST from 'data/SillyTavern';
 
 import { PanelList } from 'panel/list/list';
 
@@ -12,32 +12,24 @@ import { PanelList } from 'panel/list/list';
   imports: [PanelList],
   templateUrl: './panel.html',
   styleUrl: './panel.less',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  // changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Panel {
   private store = inject(StoreService);
-  private cdr = inject(ChangeDetectorRef);
+  // private cdr = inject(ChangeDetectorRef);
   headline = global_const.MODULE_NAME;
 
+  title = signal('objectives');
+  hasActiveChat = signal(!!(ST().chatMetadata?.chat_id_hash !== 0));
+
   constructor(){
-    console.log("angular ui", chatMetadata,this.store.get("test"))
-    // this.store.set("test", "test22")
-    eventSource.on(eventTypes.CHAT_CHANGED, () => {
-        // store.setUI("personsSelected", "")
-        // setPanelContent()
 
-        console.log("dddd", chatMetadata?.chat_id_hash);
-        this.cdr.detectChanges();
-        
-    })
-
-
+    ST().eventSource.on(ST().eventTypes.CHAT_CHANGED, () => {
+      const state = !!(ST().chatMetadata?.chat_id_hash !== 0)
+      this.hasActiveChat.set(state)
+    });
   }
 
-
-  hasActiveChat(){
-    return !!(chatMetadata?.chat_id_hash !== 0)
-  }
 
 
 

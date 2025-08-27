@@ -10,6 +10,8 @@ import ST from 'data/SillyTavern';
 })
 export class UtilsService {
     getPersonsOfcurrentChat(){   
+
+        if ((ST().chatMetadata?.chat_id_hash === 0)) return [];
         let chars = [];
 
         if(ST().groupId){
@@ -23,15 +25,17 @@ export class UtilsService {
                 }
             });
             chars = participants;
-        } else if(ST().characterId.data){
+        } else if(ST().characterId){
             chars.push({
-                name: ST().characters[ST().characterId.data].name,
-                avatar: ST().getThumbnailUrl("avatar", ST().characters[ST().characterId.data].avatar),
+                name: ST().characters[ST().characterId].name,
+                avatar: ST().getThumbnailUrl("avatar", ST().characters[ST().characterId].avatar),
                 isUser: false
             });
         }
 
-        console.log("ddddd characterId.data", ST().characterId.data);
+         console.log("dddd", ST().chatMetadata);
+
+        console.log("ddddd characterId", ST().characterId);
         const personasInChat = _.uniq([...ST().chat].filter(msg => (msg.is_user == true)).map(entry => entry.name));
         personasInChat.push(ST().powerUserSettings.personas[ST().chatMetadata.persona]);
 

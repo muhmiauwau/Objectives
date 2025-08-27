@@ -21,8 +21,8 @@ createApplication({
     // Custom Elements registrieren
     customElements.define('objectives-panel', panelElement);
     customElements.define('objectives-settings', settingsElement);
-
-    console.log('✅ Custom Elements registered: objectives-panel, objectives-settings');
+// @ts-ignore
+    console.log('✅ Custom Elements registered: objectives-panel, objectives-settings -' ,window.$);;
   } catch (error) {
     console.error('❌ Failed to create custom elements:', error);
   }

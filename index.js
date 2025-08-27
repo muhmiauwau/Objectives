@@ -2,33 +2,18 @@
 import { init } from './src/init.js';
 
 
-let originalJQuery = null;
-let original$ = null;
 
 
 function loadAngular(){
      console.log('loadAngular');
     $('#movingDivs').append('<objectives-panel class="fillLeft muhPanel drawer-content  open"></objectives-panel>');
-    console.log('objectives-panel eingefügt');
-
     const script = document.createElement('script');
     script.src = 'scripts/extensions/third-party/Objectives/ui/dist/ui/browser/main.js';
-    script.onload = () => {
-        window.jQuery = originalJQuery;
-        window.$ = originalJQuery;
-        console.log('jQuery wiederhergestellt:', typeof window.$);
-    };
     document.head.appendChild(script);
-
-
 }
 
 
 jQuery(() => {
-    // jQuery SICHERN bevor Angular es überschreibt
-
-    originalJQuery = window.jQuery;
-    original$ = $;
 
 
      let bla = setInterval(() => { 

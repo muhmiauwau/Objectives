@@ -14,10 +14,8 @@
     <div class="fa-fw fa-solid fa-circle-xmark floating_panel_close"></div>
 </h3>
 
-<panel-list></panel-list>
-
 <div class="muhPanel-content">
-    @if (!hasActiveChat()) {
-        <div class="chat-hint">Kein aktiver Chat gefunden. Bitte wähle einen Chat aus.</div>
+    @if (hasActiveChat()) {
+        <panel-list></panel-list>
     }
 </div>

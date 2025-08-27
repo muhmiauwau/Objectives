@@ -3,7 +3,7 @@ import * as _ from 'lodash-es';
 
 
 import { global_const } from 'data/base';
-import { chatMetadata, saveMetadata, saveSettingsDebounced, extensionSettings } from 'data/SillyTavern';
+import ST from 'data/SillyTavern';
 
 
 // const { lodash} = SillyTavern.libs;
@@ -37,45 +37,45 @@ const DEFAULT_UI = {
 export class StoreService {
   
   get(key: string): any {
-    if (!chatMetadata[global_const.STORAGE_KEY]) {
-      chatMetadata[global_const.STORAGE_KEY] = { ...DEFAULT_SETTINGS };
+    if (!ST().chatMetadata[global_const.STORAGE_KEY]) {
+      ST().chatMetadata[global_const.STORAGE_KEY] = { ...DEFAULT_SETTINGS };
     }
-    return _.get(chatMetadata[global_const.STORAGE_KEY], key);
+    return _.get(ST().chatMetadata[global_const.STORAGE_KEY], key);
   }
-  
+
   set(key: string, value: any): void {
-    if (!chatMetadata[global_const.STORAGE_KEY]) {
-      chatMetadata[global_const.STORAGE_KEY] = { ...DEFAULT_SETTINGS };
+    if (!ST().chatMetadata[global_const.STORAGE_KEY]) {
+      ST().chatMetadata[global_const.STORAGE_KEY] = { ...DEFAULT_SETTINGS };
     }
-    _.set(chatMetadata[global_const.STORAGE_KEY], key, value);
+    _.set(ST().chatMetadata[global_const.STORAGE_KEY], key, value);
     console.log("##dd## set", this.get(key));
-    saveMetadata();
+    ST().saveMetadata();
   }
-  
+
   getUI(key: string): any {
     const ui = JSON.parse(localStorage.getItem(global_const.LOCALSTORAGE_KEY) || '{}');
     return ui[key] ?? (DEFAULT_UI as any)[key];
   }
-  
+
   setUI(key: string, value: any): void {
     const ui = JSON.parse(localStorage.getItem(global_const.LOCALSTORAGE_KEY) || '{}');
     ui[key] = value;
     localStorage.setItem(global_const.LOCALSTORAGE_KEY, JSON.stringify(ui));
   }
-  
+
   getExt(key: string): any {
-    if (!extensionSettings[global_const.MODULE_NAME]) {
-      extensionSettings[global_const.MODULE_NAME] = {};
+    if (!ST().extensionSettings[global_const.MODULE_NAME]) {
+      ST().extensionSettings[global_const.MODULE_NAME] = {};
     }
-    return extensionSettings[global_const.MODULE_NAME][key];
+    return ST().extensionSettings[global_const.MODULE_NAME][key];
   }
-  
+
   setExt(key: string, value: any): void {
-    if (!extensionSettings[global_const.MODULE_NAME]) {
-      extensionSettings[global_const.MODULE_NAME] = {};
+    if (!ST().extensionSettings[global_const.MODULE_NAME]) {
+      ST().extensionSettings[global_const.MODULE_NAME] = {};
     }
-    extensionSettings[global_const.MODULE_NAME][key] = value;
-    saveSettingsDebounced();
+    ST().extensionSettings[global_const.MODULE_NAME][key] = value;
+    ST().saveSettingsDebounced();
   }
 
 }

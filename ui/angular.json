@@ -47,7 +47,7 @@
               "outputHashing": "all"
             },
             "elements": {
-              "optimization": true,
+              "optimization": false,
               "outputHashing": "none",
               "browser": "src/main.elements.ts",
               "polyfills": [],
