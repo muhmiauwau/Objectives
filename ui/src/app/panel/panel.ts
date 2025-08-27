@@ -10,11 +10,13 @@ import { StoreService } from '../services/store.service';
 })
 export class Panel {
     private store = inject(StoreService);
-    headline = "lala";
+    headline = "lalas ";
     
     constructor(){
 
-        // console.log("angular ui", this.store.get("tasks"))
+        console.log("angular ui", this.store.get("test"))
+
+        // this.store.set("test", "test1")
     }
 
 }

@@ -1,4 +1,5 @@
-import { EventEmitter } from '/lib/eventemitter.js';
+import { EventEmitter } from '@angular/core';
+
 
 // declare const EventEmitter: any;
 
@@ -17,7 +18,7 @@ export const OBJ_EVENT_TYPES = {
 };
 
 // EventEmitter für Objectives Events
-// export const objEventSource = new EventEmitter([OBJ_EVENT_TYPES.APP_READY]);
+export const objEventSource = new EventEmitter<string>();
 
 /**
  * 🐄 Debug Funktion - deMuh

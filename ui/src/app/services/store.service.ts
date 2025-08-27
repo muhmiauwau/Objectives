@@ -1,12 +1,9 @@
 import { Injectable } from '@angular/core';
-import { GLOBAL_CONST } from './base.service';
 import * as _ from 'lodash-es';
-// SillyTavern APIs - diese sind global verfügbar
-// declare const SillyTavern: any;
-// declare const chat_metadata: any;
-// declare const extension_settings: any;
-// declare const saveMetadataDebounced: () => void;
-// declare const saveSettingsDebounced: () => void;
+
+
+import { GLOBAL_CONST } from 'data/base';
+import { chatMetadata, saveMetadata, saveSettingsDebounced, extensionSettings } from 'data/SillyTavern';
 
 
 // const { lodash} = SillyTavern.libs;
@@ -28,6 +25,7 @@ const DEFAULT_UI = {
   isExpanded: false,
   showCompleted: false
 };
+// const {chat_metadata} = window.SillyTavern.getContext() 
 
 /**
  * 🏪 StoreService - Angular Service für SillyTavern Integration
@@ -37,51 +35,49 @@ const DEFAULT_UI = {
   providedIn: 'root'
 })
 export class StoreService {
+  // @ts-ignore
   
-//   get(key: string): any {
-//     if (!chat_metadata[GLOBAL_CONST.STORAGE_KEY]) {
-//       chat_metadata[GLOBAL_CONST.STORAGE_KEY] = { ...DEFAULT_SETTINGS };
-//     }
-//     return _.get(chat_metadata[GLOBAL_CONST.STORAGE_KEY], key);
-//   }
   
-//   set(key: string, value: any): void {
-//     if (!chat_metadata[GLOBAL_CONST.STORAGE_KEY]) {
-//       chat_metadata[GLOBAL_CONST.STORAGE_KEY] = { ...DEFAULT_SETTINGS };
-//     }
-//     _.set(chat_metadata[GLOBAL_CONST.STORAGE_KEY], key, value);
-//     console.log("##dd## set", this.get(key));
-//     saveMetadataDebounced();
-//   }
+  get(key: string): any {
+    if (!chatMetadata[GLOBAL_CONST.STORAGE_KEY]) {
+      chatMetadata[GLOBAL_CONST.STORAGE_KEY] = { ...DEFAULT_SETTINGS };
+    }
+    return _.get(chatMetadata[GLOBAL_CONST.STORAGE_KEY], key);
+  }
   
-//   getUI(key: string): any {
-//     const ui = JSON.parse(localStorage.getItem(GLOBAL_CONST.LOCALSTORAGE_KEY) || '{}');
-//     return ui[key] ?? (DEFAULT_UI as any)[key];
-//   }
+  set(key: string, value: any): void {
+    if (!chatMetadata[GLOBAL_CONST.STORAGE_KEY]) {
+      chatMetadata[GLOBAL_CONST.STORAGE_KEY] = { ...DEFAULT_SETTINGS };
+    }
+    _.set(chatMetadata[GLOBAL_CONST.STORAGE_KEY], key, value);
+    console.log("##dd## set", this.get(key));
+    saveMetadata();
+  }
   
-//   setUI(key: string, value: any): void {
-//     const ui = JSON.parse(localStorage.getItem(GLOBAL_CONST.LOCALSTORAGE_KEY) || '{}');
-//     ui[key] = value;
-//     localStorage.setItem(GLOBAL_CONST.LOCALSTORAGE_KEY, JSON.stringify(ui));
-//   }
+  getUI(key: string): any {
+    const ui = JSON.parse(localStorage.getItem(GLOBAL_CONST.LOCALSTORAGE_KEY) || '{}');
+    return ui[key] ?? (DEFAULT_UI as any)[key];
+  }
   
-//   getExt(key: string): any {
-//     if (!extension_settings[GLOBAL_CONST.MODULE_NAME]) {
-//       extension_settings[GLOBAL_CONST.MODULE_NAME] = {};
-//     }
-//     return extension_settings[GLOBAL_CONST.MODULE_NAME][key];
-//   }
+  setUI(key: string, value: any): void {
+    const ui = JSON.parse(localStorage.getItem(GLOBAL_CONST.LOCALSTORAGE_KEY) || '{}');
+    ui[key] = value;
+    localStorage.setItem(GLOBAL_CONST.LOCALSTORAGE_KEY, JSON.stringify(ui));
+  }
   
-//   setExt(key: string, value: any): void {
-//     if (!extension_settings[GLOBAL_CONST.MODULE_NAME]) {
-//       extension_settings[GLOBAL_CONST.MODULE_NAME] = {};
-//     }
-//     extension_settings[GLOBAL_CONST.MODULE_NAME][key] = value;
-//     saveSettingsDebounced();
-//   }
+  getExt(key: string): any {
+    if (!extensionSettings[GLOBAL_CONST.MODULE_NAME]) {
+      extensionSettings[GLOBAL_CONST.MODULE_NAME] = {};
+    }
+    return extensionSettings[GLOBAL_CONST.MODULE_NAME][key];
+  }
   
-//   reset(): void {
-//     delete chat_metadata[GLOBAL_CONST.STORAGE_KEY];
-//     localStorage.removeItem(GLOBAL_CONST.LOCALSTORAGE_KEY);
-//   }
+  setExt(key: string, value: any): void {
+    if (!extensionSettings[GLOBAL_CONST.MODULE_NAME]) {
+      extensionSettings[GLOBAL_CONST.MODULE_NAME] = {};
+    }
+    extensionSettings[GLOBAL_CONST.MODULE_NAME][key] = value;
+    saveSettingsDebounced();
+  }
+
 }
