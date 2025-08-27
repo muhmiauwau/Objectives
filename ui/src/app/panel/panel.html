@@ -13,9 +13,17 @@
     </div>
     <div class="fa-fw fa-solid fa-circle-xmark floating_panel_close"></div>
 </h3>
-
+sss
 <div class="muhPanel-content">
-    @if (hasActiveChat()) {
-        <panel-list></panel-list>
+    @if (panel.hasActiveChat()) {
+        @if (panel.view() === 'list') {
+            <panel-list></panel-list>
+        } @else if (panel.view() === 'detail') {
+            <panel-detail></panel-detail>
+        }
+    }@else{
+        <div style="text-align: center;">
+            <small >No function without active chat</small>
+        </div>
     }
 </div>

@@ -1,0 +1,67 @@
+
+@if (selectedPerson()) {
+    <div class="muhPanel-viewHeadline">
+        <button class="my-muhPanel-backtoList" tabindex="0">
+            <i class="fa-solid fa-list-ul"></i>
+        </button> 
+        <div>{{selectedPerson().name}}</div>
+    </div>
+
+
+
+    <div class="muhPanel-contentScroll">
+
+        <label for="muhPanel_aiPrompt" class="" style="display: block;margin-bottom: 5px;">
+            <!-- {{aiPrompt.label}} -->
+            <i class="editor_maximize fa-solid fa-maximize interactable" data-for="muhPanel_aiPrompt" title="Expand the editor" data-i18n="[title]Expand the editor" tabindex="0"></i>
+        </label>
+        <textarea id="muhPanel_aiPrompt" type="text" rows="4"></textarea>
+        <!-- <small>{{aiPrompt.desc}}</small>
+        <div class="flex-container gap10px m-t-1  m-b-1" >
+            {{#each aiPromptbtns}}
+                <button id="{{id}}" class="menu_button menu_button_icon interactable" >
+                    <i class="fa-solid fa-{{icon}}"></i> {{label}}
+                </button>
+            {{/each}}
+        </div> -->
+
+        
+
+        <div class="inline-drawer flex-container flexFlowColumn flexNoGap">
+            <div class="inline-drawer-toggle inline-drawer-header  standoutHeader">
+                <div  class="">
+                    Creator's Notes
+                    </div>
+                <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down interactable"></div>
+            </div>
+            <div class="inline-drawer-content">
+                <div></div>
+                <div class="-my-empty-incomplete" >
+                    empty
+                </div>
+            </div>
+        </div>
+    <!-- 
+        <div class="standoutHeader m-t-1">
+            Current Task
+        </div> -->
+        
+        <div id="muhPanel_currentTask_holder"></div>
+
+        
+
+        <div class=" m-t-1  m-b-1" style="font-weight: bold;">
+            Incomplete Tasks
+        </div>
+        <div id="muhPanel_tasks" class="flex-container gap10px  m-b-1" style="flex-direction: row;">
+            <div id="muhPanel_tasksList" class="flex-container gap10px wide100p "></div>
+        </div>
+
+        <div class="flex-container">
+            <button id="muhPanel_addTask" class="menu_button menu_button_icon interactable" >
+                <i class="fa-solid fa-add"></i> Add Task
+            </button>
+        </div>
+    </div>
+
+}

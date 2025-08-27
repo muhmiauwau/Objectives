@@ -7,6 +7,7 @@ import { init } from './src/init.js';
 function loadAngular(){
      console.log('loadAngular');
     $('#movingDivs').append('<objectives-panel class="fillLeft muhPanel drawer-content  open"></objectives-panel>');
+    $('#extensions_settings').append('<objectives-settings class="expression_settings"></objectives-settings>');
     const script = document.createElement('script');
     script.src = 'scripts/extensions/third-party/Objectives/ui/dist/ui/browser/main.js';
     document.head.appendChild(script);
@@ -14,53 +15,24 @@ function loadAngular(){
 
 
 jQuery(() => {
-
+    // $(".recentChat:first-child").click()
+    loadAngular()
 
      let bla = setInterval(() => { 
         if($(".welcomePanel").length > 0){
             clearInterval(bla)
             bla = null;
-            $(".recentChat:first-child").click()
-            loadAngular()
+          $(".recentChat:first-child").click()
         }
     }, 100);
 
-        
-
-    setTimeout(() => {
+     setTimeout(() => {
         if (bla) {
             clearInterval(bla) 
             loadAngular()
         }
     }, 5000)
-
-
-    
-    // console.log('jQuery gesichert:', typeof original$);
-    // $('#movingDivs').append('<objectives-panel></objectives-panel>');
-    //   setTimeout(() => {
-            
-    //         // Script dynamisch laden
-    //         const script = document.createElement('script');
-    //         script.src = 'scripts/extensions/third-party/Objectives/ui/dist/ui/browser/main.js';
-    //         script.onload = () => {
-    //             console.log('Angular geladen - jQuery überschrieben:', typeof window.$);
-                
-    //                 // jQuery WIEDERHERSTELLEN
-    //                 window.jQuery = originalJQuery;
-    //                 window.$ = originalJQuery;
-                    
-                    
-    //                 console.log('jQuery wiederhergestellt:', typeof window.$);
-                    
-    //                 // Jetzt Custom Element einbinden
-    //                 // $('#movingDivs').append('<objectives-panel></objectives-panel>');
-    //                 console.log('objectives-panel eingefügt');
-    //         };
-    //         document.head.appendChild(script);
-
-   
-    //     }, 1200)
+        
 });
 // jQuery(init());
 

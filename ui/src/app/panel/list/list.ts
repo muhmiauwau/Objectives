@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef,  Component, signal, inject } from '@angular/core';
 import ST from 'data/SillyTavern';
-
+import { StoreService } from 'services/store.service';
 import { UtilsService } from 'services/utils.service';
+import { PanelService } from '../../services/panel.service';
 
 @Component({
   selector: 'panel-list',
@@ -12,9 +13,12 @@ import { UtilsService } from 'services/utils.service';
 export class PanelList {
   utilsServie = inject(UtilsService);
   private cdr = inject(ChangeDetectorRef);
+   private store = inject(StoreService);
+  private panel: PanelService = inject(PanelService);
 
   viewHeadline = "List";
-  personsSignal = signal<any[]>(this.utilsServie.getPersonsOfcurrentChat());
+  personsSignal = this.panel.persons;
+  selectedPerson = this.panel.selectedPerson;
 
   constructor(){
 
@@ -25,22 +29,15 @@ export class PanelList {
     //   },1000)
 
 
-    // console.log("dddd", ST().chatMetadata);
-    ST().eventSource.on(ST().eventTypes.CHAT_CHANGED,  (e:any, b:any)=>{
-      console.log("dddd chat_id_hash", ST().chatMetadata?.chat_id_hash);
-    
-      // if ((ST().chatMetadata?.chat_id_hash === 0)) return [];
-      console.log("dddd chat_id_hash OK");
-        const newPersons =  this.utilsServie.getPersonsOfcurrentChat()
-        this.personsSignal.set([...newPersons]);
-        // //
-        console.log("dddd newPersons",newPersons, this.personsSignal());
-        this.cdr.detectChanges();
-        return
-    });
+  // PanelService handles CHAT_CHANGED and list updates
   }
 
   hasActiveChat(){
     return !!(ST().chatMetadata?.chat_id_hash !== 0);
+  }
+
+  openListView(person:any, index:number){
+  console.log('PanelList: open detail', { person, index });
+  this.panel.openDetail(person);
   }
 }
