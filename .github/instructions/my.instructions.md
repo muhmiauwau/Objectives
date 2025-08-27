@@ -59,6 +59,11 @@ https://angular.dev/essentials/signals
 https://angular.dev/essentials/templates
 https://angular.dev/essentials/dependency-injection
 
+
+## SillyTavern 
+wenn du infos zu "base/SillyTavern" suchst suche auch im  SillyTavern code 
+./ui/node_modules/sillytavern/*
+
 ## Best practices & Style guide
 Here are the best practices and the style guide information.
 

@@ -4,7 +4,7 @@ import { EventEmitter } from '@angular/core';
 // declare const EventEmitter: any;
 
 // 🏛️ Globale Konstanten
-export const GLOBAL_CONST = {
+export const global_const = {
   MODULE_NAME: 'Objectives',
   LOCALSTORAGE_KEY: 'Objectives_UI',
   STORAGE_KEY: 'Objectives_Store',

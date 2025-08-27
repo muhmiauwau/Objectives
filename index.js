@@ -8,7 +8,7 @@ let original$ = null;
 
 function loadAngular(){
      console.log('loadAngular');
-    $('#movingDivs').append('<objectives-panel></objectives-panel>');
+    $('#movingDivs').append('<objectives-panel class="fillLeft muhPanel drawer-content  open"></objectives-panel>');
     console.log('objectives-panel eingefügt');
 
     const script = document.createElement('script');
@@ -44,7 +44,7 @@ jQuery(() => {
 
     setTimeout(() => {
         if (bla) {
-            clearInterval(bla)
+            clearInterval(bla) 
             loadAngular()
         }
     }, 5000)

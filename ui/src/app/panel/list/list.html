@@ -1,0 +1,21 @@
+<div class="muhPanel-viewHeadline">
+    <div>{{viewHeadline}}</div>
+</div>
+
+<section class="muhPanel-contentScroll">
+    @for (person of persons(); track person.id) { 
+        <button class="muhPanel-personHead" type="button">
+            <div class="avatar">
+                <img [src]="person.avatar" alt="Avatar">
+            </div>
+            <div class="muhPanel-personHead-content">
+                <div class="muhPanel-personHead-name">{{ person.name }}</div>
+            </div>
+            <div>
+                @if (person.isUser) {
+                    <i class="fa-solid fa-user"></i>
+                }
+            </div>
+        </button>
+    }
+</section>
