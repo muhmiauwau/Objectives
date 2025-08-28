@@ -1,7 +1,8 @@
 import { Component, signal, effect, Signal } from '@angular/core';
 import { global_const } from 'data/base';
 import ST from 'data/SillyTavern';
-const { eventSource, event_types } = ST();
+const { eventSource, event_types, ConnectionManagerRequestService } = ST();
+import * as _ from 'lodash-es';
 
 @Component({
   selector: 'app-settings',
@@ -13,8 +14,13 @@ const { eventSource, event_types } = ST();
 export class Settings {
   title = global_const.MODULE_NAME;
 
-  block: any = signal(new Promise(resolve => {})) 
+  isNarrating: boolean = false
+  // simple promise-controller to delay generation until other code resolves it
+  blockPromise: Promise<void> | null = new Promise<void>((resolve) => { this.blockResolve = resolve; });
+  private blockResolve: any = () => {};
 
+
+  narratorMessage:any = {}
  
 
   getNarratorForId(id:number) {
@@ -23,13 +29,15 @@ export class Settings {
     // ST().chat
   }
 
-  setNarratorForId(id:number, str: string) {
-   
-    const msg:any = ST().chat[id] ;
+  async saveNarratorForId(id:number, str: string) {
+    
+    // this.narratorMessage = {id, mes}
+
+      const orgMsg:any = ST().chat[id] ;
 
 
     const naratorMsg = {
-        ...msg,
+        ...orgMsg,
         name: "Narrator",
         mes: str
     } 
@@ -37,114 +45,55 @@ export class Settings {
     naratorMsg.extra.isSmallSys = true
     // naratorMsg
 
-    ST().chat.push(naratorMsg);
+     await ST().chat.push(naratorMsg);
 
-    ST().saveChat();
-//  console.log('✅ ✅ setNarratorForId', id, str);
+    await ST().saveChat();
 
-    // const is_system = !!(msg?.is_system)
-    console.log('✅ ✅ setNarratorForId', id, str, naratorMsg?.is_system);
+    this.narratorMessage = {id, str,naratorMsg}
+    console.log('✅ ✅ saveNarratorForId', id, str,naratorMsg);
 
-
-      //@ts-ignore
-      jQuery(`#chat .mes[mesid="${id}"]`).attr("mesid", id).after(`
-          <div class="mes smallSysMes" mesid="${id}" ch_name="Narrator" is_user="${naratorMsg?.is_user } " is_system="false" bookmark_link swipeid="0" force_avatar="false" timestamp>
-            <div class="mes_block">
-                <div class="mes_text">
-                    ${str}
-                </div>
-            </div>
-          </div>
-      `);
-
-
-      console.log('✅ ✅ setNarratorForId', str, ST().chat);
-    // ST().chat
-//@ts-ignore
-    $(`#chat > *:last-child`)[0].scrollIntoView(false)
-   
   }
 
-  // renderNarratorForId(id:number, str: any) {
-  //   const text: string = str || this.getNarratorForId(id)
-  //   if(!text) return;
 
-  //   //@ts-ignore
-  //   jQuery(`#chat .mes.narrator[mesid="${id}"]`).remove()
-  //   //@ts-ignore
-  //   jQuery(`#chat .mes[mesid="${id}"]`).before(`
-  //         <div class="mes narrator" mesid="${id}" is_system="true">
-  //         <div class="mes_block">
-  //               <div class="mes_text">
-  //                   ${text}
-  //               </div>
-  //           </div>
-  //         </div>
-  //         `);
-
-  //     //@ts-ignore
-  //   $(`#chat > *:last-child`)[0].scrollIntoView(false)
-
-
-    
-  // }
-
-
-  injectNarrator(id:number, str: any) {
-    
-
-    
+  async setNarratorForId(id1:any) {
+    const {id, str,naratorMsg} = this.narratorMessage
+    if(!id)return;
+    console.log('✅ ✅ setNarratorForId', id, id1);
+    await ST().reloadCurrentChat();
   }
+
+
+
 
 
 
   constructor() {
 
 
-     eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, async(id: number, type: any) => {
-      // if (type == 'inpersonate') return;
-      // console.clear();
-      console.log('✅ ✅ CHARACTER_MESSAGE_RENDERED', id, type);
+     eventSource.on(event_types.USER_MESSAGE_RENDERED, async (id: number, type: any) => {
 
-      // const narratorMsg:string= `${data}: lalalaal jahdksad`
-      // this.setNarratorForId(data, narratorMsg);
+      console.log('✅ ✅ USER_MESSAGE_RENDERED', id, type);
+       await this.setNarratorForId(id)
+      // await ST().reloadCurrentChat();
 
-      this.block.set(new Promise(resolve => {}))
-
-      //  await this.runNarration(id, type)
-
-        console.log('✅ ✅ CHARACTER_MESSAGE_RENDERED', id, type);
+      // _.debounce(()=>{ ST().reloadCurrentChat()} , 200)
 
     });
 
-    // eventSource.on(event_types.USER_MESSAGE_RENDERED, (data: any, type: any) => {
-    //   // if (type == 'inpersonate') return;
-    //   // console.clear();
+    eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, async (data: any, type: any) => {
+      //  _.debounce(()=>{ ST().reloadCurrentChat()} , 200)
+      // await ST().reloadCurrentChat();
+      // if (type == 'inpersonate') return;
+      // console.clear();
       
-    //   console.log('✅ ✅ USER_MESSAGE_RENDERED', data, type);
-    //    const narratorMsg:string= `${data}: lalalaal jahdksad`
-    //   this.setNarratorForId(data, narratorMsg);
-    // });
+      // console.log('✅ ✅ USER_MESSAGE_RENDERED', data, type);
+      //  const narratorMsg:string= `${data}: lalalaal jahdksad`
+      // this.setNarratorForId(data, narratorMsg);
+    });
 
-    // eventSource.on(event_types.MESSAGE_RECEIVED, (data: any, type: any) => {
-    //   // if (type == 'inpersonate') return;
-    //   // console.clear();
-    //   console.log('✅ ✅ MESSAGE_RECEIVED', data, type);
-
-    //   const narratorMsg:string= `${data}: lalalaal jahdksad`
-    //   //@ts-ignore
-    //   // jQuery(`#chat .mes[mesid="${data}"]`).before(`
-    //   //     <div class="mes narrator" mesid="${data}" is_system="true">
-    //   //     <div class="mes_block">
-    //   //           <div class="mes_text">
-    //   //               ${narratorMsg}
-    //   //           </div>
-    //   //       </div>
-    //   //     </div>
-    //   //     `);
-
-    //   this.setNarratorForId(data, narratorMsg);
-    // }); //MESSAGE_SWIPED
+    eventSource.on(event_types.MESSAGE_RECEIVED, async(data: any, type: any) => {
+      // await ST().reloadCurrentChat();
+    }); //MESSAGE_SWIPED
 
 
     // eventSource.on(event_types.MESSAGE_DELETED, (data: any, type: any) => {
@@ -153,42 +102,41 @@ export class Settings {
     
 
 
-    eventSource.on(event_types.CHAT_CHANGED, (data: any, a: any) => {
+    // eventSource.on(event_types.CHAT_CHANGED, (data: any, a: any) => {
 
-      //@ts-ignore
-      const $msgs = jQuery(`#chat .mes`)
-      console.log('✅ ✅ CHAT_CHANGED', $msgs)
+    //   //@ts-ignore
+    //   const $msgs = jQuery(`#chat .mes`)
+    //   console.log('✅ ✅ CHAT_CHANGED', $msgs)
 
-      $msgs.each((key:any,value:any) => {
+    //   $msgs.each((key:any,value:any) => {
         
-        //@ts-ignore
-        const ele = $(value)
-        // if(ele.attr("ch_name") == "Narrator"){
-        //   ele.find(".mesAvatarWrapper,.mes_block .flex-container.flex1.alignitemscenter * ").remove()
-        // }
+    //     //@ts-ignore
+    //     const ele = $(value)
+    //     // if(ele.attr("ch_name") == "Narrator"){
+    //     //   ele.find(".mesAvatarWrapper,.mes_block .flex-container.flex1.alignitemscenter * ").remove()
+    //     // }
 
-      });
-    });
-
-
-
-
-    eventSource.on(event_types.CHAT_COMPLETION_PROMPT_READY, (event: any) =>
-      console.log('✅ Final Prompt', event, event.chat, ST().chat)
-    );
+    //   });
+    // });
 
 
 
-    eventSource.on(event_types.GENERATION_AFTER_COMMANDS, async (type: any,config: any,dryRun: any) =>{
-      if(dryRun)return;
-      console.log('✅ Delaying generation for', 1, 'seconds',this.block(), type, config, dryRun);
-        // await new Promise(resolve => setTimeout(resolve,  5000));
 
-        
-      // await this.block.effect(()=>{})
+    // eventSource.on(event_types.CHAT_COMPLETION_PROMPT_READY, async(event: any) =>{
+    //   if(event.dryRun) return;
+    //   // console.log('✅ Final Prompt', event, event.chat, ST().chat)
+    //   // event.chat = await this.runNarration(event.chat)
+    //   // await this.blockPromise
 
-      // await this.runNarration(type, config)
-      // console.log('[Stepped Thinking] Generation delay complete');
+    //   //  console.log('✅ Final Prompt After promise', event, event.chat, ST().chat)
+    // });
+
+
+
+    eventSource.on(event_types.MESSAGE_SENT, async (data:any) =>{
+      console.log('✅ MESSAGE_SENT', data);
+      // if(dryRun) return;
+       await this.runNarration()
     });
 
 
@@ -209,19 +157,114 @@ export class Settings {
   }
 
 
+  isGenerationTypeAllowed(type:any) {
+    if (ST().groupId) {
+        if (type !== 'normal' && type !== 'group_chat') {
+            return false;
+        }
+    } else {
+        if (type) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 
-  async runNarration(id: number, type: any){
-//@ts-ignore
-    console.log('✅ Delaying generation for', 1, 'seconds', id, type);
+  async runNarration(){
 
-    // //@ts-ignore
-    // // const msgId = jQuery(`#chat .mes:not([ch_name="Narrator"]`).last().attr("mesid")
 
-    //  console.log('✅ Delaying generation for', 1, 'seconds', msgId, type, config, );
+    //@ts-ignore
+    const id = jQuery(`#chat .mes:not([ch_name="Narrator"]`).last().attr("mesid")
 
-    this.setNarratorForId(id, `${id};${type}: lorem ipsum`)
+     console.log('✅ Delaying generation for', 1, 'seconds', id);
 
-    await new Promise(resolve => setTimeout(resolve,  1));
+// const naratingmsg= `${id}: jashdjksadh`
+//              await this.saveNarratorForId(id, naratingmsg)
+//  return
+ 
+
+    const profiles = ConnectionManagerRequestService.getSupportedProfiles();
+    
+        console.log("######### profiles",profiles)
+    
+        // const pro = "objectives narrator api"
+        const pro = "objectives api deepseek"
+        const find = _.find(profiles, (entry)=> (entry.name == pro))
+         console.log("######### find",find)
+
+    // const last = chat.at(-1)
+
+     console.log('✅ Delaying Finisch', 1, 'seconds', id);
+
+     if (find){
+     
+            let msgs = ""
+
+            Object.values(ST().chat).forEach((entry:any) => {
+
+              if(entry.is_system) return;
+              console.log(entry)
+              msgs += `${entry.name}:${entry.mes};`
+              
+            });
+            const prompt = `
+Du bist der Erzähler eines Rollenspiels. Analysiere den bisherigen Verlauf. Greife ein, wenn ein Zeitsprung, Ortswechsel oder eine neue Szene logisch ist – zum Beispiel wenn sich Charaktere verabschieden, weggehen oder eine Handlung endet. Falls kein Eingreifen nötig ist, antworte ausschließlich mit "false".
+
+**Vorgehen:**
+1. Lies den Verlauf.
+2. Entscheide, ob ein Zeitsprung, Ortswechsel oder eine neue Szene sinnvoll ist (z.B. bei Abschied, Ortswechsel, Tageswechsel).
+3. Falls ja, führe die Handlung fort (max. 2-3 Sätze, dritte Person).
+4. Falls nein, antworte nur mit "false".
+
+**Kontext:**
+Verlauf: ${msgs}
+
+`
+
+
+            
+            // console.log("######### prompt",msgs,prompt)
+            const response = await ConnectionManagerRequestService.sendRequest(
+                find.id,
+                prompt,
+                4048,
+                {
+                    stream: false,
+                    raw: true,
+                    signal: null,
+                    extractData: false,
+                    includePreset: false,
+                    includeInstruct: false,
+                },
+                { 
+                    stream: false,
+                    num_ctx: 1, 
+                    options:{
+                        stream: false,
+                        temperature: 0
+                    }
+                }
+            );
+    
+            const res = (response?.choices[0]?.text || response?.choices[0]?.message.content || "").trim().toLowerCase()
+    
+            console.log("######### antwort",profiles, res,  response)
+    
+            // if(res !== "false"){
+              const naratingmsg= `${id}: ${res}`
+              await this.saveNarratorForId(id, naratingmsg)
+            // }
+        }
+
+        // await new Promise(r => setTimeout(r, 10000));
+    // return chat.push({role: last.role, content: naratingmsg})
+    
+    // setTimeout(() => {
+    //   this.blockResolve()
+    // },2000)
+    // this.blockPromise = new Promise<void>((resolve) => { this.blockResolve = resolve; });
+
   }
 }

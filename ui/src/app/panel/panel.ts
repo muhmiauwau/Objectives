@@ -44,7 +44,7 @@ export class Panel {
 
 
     ST().eventSource.on(ST().event_types.GENERATE_AFTER_DATA, (payload:any) => {
-      console.log("✅ GENERATE_AFTER_DATA",this.dryRun,payload.prompt);
+      // console.log("✅ GENERATE_AFTER_DATA",this.dryRun,payload.prompt);
       
     });
   }
