@@ -219,11 +219,7 @@ Füge keine Handlungen, Bewertungen oder Charakterbeschreibungen hinzu. Bleibe r
         atmosphere: {
           hint: 'when the mood/atmosphere should be described',
           example: 'The atmosphere of the scene should be emphasized.',
-        },
-        action: {
-          hint: 'when an action should be described in more detail',
-          example: 'The plot needs more details.',
-        },
+        }
       };
       const themesList = Object.keys(triggerMap)
     .map((key:string) => `  - ${key} (${triggerMap[key].hint})`)
@@ -335,17 +331,40 @@ Füge keine Handlungen, Bewertungen oder Charakterbeschreibungen hinzu. Bleibe r
 
       const analyseResult = await callAPi("init")
       if(analyseResult !== "false"){
-        let naratingmsg = analyseResult;
-        for (const trigger of Object.keys(triggerMap)) {
-          if (analyseResult.includes(trigger)) {
-            naratingmsg = await callAPi(trigger);
-            break; // Nur den ersten gefundenen Trigger behandeln
-          }
+        const raw = analyseResult.replace(/[\[\]]/g, '').trim();
+        const labels = raw.length
+          ? raw.split(',').map((l:any) => l.trim()).filter(Boolean)
+          : [];
+
+        // bekannte Trigger in triggerMap (Reihenfolge = Priorität)
+        const knownTriggers = Object.keys(triggerMap);
+
+        // Filtere Labels auf bekannte Trigger und sortiere nach Priorität (knownTriggers Reihenfolge)
+        const orderedLabels = labels
+          .filter((l:any) => knownTriggers.includes(l))
+          .sort((a:any, b:any) => knownTriggers.indexOf(a) - knownTriggers.indexOf(b));
+
+        let finalNarration = '';
+
+        if (orderedLabels.length > 0) {
+          // Für jedes gefundene Label parallel die spezifischen Prompts abrufen
+          const promises = orderedLabels.map((label:any) => callAPi(label));
+          const results = await Promise.all(promises);
+
+          // Kombiniere die Ergebnisse: jeder Block bekommt ein Label-Präfix
+          const combined = orderedLabels
+            .map((label:any, i:any) => `(${label}) ${results[i]}`)
+            .join('\n\n');
+
+          finalNarration = `(Erzähler)(${orderedLabels.join(',')})\n${combined}`;
+        } else {
+          // Falls die Analyse keinen oder unverständlichen Label-Text geliefert hat,
+          // speichere die Roh-Antwort als Narration (bisherige Verhalten / Fallback)
+          finalNarration = `(Erzähler)(${analyseResult})\n${analyseResult}`;
         }
 
-      
 
-        await this.saveNarratorForId(id, `(Erzähler)(${analyseResult})\n ${naratingmsg}`);
+        await this.saveNarratorForId(id, finalNarration);
       }
     }
   }
