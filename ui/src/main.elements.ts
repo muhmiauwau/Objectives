@@ -22,7 +22,7 @@ createApplication({
     customElements.define('objectives-panel', panelElement);
     customElements.define('objectives-settings', settingsElement);
 // @ts-ignore
-    console.log('✅ Custom Elements registered: objectives-panel, objectives-settings -' ,window.$);;
+    console.log('✅ Custom Elements registered: objectives-panel, objectives-settings');
   } catch (error) {
     console.error('❌ Failed to create custom elements:', error);
   }
