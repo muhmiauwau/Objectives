@@ -192,12 +192,29 @@ export class Settings {
           example: 'The current location was not described.',
         },
         cloths_user: {
-          hint: "when the user's clothing should be described",
-          example: "The user's clothing was not mentioned.",
-        },
+          hint: "Wenn die Kleidung des Users für eine bevorstehende oder aktuelle Handlung relevant ist (z.B. wird berührt, verändert oder entfernt) und noch nicht beschrieben wurde.",
+          example: "Die Kleidung des Users wurde nicht erwähnt.",
+          prompt: `
+Du bist ein neutraler Erzähler. Beschreibe ausschließlich die Kleidung von {{user}}, sofern sie für die aktuelle oder bevorstehende Handlung relevant und bisher nicht beschrieben ist. Falls sich der User an- oder auszieht, liste alle Kleidungsstücke einzeln und sachlich für den Zustand davor und danach auf. Verwende keine Sammelbezeichnungen wie „Rest“ oder „weitere Kleidungsstücke“. Wenn Kleidungsstücke nicht im Chat erwähnt wurden, ergänze sie möglichst präzise und vollständig anhand des Kontexts oder allgemeiner Erwartungen (z.B. Unterwäsche, Hose, Socken, Schuhe). Nutze das folgende Format:
+
+Kleidung des Users (vorher):
+
+- Kleidungsstück 1: kurze detailierte Beschreibung
+- Kleidungsstück 2: kurze detailierte Beschreibung
+...
+
+Kleidung des Users (nachher):
+
+- Kleidungsstück 1: kurze detailierte Beschreibung
+- Kleidungsstück 2: kurze detailierte Beschreibung
+...
+
+Füge keine Handlungen, Bewertungen oder Charakterbeschreibungen hinzu. Bleibe rein sachlich und kontextuell.
+`  },
         cloths_char: {
-          hint: "when a character's clothing should be described",
+          hint: "when a character's clothing is relevant for an imminent action (e.g., being touched, modified, or removed) but has not been described yet",
           example: "The character's clothing is missing.",
+          prompt: `Du bist ein neutraler Erzähler. Prüfe anhand des Chatverlaufs und der letzten Nachricht, ob die Kleidung des char für die aktuelle oder bevorstehende Handlung relevant ist. Falls ja, beschreibe sie kurz und neutral in der dritten Person. Vermeide jegliche Handlungen, Bewertungen oder Beschreibungen von User oder Charakteren. Halte die Beschreibung rein sachlich und kontextuell, ohne auf Gedanken, Gefühle oder Absichten einzugehen.`
         },
         atmosphere: {
           hint: 'when the mood/atmosphere should be described',
@@ -216,10 +233,11 @@ export class Settings {
     .map((key:string) => `  - ${key} (${triggerMap[key].example})`)
     .join('\n');
 
+// console.log(ST().substituteParamsExtended?.("User: {{user}}"))
 
 
       const analysePrompt = `
-        History: [${msgs}]
+        History: [${lastmsg}]
         Last message: [${lastmsg}]
 
         You are an experienced conversation analyst.
@@ -231,16 +249,21 @@ export class Settings {
         Possible topics (use only these exact labels):
         ${themesList}
 
-        Response format: [Topic]
+        Response format: [Topic,Topic,...]
         If no intervention is necessary, reply with "false".
+      
 
         Example responses:
         ${themesList}
         - false
 
+        user == "{{user}}" 
+        char == "{{char}}"
+
+
       `;
 
-      console.log('######### analysePrompt', analysePrompt);
+      
 
       
 
@@ -248,19 +271,27 @@ export class Settings {
         //@ts-ignore
         toastr.info(`callAPi: ${mode}`, "objectives");
        
-        let prompt= `Verlauf: [${msgs}]
+        const prefix= `Verlauf: [${msgs}]
         Letzte Nachricht: [${lastmsg}]
         
       `
-
+        let prompt =""
+     
        if(Object.keys(triggerMap).includes(mode)){
            prompt += triggerMap[mode].prompt
         }else{
           prompt += analysePrompt
         }
 
+         prompt = ST().substituteParamsExtended(prompt)
+
+
+         console.log('######### callAPi prompt', prompt);
+
+         prompt = `${prefix}\n\n${prompt}`
+
       
-           console.log('######### ',mode, Object.keys(triggerMap), Object.keys(triggerMap).includes(mode));
+          //  console.log('######### ',mode, Object.keys(triggerMap), Object.keys(triggerMap).includes(mode));
 
 
         const response = await ConnectionManagerRequestService.sendRequest(
@@ -278,7 +309,7 @@ export class Settings {
           {
             options: {
               stream: false,
-              temperature: 0,
+              temperature: 0.2,
               max_tokens: 300,
               presence_penalty: 0,
               frequency_penalty: 0,
@@ -305,15 +336,16 @@ export class Settings {
       const analyseResult = await callAPi("init")
       if(analyseResult !== "false"){
         let naratingmsg = analyseResult;
-        if(analyseResult.includes("newscene")){
-          naratingmsg = await callAPi("newscene")
+        for (const trigger of Object.keys(triggerMap)) {
+          if (analyseResult.includes(trigger)) {
+            naratingmsg = await callAPi(trigger);
+            break; // Nur den ersten gefundenen Trigger behandeln
+          }
         }
 
-  //        if (triggerMap[analyseResult] && triggerMap[analyseResult].prompt) {
-  //   naratingmsg = await callAPi(analyseResult);
-  // }
+      
 
-        await this.saveNarratorForId(id, `(Erzähler) ${naratingmsg}`);
+        await this.saveNarratorForId(id, `(Erzähler)(${analyseResult})\n ${naratingmsg}`);
       }
     }
   }
