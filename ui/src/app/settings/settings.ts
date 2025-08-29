@@ -29,18 +29,35 @@ export class Settings {
     // ST().chat
   }
 
+
+
   async saveNarratorForId(id: number, str: string) {
     // this.narratorMessage = {id, mes}
 
     const orgMsg: any = ST().chat[id];
 
+    let tracker = {}
+    if(!orgMsg.is_user){
+      // @ts-ignore
+      // tracker = await window.generateTracker(id)
+     }
+
+    //@ts-ignore
+    window.currentTracker = tracker
+    // const tracker = { ...(orgMsg.tracker || {}) } 
+
+    // const tracker = jsonToYAML(mes.tracker);
+		// 	mes.mes = `<tracker>${tracker}</tracker>\n\n`;
+    orgMsg.tracker = {}
+
     const naratorMsg = {
       ...orgMsg,
       name: 'Narrator',
       mes: str,
+      narratorMsg: {}
     };
     naratorMsg.extra = {};
-    naratorMsg.extra.isSmallSys = true;
+    // naratorMsg.extra.isSmallSys = true;
     naratorMsg.is_user = true;
     // naratorMsg.is_system = true
     // naratorMsg
@@ -61,22 +78,49 @@ export class Settings {
   }
 
   constructor() {
+  
+
+
+    eventSource.on("TRACKER_PREVIEW_UPDATED", async (id: number, type: any) => {
+      console.log('✅ ✅ TRACKER_PREVIEW_UPDATED', id, type, ST().chat.length);
+
+
+
+        //@ts-ignore
+        window.currentTracker = ST().chat.at(-1).tracker
+    });
+  
+    
+
+    // ST().registerMacro('narratorMsg', function(a) {
+    //   console.log()
+    //   //@ts-ignore
+    //   let tracker = window.jsonToYAML(window.currentTracker)
+    //   return `\n\n<Tracker>${tracker}</Tracker>\n\n \n\n  Wichtig:Diese "<Tracker>" Informationen sind nur für deinen context, inkludiere die niemals in deine Antwort`;
+
+    // });
+
+
+    ST().registerMacro('tracker', function() {
+      //@ts-ignore
+      let tracker = window.jsonToYAML(window.currentTracker)
+      return `\n\n<Tracker>${tracker}</Tracker>\n\n \n\n  Wichtig:Diese "<Tracker>" Informationen sind nur für deinen context, inkludiere die niemals in deine Antwort`;
+
+    });
+   
+
     eventSource.on(event_types.USER_MESSAGE_RENDERED, async (id: number, type: any) => {
       console.log('✅ ✅ USER_MESSAGE_RENDERED', id, type);
-      await this.setNarratorForId(id);
-      // await ST().reloadCurrentChat();
 
-      // _.debounce(()=>{ ST().reloadCurrentChat()} , 200)
+
+
+
+      await this.setNarratorForId(id);
     });
 
-    eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, async (data: any, type: any) => {
-      //  _.debounce(()=>{ ST().reloadCurrentChat()} , 200)
-      // await ST().reloadCurrentChat();
-      // if (type == 'inpersonate') return;
-      // console.clear();
-      // console.log('✅ ✅ USER_MESSAGE_RENDERED', data, type);
-      //  const narratorMsg:string= `${data}: lalalaal jahdksad`
-      // this.setNarratorForId(data, narratorMsg);
+    eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, async (id: any, type: any) => {
+      console.log('✅ ✅ CHARACTER_MESSAGE_RENDERED', id, type);
+      await this.setNarratorForId(id);
     });
 
     eventSource.on(event_types.MESSAGE_RECEIVED, async (data: any, type: any) => {
@@ -86,25 +130,34 @@ export class Settings {
     // eventSource.on(event_types.MESSAGE_DELETED, (data: any, type: any) => {
     // }); //MESSAGE_SWIPED
 
-    // eventSource.on(event_types.CHAT_CHANGED, (data: any, a: any) => {
+    eventSource.on(event_types.CHAT_CHANGED, (data: any, a: any) => {
 
-    //   //@ts-ignore
-    //   const $msgs = jQuery(`#chat .mes`)
-    //   console.log('✅ ✅ CHAT_CHANGED', $msgs)
+      const last:any =  _.findLast(Object.values(ST().chat), (entry:any) => {
+        return entry.name == "Narrator"
+      })
 
-    //   $msgs.each((key:any,value:any) => {
+      //@ts-ignore
+      window.currentTracker = {...(last.tracker||{})}
 
-    //     //@ts-ignore
-    //     const ele = $(value)
-    //     // if(ele.attr("ch_name") == "Narrator"){
-    //     //   ele.find(".mesAvatarWrapper,.mes_block .flex-container.flex1.alignitemscenter * ").remove()
-    //     // }
 
-    //   });
-    // });
+
+      // //@ts-ignore
+      // const $msgs = jQuery(`#chat .mes`)
+      // console.log('✅ ✅ CHAT_CHANGED', $msgs)
+
+      // $msgs.each((key:any,value:any) => {
+
+      //   //@ts-ignore
+      //   const ele = $(value)
+      //   // if(ele.attr("ch_name") == "Narrator"){
+      //   //   ele.find(".mesAvatarWrapper,.mes_block .flex-container.flex1.alignitemscenter * ").remove()
+      //   // }
+
+      // });
+    });
 
     eventSource.on(event_types.CHAT_COMPLETION_PROMPT_READY, async (event: any) => {
-      if (event.dryRun) return;
+      // if (event.dryRun) return;
       console.log('✅ Final Prompt', event, event.chat, ST().chat);
       // event.chat = await this.runNarration(event.chat)
       // await this.blockPromise
@@ -112,8 +165,15 @@ export class Settings {
       //  console.log('✅ Final Prompt After promise', event, event.chat, ST().chat)
     });
 
-    eventSource.on(event_types.MESSAGE_SENT, async (data: any) => {
-      console.log('✅ MESSAGE_SENT', data);
+
+    eventSource.on(event_types.MESSAGE_RECEIVED, async (id: any, type:string) => {
+      console.log('✅ MESSAGE_RECEIVED', id, type);
+      // if(dryRun) return;
+      await this.runNarration();
+    });
+
+    eventSource.on(event_types.MESSAGE_SENT, async (id: any) => {
+      console.log('✅ MESSAGE_SENT', id);
       // if(dryRun) return;
       await this.runNarration();
     });
@@ -145,7 +205,16 @@ export class Settings {
     return true;
   }
 
+
   async runNarration() {
+    //@ts-ignore
+     const id = jQuery(`#chat .mes:not([ch_name="Narrator"]`).last().attr('mesid');
+
+    console.log('✅ runNarration', id);
+     await this.saveNarratorForId(id, "<objectives-narrator-msg></objectives-narrator-msg>");
+  }
+  
+  async runNarration2() {
     //@ts-ignore
     const id = jQuery(`#chat .mes:not([ch_name="Narrator"]`).last().attr('mesid');
 
@@ -153,7 +222,7 @@ export class Settings {
 
     // const naratingmsg= `${id}: jashdjksadh`
     //              await this.saveNarratorForId(id, naratingmsg)
-    //  return
+    // await this.saveNarratorForId(id, "");
 
     const profiles = ConnectionManagerRequestService.getSupportedProfiles();
 
@@ -190,35 +259,39 @@ export class Settings {
         location: {
           hint: 'when the current location should be described',
           example: 'The current location was not described.',
+           prompt: `Du bist ein neutraler Erzähler. Basierend auf dem Chatverlauf und der letzten Nachricht, beschreibe kurz und neutral in der dritten Person die aktuelle location. Vermeide jegliche Handlungen oder Beschreibungen von User oder Charakteren. Halte es rein narrativ und kontextuell.`
+       
         },
-        cloths_user: {
-          hint: "Wenn die Kleidung des Users für eine bevorstehende oder aktuelle Handlung relevant ist (z.B. wird berührt, verändert oder entfernt) und noch nicht beschrieben wurde.",
-          example: "Die Kleidung des Users wurde nicht erwähnt.",
-          prompt: `
-Du bist ein neutraler Erzähler. Beschreibe ausschließlich die Kleidung von {{user}}, sofern sie für die aktuelle oder bevorstehende Handlung relevant und bisher nicht beschrieben ist. Falls sich der User an- oder auszieht, liste alle Kleidungsstücke einzeln und sachlich für den Zustand davor und danach auf. Verwende keine Sammelbezeichnungen wie „Rest“ oder „weitere Kleidungsstücke“. Wenn Kleidungsstücke nicht im Chat erwähnt wurden, ergänze sie möglichst präzise und vollständig anhand des Kontexts oder allgemeiner Erwartungen (z.B. Unterwäsche, Hose, Socken, Schuhe). Nutze das folgende Format:
+//         cloths_user: {
+//           hint: "Wenn die Kleidung des Users für eine bevorstehende oder aktuelle Handlung relevant ist (z.B. wird berührt, verändert oder entfernt) und noch nicht beschrieben wurde.",
+//           example: "Die Kleidung des Users wurde nicht erwähnt.",
+//           prompt: `
+// Du bist ein neutraler Erzähler. Beschreibe ausschließlich die Kleidung von {{user}}, sofern sie für die aktuelle oder bevorstehende Handlung relevant und bisher nicht beschrieben ist. Falls sich der User an- oder auszieht, liste alle Kleidungsstücke einzeln und sachlich für den Zustand davor und danach auf. Verwende keine Sammelbezeichnungen wie „Rest“ oder „weitere Kleidungsstücke“. Wenn Kleidungsstücke nicht im Chat erwähnt wurden, ergänze sie möglichst präzise und vollständig anhand des Kontexts oder allgemeiner Erwartungen (z.B. Unterwäsche, Hose, Socken, Schuhe). Nutze das folgende Format:
 
-Kleidung des Users (vorher):
+// Kleidung des Users (vorher):
 
-- Kleidungsstück 1: kurze detailierte Beschreibung
-- Kleidungsstück 2: kurze detailierte Beschreibung
-...
+// - Kleidungsstück 1: kurze detailierte Beschreibung
+// - Kleidungsstück 2: kurze detailierte Beschreibung
+// ...
 
-Kleidung des Users (nachher):
+// Kleidung des Users (nachher):
 
-- Kleidungsstück 1: kurze detailierte Beschreibung
-- Kleidungsstück 2: kurze detailierte Beschreibung
-...
+// - Kleidungsstück 1: kurze detailierte Beschreibung
+// - Kleidungsstück 2: kurze detailierte Beschreibung
+// ...
 
-Füge keine Handlungen, Bewertungen oder Charakterbeschreibungen hinzu. Bleibe rein sachlich und kontextuell.
-`  },
-        cloths_char: {
-          hint: "when a character's clothing is relevant for an imminent action (e.g., being touched, modified, or removed) but has not been described yet",
-          example: "The character's clothing is missing.",
-          prompt: `Du bist ein neutraler Erzähler. Prüfe anhand des Chatverlaufs und der letzten Nachricht, ob die Kleidung des char für die aktuelle oder bevorstehende Handlung relevant ist. Falls ja, beschreibe sie kurz und neutral in der dritten Person. Vermeide jegliche Handlungen, Bewertungen oder Beschreibungen von User oder Charakteren. Halte die Beschreibung rein sachlich und kontextuell, ohne auf Gedanken, Gefühle oder Absichten einzugehen.`
-        },
+// Füge keine Handlungen, Bewertungen oder Charakterbeschreibungen hinzu. Bleibe rein sachlich und kontextuell.
+// `  },
+//         cloths_char: {
+//           hint: "when a character's clothing is relevant for an imminent action (e.g., being touched, modified, or removed) but has not been described yet",
+//           example: "The character's clothing is missing.",
+//           prompt: `Du bist ein neutraler Erzähler. Prüfe anhand des Chatverlaufs und der letzten Nachricht, ob die Kleidung des char für die aktuelle oder bevorstehende Handlung relevant ist. Falls ja, beschreibe sie kurz und neutral in der dritten Person. Vermeide jegliche Handlungen, Bewertungen oder Beschreibungen von User oder Charakteren. Halte die Beschreibung rein sachlich und kontextuell, ohne auf Gedanken, Gefühle oder Absichten einzugehen.`
+//         },
         atmosphere: {
           hint: 'when the mood/atmosphere should be described',
           example: 'The atmosphere of the scene should be emphasized.',
+          prompt: `Du bist ein neutraler Erzähler. Basierend auf dem Chatverlauf und der letzten Nachricht, beschreibe kurz und neutral in der dritten Person die aktuelle atmosphere. Vermeide jegliche Handlungen oder Beschreibungen von User oder Charakteren. Halte es rein narrativ und kontextuell.`
+       
         }
       };
       const themesList = Object.keys(triggerMap)
