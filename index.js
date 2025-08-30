@@ -1,5 +1,18 @@
 
 import { init } from './src/init.js';
+import { extension_settings } from "/scripts/extensions.js";
+import { log, warn, debug, error, unescapeJsonString } from "./lib/utils.js";
+import { yamlToJSON, jsonToYAML } from "./lib/ymlParser.js";
+
+export const extensionName = "Objectives";
+const extensionNameLong = `Objectives`;
+export const extensionFolderPath = `scripts/extensions/third-party/${extensionNameLong}`;
+export const extensionSettings = extension_settings[extensionName] | {};
+
+window.Objectives = { log, warn, debug, error, unescapeJsonString,  yamlToJSON, jsonToYAML } 
+
+
+
 
 let angularLoaded  = false
 
@@ -9,7 +22,7 @@ function loadAngular(){
     $('#movingDivs').append('<objectives-panel class="fillLeft muhPanel drawer-content  open"></objectives-panel>');
     $('#extensions_settings').append('<objectives-settings class="expression_settings"></objectives-settings>');
     const script = document.createElement('script');
-    script.src = 'scripts/extensions/third-party/Objectives/ui/dist/ui/browser/main.js';
+    script.src = extensionFolderPath + '/ui/dist/ui/browser/main.js';
     document.head.appendChild(script);
     angularLoaded = true
 }
@@ -18,7 +31,7 @@ function loadAngular(){
 jQuery(() => {
     
     // $(".recentChat:first-child").click()
-    // loadAngular()
+    loadAngular()
 
      let bla = setInterval(() => { 
         if($(".welcomePanel").length > 0){
@@ -34,7 +47,29 @@ jQuery(() => {
             // loadAngular()
         }
     }, 5000)
+
+
+
+   
+
         
 });
 // jQuery(init());
 
+
+
+ SillyTavern.getContext().registerMacro('tracker', function() {
+    if(!window.currentTracker)return;
+    const newScene = `Wichtig: ${window.currentTracker.NewScene}`
+    //@ts-ignore
+    let tracker = jsonToYAML(window.currentTracker)
+    return `\n\n<Tracker>${tracker}</Tracker>\n\n \n\n  Wichtig:Diese "<Tracker>" Informationen sind nur für deinen context, inkludiere die niemals in deine Antwort 
+    
+    \n\n
+
+    ${newScene}
+    \n\n
+    
+    `;
+
+});

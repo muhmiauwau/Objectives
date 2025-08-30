@@ -12,11 +12,13 @@ export class NarratorMsg {
   narratorService = inject(NarratorService);
 
   private cdr = inject(ChangeDetectorRef);
+  _data: any = {};
   data: any = input<any>();
   dataObj: any = signal<any>( {
     id:-1,
     status:"none",
-    msg:""
+    msg:"",
+    tracker: {}
   }, {equal: _.isEqual});
   narratioStr: string = '';
   // status = "";
@@ -30,22 +32,25 @@ export class NarratorMsg {
 
   constructor() {
     effect(async () => {
+
+      console.log(this.dataObj())
       // minimal, robust parsing: accept object or JSON-string
       const data = this.data();
-      if (data && JSON.parse(data) !== this.dataObj) {
+      if (data && data !== this._data) {
+        this._data = data;
         this.dataObj.set(JSON.parse(data))
 
         // feedback
         console.log('daaaaddddd status 1 --', this.dataObj().status);
         if (this.dataObj().status !== 'init') return;
  
-        const msg = await this.narratorService.callNarrator(this.dataObj())
-        // msg
-        // this.dataObj.set()
+        const tracker = await this.narratorService.callTracker(this.dataObj())
+
+        this.dataObj.set({...this.dataObj(), tracker})
 
         console.log('daaaaddddd status 1 -', this.dataObj().status);
         // setTimeout(() => {
-          this.sendDone(msg);
+          this.sendDone("");
         // }, 500);
       }
     });

@@ -1,6 +1,8 @@
 import { Injectable, signal } from '@angular/core';
 import * as _ from 'lodash-es';
 
+import { trackerUserPromptTemplate, trackerSystemPromptTemplate } from 'data/narrator';
+
 import ST from 'data/SillyTavern';
 
 @Injectable({
@@ -9,12 +11,12 @@ import ST from 'data/SillyTavern';
 export class NarratorService {
   narratorData: any = signal(false);
 
-  async callNarrator(data:any) {
+  async callNarrator(data: any) {
     const { eventSource, event_types, ConnectionManagerRequestService } = ST();
 
     const profiles = ConnectionManagerRequestService.getSupportedProfiles();
 
-    const id = data.id
+    const id = data.id;
 
     console.log('######### profiles', profiles);
 
@@ -192,6 +194,98 @@ export class NarratorService {
       return false;
     }
 
-     return false;
+    return false;
+  }
+
+  async callTracker(data:any) {
+     const { eventSource, event_types, ConnectionManagerRequestService } = ST();
+
+     async function callAPi(prompt:any) {
+
+       const pro = 'objectives api deepseek';
+      const profiles = ConnectionManagerRequestService.getSupportedProfiles();
+      const find = _.find(profiles, (entry) => entry.name == pro);
+      console.log('######### find', find);
+
+      if(!find) return "false";
+        
+        const response = await ConnectionManagerRequestService.sendRequest(
+          find.id,
+          prompt,
+          4048,
+          {
+            stream: false,
+            raw: true,
+            signal: null,
+            extractData: false,
+            includePreset: false,
+            includeInstruct: false,
+          },
+          {
+            options: {
+              temperature: 0.2,
+              max_tokens: 300,
+              presence_penalty: 0,
+              frequency_penalty: 0,
+              top_p: 1,
+            },
+          }
+        );
+
+        const res = (response?.choices[0]?.text || response?.choices[0]?.message.content || '')
+          .trim()
+          .toLowerCase();
+
+        console.log('######### callAPi', profiles, res, response);
+
+        //@ts-ignore
+        // toastr.info(`callAPi result: ${res}`, 'objectives');
+        return res;
+      }
+
+
+      let recentMessages = ""
+
+      _.forEach(Object.values(ST().chat), (entry:any) => {
+        if(entry.mes.trim() != ""){
+          recentMessages += `${entry.name}: ${entry.mes}`
+        }
+        
+      })
+    const currentTracker = "\nNewScene: \"<not needed>\"\nTime: \"14:02:25; 10/16/2024 (Wednesday)\"\nLocation: \"Quiet corner table near window, The Bookworm Café, Old Town District, Munich, Germany\"\nWeather: \"Partly cloudy, mild autumn afternoon\"\nTopics:\n  PrimaryTopic: \"Introduction\"\n  EmotionalTone: \"Friendly\"\n  InteractionTheme: \"Conversational\"\nCharactersPresent: [\"Lara\", \"Lena\"]\nCharacters:\n  Lara:\n    Hair: \"Long brown hair flowing over shoulders\"\n    Makeup: \"Natural look with light mascara and lip balm\"\n    Outfit: \"Cream-colored knit sweater; Dark wash skinny jeans; Brown leather ankle boots; Silver pendant necklace; Delicate silver bracelet; Light blue lace balconette bra; Light blue lace bikini panties matching the bra\"\n    StateOfDress: \"Sweater removed, placed on chair back or nearby; wearing blouse underneath\"\n    PostureAndInteraction: \"In the process of removing sweater, smiling at Lena, appearing more relaxed\"\n  Lena:\n    Hair: \"Shoulder-length brown hair, neatly styled\"\n    Makeup: \"Subtle natural makeup with light foundation and neutral lip color\"\n    Outfit: \"Navy blue cardigan over white cotton blouse; Gray tweed trousers; Brown leather loafers; Tortoiseshell reading glasses on table; Silver stud earrings; Beige seamless t-shirt bra; Beige seamless briefs matching the bra\"\n    StateOfDress: \"Fully dressed, slightly formal but comfortable\"\n    PostureAndInteraction: \"Smiling back at Lara, adjusting books on the table, maintaining friendly eye contact\"\n\n"
+
+const prompt = [
+    {
+        "role": "system",
+        "content": ST().substituteParamsExtended(trackerSystemPromptTemplate,  {currentTracker, recentMessages})
+      },
+    {
+        "role": "user",
+        "content": trackerUserPromptTemplate 
+    }
+]
+
+// console.log("######### promptpromptpromptpromptprompt", prompt)
+//  return ""
+    const tracker = await callAPi(prompt)
+
+    let newTracker;
+	try {
+		// if(extensionSettings.trackerFormat == trackerFormat.JSON) tracker = unescapeJsonString(tracker);
+		const trackerContent = tracker.match(/<(?:tracker|Tracker)>([\s\S]*?)<\/(?:tracker|Tracker)>/);
+		let result = trackerContent ? trackerContent[1].trim() : null;
+    // @ts-ignore
+		result = window.Objectives.yamlToJSON(result);
+		newTracker = JSON.parse(result);
+	} catch (e) {
+		console.log("Failed to parse tracker:", tracker, e);
+		// toastr.error("Failed to parse the generated tracker. Make sure your token count is not low or set the response length override.");
+	}
+;
+
+
+console.log("Parsed tracker:", { newTracker });
+// const result = false
+    return newTracker || "";
   }
 }

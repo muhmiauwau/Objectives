@@ -135,6 +135,12 @@ console.log("saveNarratorForId orgMsg", orgMsg)
         ST().chat[this.narratorData.id].narratorObj = this.narratorData
         ST().chat[this.narratorData.id].mes = this.narratorData.msg
           await ST().saveChat();
+        //@ts-ignore
+        window.currentTracker =  this.narratorData.tracker || {}
+
+//@ts-ignore
+         console.log('daaaaddddd window.currentTracker', window.currentTracker); 
+
          ST().executeSlashCommandsWithOptions("/trigger", {await:true})
         
        
@@ -156,12 +162,7 @@ console.log("saveNarratorForId orgMsg", orgMsg)
 
 
 
-    // ST().registerMacro('tracker', function() {
-    //   //@ts-ignore
-    //   let tracker = window.jsonToYAML(window.currentTracker)
-    //   return `\n\n<Tracker>${tracker}</Tracker>\n\n \n\n  Wichtig:Diese "<Tracker>" Informationen sind nur für deinen context, inkludiere die niemals in deine Antwort`;
-
-    // });
+   
    
 
 

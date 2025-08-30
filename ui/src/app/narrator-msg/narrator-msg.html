@@ -5,7 +5,12 @@
         @if(dataObj().status  == "init") {
             <i class="fa-solid fa-spinner fa-spin"></i>
         }@else{
-             {{dataObj().msg}}
+            @if(dataObj().tracker) {
+                <div class="" [innerHTML]="dataObj().tracker"></div>
+                Tracker: {{dataObj().tracker}}
+                <br>
+            }
+            ssss {{dataObj().msg}}
         } 
 
     } 

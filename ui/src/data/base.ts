@@ -4,12 +4,18 @@ import { EventEmitter } from '@angular/core';
 // declare const EventEmitter: any;
 
 // 🏛️ Globale Konstanten
-export const global_const = {
+const globalConst:any = {
   MODULE_NAME: 'Objectives',
+  EXTENTION_NAME: 'Objectives',
+  EXTENTION_NAME_LONG: 'SillyTavern-Objectives',
   LOCALSTORAGE_KEY: 'Objectives_UI',
   STORAGE_KEY: 'Objectives_Store',
   TEMPLATE_PATH: 'third-party/Objectives/templates',
 };
+
+globalConst["EXTENSION_FOLDER_PATH"] = 'third-party/${EXTENTION_NAME_LONG}/templates'
+
+export const global_const = globalConst
 
 // 📡 Event Types
 export const OBJ_EVENT_TYPES = {
