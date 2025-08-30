@@ -204,18 +204,20 @@ export class NarratorService {
 
      async function callAPi(prompt:any) {
 
-       const pro = 'objectives api deepseek';
-      // const pro = 'ollama';
+      //  const pro = 'objectives api deepseek';
+      const pro = 'openrouter - narrator';
       const profiles = ConnectionManagerRequestService.getSupportedProfiles();
       const find = _.find(profiles, (entry) => entry.name == pro);
       console.log('Profile find', find);
 
       if(!find) return false;
-        console.time(`callTracker time ${data.id}`);
+       console.time(`callTracker`);
+        console.log("callTracker prompt", prompt);
+        const startTime = performance.now()
         const response = await ConnectionManagerRequestService.sendRequest(
           find.id,
           prompt,
-          4048,
+          8000,
           {
             stream: false,
             signal: null,
@@ -226,14 +228,24 @@ export class NarratorService {
           },
           {
             options: {
-              temperature: 0.2,
-              max_tokens: 300,
-              presence_penalty: 0,
-              frequency_penalty: 0,
-              top_p: 1,
+              // temperature: 0.2,
+              // max_tokens: 300,
+              // presence_penalty: 0,
+              // frequency_penalty: 0,
+              // top_p: 1,
             },
           }
         );
+
+        /*
+          inception/mercury 
+            128K
+            16.4K
+            $0,25
+            $1
+            Fast but no cache
+
+        */
 
 
 
@@ -242,36 +254,54 @@ export class NarratorService {
           .trim()
           .toLowerCase();
 
-        console.timeEnd(`callTracker time ${data.id}`);
-        console.log('######### callAPi', profiles, res, response);
+        function calcTime(startTime:any, endTime:any, usage:any){
+          const ms = endTime - startTime
+        
+          console.assert(usage.completion_tokens, "calcTime: mising usage.completion_tokens")
+          const token =  usage.completion_tokens
+          const seconds = ms / 1000; // Convert ms to seconds first
+          const result = (token / seconds).toFixed(2); // tokens per second
+          const secondsFormatted = seconds.toFixed(2);
+
+
+          return `CallTracker stats: ${token} tokens, ${secondsFormatted} seconds, rate: ${result} TPS `
+        }
+  
+        console.log('######### callAPi', profiles, res, response); 
+        const endTime = performance.now()
+        console.timeEnd(`callTracker`);
+        console.warn(calcTime(startTime, endTime, response.usage))
         console.warn("callAPi", response.usage) 
+       
+        
 
         return res;
       }
 
+      // @ts-ignore
+      const currentTracker = this.getCurrentTracker()
+      
+    // const currentTracker = "\nNewScene: \"<not needed>\"\nTime: \"14:02:25; 10/16/2024 (Wednesday)\"\nLocation: \"Quiet corner table near window, The Bookworm Café, Old Town District, Munich, Germany\"\nWeather: \"Partly cloudy, mild autumn afternoon\"\nTopics:\n  PrimaryTopic: \"Introduction\"\n  EmotionalTone: \"Friendly\"\n  InteractionTheme: \"Conversational\"\nCharactersPresent: [\"Lara\", \"Lena\"]\nCharacters:\n  Lara:\n    Hair: \"Long brown hair flowing over shoulders\"\n    Makeup: \"Natural look with light mascara and lip balm\"\n    Outfit: \"Cream-colored knit sweater; Dark wash skinny jeans; Brown leather ankle boots; Silver pendant necklace; Delicate silver bracelet; Light blue lace balconette bra; Light blue lace bikini panties matching the bra\"\n    StateOfDress: \"Sweater removed, placed on chair back or nearby; wearing blouse underneath\"\n    PostureAndInteraction: \"In the process of removing sweater, smiling at Lena, appearing more relaxed\"\n  Lena:\n    Hair: \"Shoulder-length brown hair, neatly styled\"\n    Makeup: \"Subtle natural makeup with light foundation and neutral lip color\"\n    Outfit: \"Navy blue cardigan over white cotton blouse; Gray tweed trousers; Brown leather loafers; Tortoiseshell reading glasses on table; Silver stud earrings; Beige seamless t-shirt bra; Beige seamless briefs matching the bra\"\n    StateOfDress: \"Fully dressed, slightly formal but comfortable\"\n    PostureAndInteraction: \"Smiling back at Lara, adjusting books on the table, maintaining friendly eye contact\"\n\n"
 
-      let recentMessages = ""
 
-      _.forEach(Object.values(ST().chat), (entry:any) => {
-        if(entry.mes.trim() != ""){
-          recentMessages += `${entry.name}: ${entry.mes}`
+
+    const lastChatMsg = ST().chat.at(-2)
+    console.log("lastChatMsg currentTracker", lastChatMsg, currentTracker)
+    const prompt = [
+      {
+          role: "system",
+          content: ST().substituteParamsExtended(trackerSystemPromptTemplate,  {currentTracker})
+        },
+        {
+            role: "user",
+            content: trackerUserPromptTemplate 
+        },
+        {
+          role: (lastChatMsg.is_user)? "user": "assistant",
+          content: ST().substituteParamsExtended(`${((lastChatMsg.is_user)? "{{user}}": "{{char}}")}: ${lastChatMsg.mes}`)
         }
-        
-      })
-    const currentTracker = "\nNewScene: \"<not needed>\"\nTime: \"14:02:25; 10/16/2024 (Wednesday)\"\nLocation: \"Quiet corner table near window, The Bookworm Café, Old Town District, Munich, Germany\"\nWeather: \"Partly cloudy, mild autumn afternoon\"\nTopics:\n  PrimaryTopic: \"Introduction\"\n  EmotionalTone: \"Friendly\"\n  InteractionTheme: \"Conversational\"\nCharactersPresent: [\"Lara\", \"Lena\"]\nCharacters:\n  Lara:\n    Hair: \"Long brown hair flowing over shoulders\"\n    Makeup: \"Natural look with light mascara and lip balm\"\n    Outfit: \"Cream-colored knit sweater; Dark wash skinny jeans; Brown leather ankle boots; Silver pendant necklace; Delicate silver bracelet; Light blue lace balconette bra; Light blue lace bikini panties matching the bra\"\n    StateOfDress: \"Sweater removed, placed on chair back or nearby; wearing blouse underneath\"\n    PostureAndInteraction: \"In the process of removing sweater, smiling at Lena, appearing more relaxed\"\n  Lena:\n    Hair: \"Shoulder-length brown hair, neatly styled\"\n    Makeup: \"Subtle natural makeup with light foundation and neutral lip color\"\n    Outfit: \"Navy blue cardigan over white cotton blouse; Gray tweed trousers; Brown leather loafers; Tortoiseshell reading glasses on table; Silver stud earrings; Beige seamless t-shirt bra; Beige seamless briefs matching the bra\"\n    StateOfDress: \"Fully dressed, slightly formal but comfortable\"\n    PostureAndInteraction: \"Smiling back at Lara, adjusting books on the table, maintaining friendly eye contact\"\n\n"
+    ]
 
-
-  
-const prompt = [
-    {
-        "role": "system",
-        "content": ST().substituteParamsExtended(trackerSystemPromptTemplate,  {currentTracker, recentMessages})
-      },
-    {
-        "role": "user",
-        "content": trackerUserPromptTemplate 
-    }
-]
 
     const tracker = await callAPi(prompt)
 
@@ -297,4 +327,23 @@ const prompt = [
 
     
   }
+
+
+  getCurrentTracker() {
+    const chat = {...ST().chat}
+
+    const filtered: any = _.filter(chat, (entry: any) =>{
+      return _.has(entry,["narratorObj", "tracker"])
+    })
+
+    console.assert(filtered, "getCurrentTracker:_ no narratorObj found")
+    if(!filtered) return {};
+
+    const lastEntry:any = _.last(filtered)
+    console.assert(lastEntry, "getCurrentTracker: no lastEntry found")
+    if(!lastEntry) return {};
+
+    return lastEntry.narratorObj.tracker
+  }
+
 }

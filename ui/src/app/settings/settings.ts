@@ -136,12 +136,12 @@ console.log("saveNarratorForId orgMsg", orgMsg)
 
         ST().chat[this.narratorData.id].narratorObj = this.narratorData
         ST().chat[this.narratorData.id].mes = this.narratorData.msg
-          await ST().saveChat();
+          await ST().saveChat(); 
         //@ts-ignore
         window.currentTracker =  this.narratorData.tracker
 
 //@ts-ignore
-         console.log('daaaaddddd window.currentTracker', window.currentTracker, this.narratorData.tracker,this.narratorData.tracker); 
+         console.log('daaaaddddd window.currentTracker', window.currentTracker, this.narratorData.tracker); 
 
          ST().executeSlashCommandsWithOptions("/trigger", {await:true})
         
