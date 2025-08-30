@@ -1,8 +1,12 @@
-import { Component, signal, effect, Signal } from '@angular/core';
+import { Component, signal, effect, Signal, inject } from '@angular/core';
+import { NarratorService } from 'services/narrator.service';
 import { global_const } from 'data/base';
 import ST from 'data/SillyTavern';
 const { eventSource, event_types, ConnectionManagerRequestService } = ST();
 import * as _ from 'lodash-es';
+
+// @ts-ignore
+const $ = jQuery
 
 @Component({
   selector: 'app-settings',
@@ -12,7 +16,10 @@ import * as _ from 'lodash-es';
   styleUrl: './settings.less',
 })
 export class Settings {
+  narratorService = inject(NarratorService);
   title = global_const.MODULE_NAME;
+
+  blocked: any = true
 
   isNarrating: boolean = false;
   // simple promise-controller to delay generation until other code resolves it
@@ -31,10 +38,16 @@ export class Settings {
 
 
 
-  async saveNarratorForId(id: number, str: string) {
-    // this.narratorMessage = {id, mes}
+  async saveNarratorForId(id: number, narratorObj: any) {
 
-    const orgMsg: any = ST().chat[id];
+    console.log("saveNarratorForId call", id, narratorObj, ST().chat[id])
+    const context = ST()
+    // this.narratorMessage = {id, mes}
+    const orgMsg: any = {...ST().chat[id]};
+    // if(orgMsg.name)return 
+    // orgMsg.name += " ✅"
+    // context.addOneMessage(orgMsg)
+
 
     let tracker = {}
     if(!orgMsg.is_user){
@@ -50,77 +63,124 @@ export class Settings {
 		// 	mes.mes = `<tracker>${tracker}</tracker>\n\n`;
     orgMsg.tracker = {}
 
+console.log("saveNarratorForId orgMsg", orgMsg)
+     
     const naratorMsg = {
-      ...orgMsg,
+      orgMsg,
       name: 'Narrator',
-      mes: str,
-      narratorMsg: {}
+      mes: "",
+      narratorObj,
+      swipes:[],
+      extra: {
+        isSmallSys:true
+      }
     };
-    naratorMsg.extra = {};
-    // naratorMsg.extra.isSmallSys = true;
-    naratorMsg.is_user = true;
+    // naratorMsg.extra = naratorMsg.extra ||{};
+    naratorMsg.extra.isSmallSys = true;
     // naratorMsg.is_system = true
     // naratorMsg
 
-    await ST().chat.push(naratorMsg);
-
+    await ST().chat.push({...naratorMsg, name: 'Narrator'});
     await ST().saveChat();
+    ST().addOneMessage(naratorMsg,{forceId: narratorObj.id, showSwipes: false})
 
-    this.narratorMessage = { id, str, naratorMsg };
-    console.log('✅ ✅ saveNarratorForId', id, str, naratorMsg);
+    await new Promise(r => setTimeout(r, 200));
+   
+    try{
+      //@ts-ignore
+      const $element = $(`#chat .mes[mesid="${narratorObj.id}"]`)
+      this.insertElement($element, narratorObj)
+      console.log('aaaddddd runN saveNarratorForId', $element, `#chat .mes[mesid="${narratorObj.id}"]`);
+       
+    }catch(err:any){
+      console.log(err)
+
+    }
+
+    this.blocked = false
+
+    this.narratorMessage = { id, narratorObj, naratorMsg };
+    // console.log('aaaddddd runN saveNarratorForId', $element, `#chat .mes[mesid="${narratorObj.id}"]`);
+
   }
 
-  async setNarratorForId(id1: any) {
-    const { id, str, naratorMsg } = this.narratorMessage;
-    if (!id) return;
-    console.log('✅ ✅ setNarratorForId', id, id1);
-    await ST().reloadCurrentChat();
+
+  insertElement($element: any, narratorObj:any, mode: any = "init"){
+    
+    if($element){
+       narratorObj.status = mode
+      const $new = $(`<objectives-narrator-msg data='${JSON.stringify(narratorObj)}' ></objectives-narrator-msg>`)
+      $element.find(".mes_text").html($new)
+      if(mode == "init"){
+        $(`#chat .mes:last-child`).addClass("last_mes").siblings().removeClass("last_mes")
+        $(`#chat .mes:last-child`).get(0).scrollIntoView();
+       
+      }
+    }
   }
 
+
+  narratorData:any = {}
   constructor() {
+
   
 
 
-    eventSource.on("TRACKER_PREVIEW_UPDATED", async (id: number, type: any) => {
-      console.log('✅ ✅ TRACKER_PREVIEW_UPDATED', id, type, ST().chat.length);
+    effect(async () => {
+      const narratorData = this.narratorService.narratorData()
+      if(narratorData && narratorData !== this.narratorData){
+        this.narratorData = narratorData;
+        console.log('daaaaddddd narratorData', this.narratorData); 
 
-
-
-        //@ts-ignore
-        window.currentTracker = ST().chat.at(-1).tracker
+        ST().chat[this.narratorData.id].narratorObj = this.narratorData
+        ST().chat[this.narratorData.id].mes = this.narratorData.msg
+          await ST().saveChat();
+         ST().executeSlashCommandsWithOptions("/trigger", {await:true})
+        
+       
+      }
+      
     });
+
+
+    // eventSource.on("TRACKER_PREVIEW_UPDATED", async (id: number, type: any) => {
+    //   console.log('✅ ✅ TRACKER_PREVIEW_UPDATED', id, type, ST().chat.length);
+
+
+
+    //     //@ts-ignore
+    //     window.currentTracker = ST().chat.at(-1).tracker
+    // });
   
     
 
-    // ST().registerMacro('narratorMsg', function(a) {
-    //   console.log()
+
+
+    // ST().registerMacro('tracker', function() {
     //   //@ts-ignore
     //   let tracker = window.jsonToYAML(window.currentTracker)
     //   return `\n\n<Tracker>${tracker}</Tracker>\n\n \n\n  Wichtig:Diese "<Tracker>" Informationen sind nur für deinen context, inkludiere die niemals in deine Antwort`;
 
     // });
-
-
-    ST().registerMacro('tracker', function() {
-      //@ts-ignore
-      let tracker = window.jsonToYAML(window.currentTracker)
-      return `\n\n<Tracker>${tracker}</Tracker>\n\n \n\n  Wichtig:Diese "<Tracker>" Informationen sind nur für deinen context, inkludiere die niemals in deine Antwort`;
-
-    });
    
 
-    eventSource.on(event_types.USER_MESSAGE_RENDERED, async (id: number, type: any) => {
-      console.log('✅ ✅ USER_MESSAGE_RENDERED', id, type);
 
+     eventSource.on(event_types.USER_MESSAGE_RENDERED, async (id: number, type: any) => {
+      console.log('✅ ✅ ✅ ✅ USER_MESSAGE_RENDERED', id, type);
 
+      // await this.setNarratorForId(id);
+    });
 
-
-      await this.setNarratorForId(id);
+    eventSource.on(event_types.MESSAGE_RECEIVED, (id: number, type: any) => {
+      console.log('✅ ✅ ✅ ✅ MESSAGE_RECEIVED', id, type, ST().chatMetadata);
+      this.blocked = true
+      
+      // await this.setNarratorForId(id);
     });
 
     eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, async (id: any, type: any) => {
       console.log('✅ ✅ CHARACTER_MESSAGE_RENDERED', id, type);
-      await this.setNarratorForId(id);
+      // await this.setNarratorForId(id);
     });
 
     eventSource.on(event_types.MESSAGE_RECEIVED, async (data: any, type: any) => {
@@ -136,8 +196,23 @@ export class Settings {
         return entry.name == "Narrator"
       })
 
+      const chat = ST().chat
+      // @ts-ignore
+      $(`#chat .mes[ch_name="Narrator"]`).each((key, element:any) => {
+        console.log(element)
+        //@ts-ignore
+        const $element = $(element)
+        const narratorObj = chat.at($element.attr("mesid")).narratorObj
+        this.insertElement($element, narratorObj, "done")
+      });
+
+
+        //@ts-ignore
+      
+      
+
       //@ts-ignore
-      window.currentTracker = {...(last.tracker||{})}
+      // window.currentTracker = {...(last.tracker||{})}
 
 
 
@@ -157,25 +232,44 @@ export class Settings {
     });
 
     eventSource.on(event_types.CHAT_COMPLETION_PROMPT_READY, async (event: any) => {
-      // if (event.dryRun) return;
+      if (event.dryRun) return;
       console.log('✅ Final Prompt', event, event.chat, ST().chat);
+
+        console.log('✅ blocked', this.blocked);
+      if(!this.blocked) return;
+       
+      ST().stopGeneration()
+      await this.runNarration();
+
+
       // event.chat = await this.runNarration(event.chat)
       // await this.blockPromise
+      // await this.runNarration();
+      // await new Promise(r => setTimeout(r, 20000));
+
 
       //  console.log('✅ Final Prompt After promise', event, event.chat, ST().chat)
     });
 
 
-    eventSource.on(event_types.MESSAGE_RECEIVED, async (id: any, type:string) => {
-      console.log('✅ MESSAGE_RECEIVED', id, type);
+    eventSource.on(event_types.GENERATION_AFTER_COMMANDS, async (type:any, config:any, dryRun:any) =>{ 
       // if(dryRun) return;
-      await this.runNarration();
+      //  console.log('✅ GENERATION_AFTER_COMMANDS blocked', this.blocked);
+      // if(this.blocked) return;
+      // console.log('✅ GENERATION_AFTER_COMMANDS', type, config,dryRun);
+      // await this.runNarration();
+
+    });
+
+    eventSource.on(event_types.MESSAGE_RECEIVED, async (id: any, type:string) => {
+      if(type == "first_message") return;
+      console.log('✅ MESSAGE_RECEIVED', id, type);
+      // await this.runNarration();
     });
 
     eventSource.on(event_types.MESSAGE_SENT, async (id: any) => {
       console.log('✅ MESSAGE_SENT', id);
-      // if(dryRun) return;
-      await this.runNarration();
+      // await this.runNarration();
     });
 
     // eventSource.on(event_types.GENERATE_BEFORE_COMBINE_PROMPTS, (data: any, a: any) => {
@@ -207,238 +301,36 @@ export class Settings {
 
 
   async runNarration() {
-    //@ts-ignore
-     const id = jQuery(`#chat .mes:not([ch_name="Narrator"]`).last().attr('mesid');
+    let id = $(`#chat .mes`).last().attr('mesid');
+    id = parseInt(id)
 
-    console.log('✅ runNarration', id);
-     await this.saveNarratorForId(id, "<objectives-narrator-msg></objectives-narrator-msg>");
+    console.log('daaaaddddd ✅ runNarration for', id, id + 1);
+
+
+    const narratorObj = {
+      id: id + 1,
+      msg: `${id}:(dummy msg)`
+    }
+    await this.saveNarratorForId(id, narratorObj);
   }
   
-  async runNarration2() {
-    //@ts-ignore
-    const id = jQuery(`#chat .mes:not([ch_name="Narrator"]`).last().attr('mesid');
-
-    console.log('✅ Delaying generation for', 1, 'seconds', id);
-
-    // const naratingmsg= `${id}: jashdjksadh`
-    //              await this.saveNarratorForId(id, naratingmsg)
-    // await this.saveNarratorForId(id, "");
-
-    const profiles = ConnectionManagerRequestService.getSupportedProfiles();
-
-    console.log('######### profiles', profiles);
-
-    // const pro = "objectives narrator api"
-    const pro = 'objectives api deepseek';
-    const find = _.find(profiles, (entry) => entry.name == pro);
-    console.log('######### find', find);
-
-    // const last = chat.at(-1)
-
-    console.log('✅ Delaying Finisch', 1, 'seconds', id);
-
-    if (find) {
-      let msgs: any = [];
-
-      const chatArray = Object.values(ST().chat);
-      chatArray.forEach((entry: any) => {
-        if (entry.is_system) return;
-        console.log(entry);
-        msgs.push(`${entry.name}:${entry.mes}`);
-      });
-      const lastmsg = msgs.at(-1);
-
-      msgs.join('\n');
-
-      const triggerMap:any = {
-        newscene: {
-          hint: 'If the conversation contains an action or dialogue that clearly and definitively ends the current social interaction (e.g., saying goodbye and walking away, leaving a room, abruptly ending the conversation, falling asleep). This signals that the current scene is narratively complete and a new narrative unit begins.',
-          example: 'The scene is complete',
-          prompt: `Du bist ein neutraler Erzähler. Basierend auf dem Chatverlauf und der letzten Nachricht, beschreibe kurz und neutral in der dritten Person den Übergang zu einer neuen Szene (z.B. Zeitverlauf oder Ortswechsel). Vermeide jegliche Handlungen oder Beschreibungen von User oder Charakteren. Halte es rein narrativ und kontextuell.`
-        },
-        location: {
-          hint: 'when the current location should be described',
-          example: 'The current location was not described.',
-           prompt: `Du bist ein neutraler Erzähler. Basierend auf dem Chatverlauf und der letzten Nachricht, beschreibe kurz und neutral in der dritten Person die aktuelle location. Vermeide jegliche Handlungen oder Beschreibungen von User oder Charakteren. Halte es rein narrativ und kontextuell.`
-       
-        },
-//         cloths_user: {
-//           hint: "Wenn die Kleidung des Users für eine bevorstehende oder aktuelle Handlung relevant ist (z.B. wird berührt, verändert oder entfernt) und noch nicht beschrieben wurde.",
-//           example: "Die Kleidung des Users wurde nicht erwähnt.",
-//           prompt: `
-// Du bist ein neutraler Erzähler. Beschreibe ausschließlich die Kleidung von {{user}}, sofern sie für die aktuelle oder bevorstehende Handlung relevant und bisher nicht beschrieben ist. Falls sich der User an- oder auszieht, liste alle Kleidungsstücke einzeln und sachlich für den Zustand davor und danach auf. Verwende keine Sammelbezeichnungen wie „Rest“ oder „weitere Kleidungsstücke“. Wenn Kleidungsstücke nicht im Chat erwähnt wurden, ergänze sie möglichst präzise und vollständig anhand des Kontexts oder allgemeiner Erwartungen (z.B. Unterwäsche, Hose, Socken, Schuhe). Nutze das folgende Format:
-
-// Kleidung des Users (vorher):
-
-// - Kleidungsstück 1: kurze detailierte Beschreibung
-// - Kleidungsstück 2: kurze detailierte Beschreibung
-// ...
-
-// Kleidung des Users (nachher):
-
-// - Kleidungsstück 1: kurze detailierte Beschreibung
-// - Kleidungsstück 2: kurze detailierte Beschreibung
-// ...
-
-// Füge keine Handlungen, Bewertungen oder Charakterbeschreibungen hinzu. Bleibe rein sachlich und kontextuell.
-// `  },
-//         cloths_char: {
-//           hint: "when a character's clothing is relevant for an imminent action (e.g., being touched, modified, or removed) but has not been described yet",
-//           example: "The character's clothing is missing.",
-//           prompt: `Du bist ein neutraler Erzähler. Prüfe anhand des Chatverlaufs und der letzten Nachricht, ob die Kleidung des char für die aktuelle oder bevorstehende Handlung relevant ist. Falls ja, beschreibe sie kurz und neutral in der dritten Person. Vermeide jegliche Handlungen, Bewertungen oder Beschreibungen von User oder Charakteren. Halte die Beschreibung rein sachlich und kontextuell, ohne auf Gedanken, Gefühle oder Absichten einzugehen.`
-//         },
-        atmosphere: {
-          hint: 'when the mood/atmosphere should be described',
-          example: 'The atmosphere of the scene should be emphasized.',
-          prompt: `Du bist ein neutraler Erzähler. Basierend auf dem Chatverlauf und der letzten Nachricht, beschreibe kurz und neutral in der dritten Person die aktuelle atmosphere. Vermeide jegliche Handlungen oder Beschreibungen von User oder Charakteren. Halte es rein narrativ und kontextuell.`
-       
-        }
-      };
-      const themesList = Object.keys(triggerMap)
-    .map((key:string) => `  - ${key} (${triggerMap[key].hint})`)
-    .join('\n');
-
-    const themesExamples = Object.keys(triggerMap)
-    .map((key:string) => `  - ${key} (${triggerMap[key].example})`)
-    .join('\n');
-
-// console.log(ST().substituteParamsExtended?.("User: {{user}}"))
-
-
-      const analysePrompt = `
-        History: [${lastmsg}]
-        Last message: [${lastmsg}]
-
-        You are an experienced conversation analyst.
-        Your task:
-        1. Analyze the last message in the chat history.
-        2. Examine the previous history.
-        3. Decide if any of the following aspects are missing or should be described:
-
-        Possible topics (use only these exact labels):
-        ${themesList}
-
-        Response format: [Topic,Topic,...]
-        If no intervention is necessary, reply with "false".
-      
-
-        Example responses:
-        ${themesList}
-        - false
-
-        user == "{{user}}" 
-        char == "{{char}}"
-
-
-      `;
-
-      
-
-      
-
-      async function callAPi(mode:string){
-        //@ts-ignore
-        toastr.info(`callAPi: ${mode}`, "objectives");
-       
-        const prefix= `Verlauf: [${msgs}]
-        Letzte Nachricht: [${lastmsg}]
-        
-      `
-        let prompt =""
-     
-       if(Object.keys(triggerMap).includes(mode)){
-           prompt += triggerMap[mode].prompt
-        }else{
-          prompt += analysePrompt
-        }
-
-         prompt = ST().substituteParamsExtended(prompt)
-
-
-         console.log('######### callAPi prompt', prompt);
-
-         prompt = `${prefix}\n\n${prompt}`
-
-      
-          //  console.log('######### ',mode, Object.keys(triggerMap), Object.keys(triggerMap).includes(mode));
-
-
-        const response = await ConnectionManagerRequestService.sendRequest(
-          find.id,
-          prompt,
-          4048,
-          {
-            stream: false,
-            raw: true,
-            signal: null,
-            extractData: false,
-            includePreset: false,
-            includeInstruct: false,
-          },
-          {
-            options: {
-              stream: false,
-              temperature: 0.2,
-              max_tokens: 300,
-              presence_penalty: 0,
-              frequency_penalty: 0,
-              top_p: 1,
-            },
-          }
-        );
-
-        const res = (response?.choices[0]?.text || response?.choices[0]?.message.content || '')
-          .trim()
-          .toLowerCase();
-
-           console.log('######### callAPi', profiles, res, response);
-
-           //@ts-ignore
-        toastr.info(`callAPi result: ${res}`, "objectives");
-          return res
-
-      }
-
-
-      
-
-      const analyseResult = await callAPi("init")
-      if(analyseResult !== "false"){
-        const raw = analyseResult.replace(/[\[\]]/g, '').trim();
-        const labels = raw.length
-          ? raw.split(',').map((l:any) => l.trim()).filter(Boolean)
-          : [];
-
-        // bekannte Trigger in triggerMap (Reihenfolge = Priorität)
-        const knownTriggers = Object.keys(triggerMap);
-
-        // Filtere Labels auf bekannte Trigger und sortiere nach Priorität (knownTriggers Reihenfolge)
-        const orderedLabels = labels
-          .filter((l:any) => knownTriggers.includes(l))
-          .sort((a:any, b:any) => knownTriggers.indexOf(a) - knownTriggers.indexOf(b));
-
-        let finalNarration = '';
-
-        if (orderedLabels.length > 0) {
-          // Für jedes gefundene Label parallel die spezifischen Prompts abrufen
-          const promises = orderedLabels.map((label:any) => callAPi(label));
-          const results = await Promise.all(promises);
-
-          // Kombiniere die Ergebnisse: jeder Block bekommt ein Label-Präfix
-          const combined = orderedLabels
-            .map((label:any, i:any) => `(${label}) ${results[i]}`)
-            .join('\n\n');
-
-          finalNarration = `(Erzähler)(${orderedLabels.join(',')})\n${combined}`;
-        } else {
-          // Falls die Analyse keinen oder unverständlichen Label-Text geliefert hat,
-          // speichere die Roh-Antwort als Narration (bisherige Verhalten / Fallback)
-          finalNarration = `(Erzähler)(${analyseResult})\n${analyseResult}`;
-        }
-
-
-        await this.saveNarratorForId(id, finalNarration);
-      }
-    }
-  }
 }
+
+
+  // const generationMutexEvents = {
+  //     MUTEX_CAPTURED: 'GENERATION_MUTEX_CAPTURED',
+  //     MUTEX_RELEASED: 'GENERATION_MUTEX_RELEASED',
+  //   };
+
+  //   function onGenerationMutexCaptured(event:any) {
+  //     const capturedBy = event.extension_name;
+  //     console.log('[daaaaddddd MUTEX] Generation mutex captured by', capturedBy);
+  // }
+
+  //   function onGenerationMutexReleased() {
+  //     // capturedBy = NO_CAPTURES;
+  //     console.log('[daaaaddddd MUTEX] Generation mutex released');
+  // }
+
+  //   eventSource.on(generationMutexEvents.MUTEX_CAPTURED, onGenerationMutexCaptured);
+  //   eventSource.on(generationMutexEvents.MUTEX_RELEASED, onGenerationMutexReleased);

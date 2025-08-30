@@ -1,3 +1,19 @@
+#chat .mes[ch_name="Narrator ✅"],
+#chat .mes[ch_name="Narrator"]{
+    background: #000 !important;
+}
+@keyframes fa-spin{
+    0%{
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(1turn);
+    }
+}
+.fa-spin{
+        animation: fa-spin 2s linear infinite;
+}
+
 .muhPanel{
    
 }

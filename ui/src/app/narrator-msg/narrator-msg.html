@@ -1,1 +1,13 @@
-<p>narrator-msg works!</p>
+@if(dataObj()) {
+    @if( dataObj().id >-1) {
+        Status: {{dataObj().status  }}
+        <br>
+        @if(dataObj().status  == "init") {
+            <i class="fa-solid fa-spinner fa-spin"></i>
+        }@else{
+             {{dataObj().msg}}
+        } 
+
+    } 
+}  
+

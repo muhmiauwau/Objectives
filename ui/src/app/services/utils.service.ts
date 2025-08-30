@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal} from '@angular/core';
 import * as _ from 'lodash-es';
 
 
@@ -9,6 +9,9 @@ import ST from 'data/SillyTavern';
   providedIn: 'root'
 })
 export class UtilsService {
+
+    narratorMsgDone: any = signal(false)
+
     getPersonsOfcurrentChat(){   
 
         if ((ST().chatMetadata?.chat_id_hash === 0)) return [];
