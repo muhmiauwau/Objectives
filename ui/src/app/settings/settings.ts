@@ -120,6 +120,8 @@ console.log("saveNarratorForId orgMsg", orgMsg)
   }
 
 
+  type:any = ""
+
   narratorData:any = {}
   constructor() {
 
@@ -136,10 +138,10 @@ console.log("saveNarratorForId orgMsg", orgMsg)
         ST().chat[this.narratorData.id].mes = this.narratorData.msg
           await ST().saveChat();
         //@ts-ignore
-        window.currentTracker =  this.narratorData.tracker || {}
+        window.currentTracker =  this.narratorData.tracker
 
 //@ts-ignore
-         console.log('daaaaddddd window.currentTracker', window.currentTracker); 
+         console.log('daaaaddddd window.currentTracker', window.currentTracker, this.narratorData.tracker,this.narratorData.tracker); 
 
          ST().executeSlashCommandsWithOptions("/trigger", {await:true})
         
@@ -236,30 +238,26 @@ console.log("saveNarratorForId orgMsg", orgMsg)
       if (event.dryRun) return;
       console.log('✅ Final Prompt', event, event.chat, ST().chat);
 
-        console.log('✅ blocked', this.blocked);
+        console.log('✅ blocked', this.blocked, this.type);
       if(!this.blocked) return;
-       
-      ST().stopGeneration()
-      await this.runNarration();
+
+      if(this.type == "impersonate") {
+        this.blocked = false
+      }else{
+        await ST().stopGeneration()
+        await this.runNarration();
+      }
+    
 
 
-      // event.chat = await this.runNarration(event.chat)
-      // await this.blockPromise
-      // await this.runNarration();
-      // await new Promise(r => setTimeout(r, 20000));
-
-
-      //  console.log('✅ Final Prompt After promise', event, event.chat, ST().chat)
     });
 
 
     eventSource.on(event_types.GENERATION_AFTER_COMMANDS, async (type:any, config:any, dryRun:any) =>{ 
-      // if(dryRun) return;
-      //  console.log('✅ GENERATION_AFTER_COMMANDS blocked', this.blocked);
-      // if(this.blocked) return;
-      // console.log('✅ GENERATION_AFTER_COMMANDS', type, config,dryRun);
-      // await this.runNarration();
-
+      if(dryRun) return;
+       if(!this.blocked) return;
+      console.log('GENERATION_AFTER_COMMANDS',type)
+      this.type = type
     });
 
     eventSource.on(event_types.MESSAGE_RECEIVED, async (id: any, type:string) => {
@@ -270,6 +268,8 @@ console.log("saveNarratorForId orgMsg", orgMsg)
 
     eventSource.on(event_types.MESSAGE_SENT, async (id: any) => {
       console.log('✅ MESSAGE_SENT', id);
+      this.type = "user"
+      this.blocked = true
       // await this.runNarration();
     });
 

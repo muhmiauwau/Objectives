@@ -198,28 +198,31 @@ export class NarratorService {
   }
 
   async callTracker(data:any) {
+    
+    // console.groupCollapsed(`callTracker ${data.id}`);
      const { eventSource, event_types, ConnectionManagerRequestService } = ST();
 
      async function callAPi(prompt:any) {
 
        const pro = 'objectives api deepseek';
+      // const pro = 'ollama';
       const profiles = ConnectionManagerRequestService.getSupportedProfiles();
       const find = _.find(profiles, (entry) => entry.name == pro);
-      console.log('######### find', find);
+      console.log('Profile find', find);
 
-      if(!find) return "false";
-        
+      if(!find) return false;
+        console.time(`callTracker time ${data.id}`);
         const response = await ConnectionManagerRequestService.sendRequest(
           find.id,
           prompt,
           4048,
           {
             stream: false,
-            raw: true,
             signal: null,
             extractData: false,
             includePreset: false,
             includeInstruct: false,
+            instructSettings: {},
           },
           {
             options: {
@@ -232,14 +235,17 @@ export class NarratorService {
           }
         );
 
+
+
+         console.log('######### callAPi before', response);
         const res = (response?.choices[0]?.text || response?.choices[0]?.message.content || '')
           .trim()
           .toLowerCase();
 
+        console.timeEnd(`callTracker time ${data.id}`);
         console.log('######### callAPi', profiles, res, response);
+        console.warn("callAPi", response.usage) 
 
-        //@ts-ignore
-        // toastr.info(`callAPi result: ${res}`, 'objectives');
         return res;
       }
 
@@ -254,6 +260,8 @@ export class NarratorService {
       })
     const currentTracker = "\nNewScene: \"<not needed>\"\nTime: \"14:02:25; 10/16/2024 (Wednesday)\"\nLocation: \"Quiet corner table near window, The Bookworm Café, Old Town District, Munich, Germany\"\nWeather: \"Partly cloudy, mild autumn afternoon\"\nTopics:\n  PrimaryTopic: \"Introduction\"\n  EmotionalTone: \"Friendly\"\n  InteractionTheme: \"Conversational\"\nCharactersPresent: [\"Lara\", \"Lena\"]\nCharacters:\n  Lara:\n    Hair: \"Long brown hair flowing over shoulders\"\n    Makeup: \"Natural look with light mascara and lip balm\"\n    Outfit: \"Cream-colored knit sweater; Dark wash skinny jeans; Brown leather ankle boots; Silver pendant necklace; Delicate silver bracelet; Light blue lace balconette bra; Light blue lace bikini panties matching the bra\"\n    StateOfDress: \"Sweater removed, placed on chair back or nearby; wearing blouse underneath\"\n    PostureAndInteraction: \"In the process of removing sweater, smiling at Lena, appearing more relaxed\"\n  Lena:\n    Hair: \"Shoulder-length brown hair, neatly styled\"\n    Makeup: \"Subtle natural makeup with light foundation and neutral lip color\"\n    Outfit: \"Navy blue cardigan over white cotton blouse; Gray tweed trousers; Brown leather loafers; Tortoiseshell reading glasses on table; Silver stud earrings; Beige seamless t-shirt bra; Beige seamless briefs matching the bra\"\n    StateOfDress: \"Fully dressed, slightly formal but comfortable\"\n    PostureAndInteraction: \"Smiling back at Lara, adjusting books on the table, maintaining friendly eye contact\"\n\n"
 
+
+  
 const prompt = [
     {
         "role": "system",
@@ -265,8 +273,6 @@ const prompt = [
     }
 ]
 
-// console.log("######### promptpromptpromptpromptprompt", prompt)
-//  return ""
     const tracker = await callAPi(prompt)
 
     let newTracker;
@@ -284,8 +290,11 @@ const prompt = [
 ;
 
 
-console.log("Parsed tracker:", { newTracker });
+// console.log("Parsed tracker:", { newTracker });
 // const result = false
+    // console.groupEnd();
     return newTracker || "";
+
+    
   }
 }

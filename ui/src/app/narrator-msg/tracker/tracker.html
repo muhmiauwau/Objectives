@@ -1,1 +1,127 @@
-<p>tracker works!</p>
+@if(tracker()){
+
+    <div class="smallView">
+        <!-- <div class="toggle">
+            <button><i class="fa-fw fa-solid fa-chevron-down"></i></button>
+        </div> -->
+        <div class="left">
+                @for (entry of trackerFieldAry; let index = $index; track index; ) {
+                     @if(entry != "location"){}@else{
+                        <div class="entry" [title]="tracker()[entry]">{{ tracker()[entry] }}</div>
+                    }
+                }
+        </div>
+        <div class="right">
+                @for (entry of trackerFieldAry; let index = $index; track index; ) {
+                     @if(entry == "location"){}@else{
+                         <div class="entry" [title]="tracker()[entry]">{{ tracker()[entry] }}</div>
+                    }
+
+                }
+        </div>
+    </div>
+     <hr>
+    <div class="fullView" style="display: none  !important;">
+        <div class="left">
+
+
+            @for (character of tracker().characterspresent; let index = $index; track index; ) {
+
+                <div class="charName">{{ character }}</div>
+                <hr>
+                <dl>
+                @for (characterEtry of entries(tracker().characters[character]); let index = $index; track index; ) {
+                <!-- {{ log(characterEtry) }} -->
+                    <dt>{{ characterEtry.key }}</dt>
+                    <dd contenteditable="true" (blur)="onChange(['characters', character, characterEtry.key],$event)">{{ characterEtry.value }}</dd>
+
+                } 
+                </dl>
+            <!--    <dd>{{ character }}</dd> -->
+
+            }
+           
+        </div>
+        <div class="sep"></div>
+        <div class="right">
+
+            <dl>
+                @for (entry of trackerFieldAry; let index = $index; track index; ) {
+
+                    <dt>{{ entry }}</dt>
+                    @if(entry == "location"){
+                        <dd  contenteditable="true" (focus)="onFocus([entry],$event)" (blur)="onChange([entry],$event, true)" [innerHtml]="replace(tracker()[entry])"></dd>
+                        <!-- dddd {{ replace(tracker()[entry]) }} sss -->
+                    }@else{
+                        <dd  contenteditable="true"   (blur)="onChange([entry],$event)">{{ tracker()[entry] }}</dd>
+                    }
+                    
+                }
+                </dl>
+        </div>
+    </div>
+    
+   
+
+   
+
+
+<!-- <div class="tracker_default_mes_template">
+    <table>
+        <tr>
+            <td>Time:</td>
+            <td>{{Time}}</td>
+        </tr>
+        <tr>
+            <td>Location:</td>
+            <td>{{Location}}</td>
+        </tr>
+        <tr>
+            <td>Weather:</td>
+            <td>{{Weather}}</td>
+        </tr>
+    </table>
+    <details>
+        <summary><span>Tracker</span></summary>
+        <table>
+            <tr>
+                <td>Topics:</td>
+                <td>{{#join "; " Topics}}</td>
+            </tr>
+            <tr>
+                <td>Present:</td>
+                <td>{{#join "; " CharactersPresent}}</td>
+            </tr>
+        </table>
+        <div class="mes_tracker_characters">
+            {{#foreach Characters character}}
+            <hr>
+            <strong>{{character}}:</strong><br />
+            <table>
+                <tr>
+                    <td>Hair:</td>
+                    <td>{{character.Hair}}</td>
+                </tr>
+                <tr>
+                    <td>Makeup:</td>
+                    <td>{{character.Makeup}}</td>
+                </tr>
+                <tr>
+                    <td>Outfit:</td>
+                    <td>{{character.Outfit}}</td>
+                </tr>
+                <tr>
+                    <td>State:</td>
+                    <td>{{character.StateOfDress}}</td>
+                </tr>
+                <tr>
+                    <td>Position:</td>
+                    <td>{{character.PostureAndInteraction}}</td>
+                </tr>
+            </table>
+            {{/foreach}}
+        </div>
+    </details>
+</div>
+<hr> -->
+}
