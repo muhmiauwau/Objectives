@@ -6,45 +6,54 @@
         </div> -->
         <div class="left">
                 @for (entry of trackerFieldAry; let index = $index; track index; ) {
-                     @if(entry != "location"){}@else{
+                     @if(entry == "location"){
                         <div class="entry" [title]="tracker()[entry]">{{ tracker()[entry] }}</div>
                     }
                 }
         </div>
         <div class="right">
                 @for (entry of trackerFieldAry; let index = $index; track index; ) {
-                     @if(entry == "location"){}@else{
+                    @if(entry == "time"){
                          <div class="entry" [title]="tracker()[entry]">{{ tracker()[entry] }}</div>
                     }
 
                 }
         </div>
     </div>
-     <hr>
-    <div class="fullView" style="display: flex  !important;">
-        
-        @if(mode() == "inline"){
-            
-            <div class="right">
+    @if(mode() != "inline"){
+    <div class="fullView">
+         <hr>
+        <!-- <div class="right">
+            <dl>
+                @for (entry of trackerFieldAry; let index = $index; track index; ) {
 
-                <dl>
-                    @for (entry of trackerFieldAry; let index = $index; track index; ) {
-
-                        <dt>{{ entry }}</dt>
-                        @if(entry == "location"){
-                            <dd  contenteditable="true" (focus)="onFocus([entry],$event)" (blur)="onChange([entry],$event, true)" [innerHtml]="replace(tracker()[entry])"></dd>
-                            <!-- dddd {{ replace(tracker()[entry]) }} sss -->
-                        }@else{
-                            <dd  contenteditable="true"   (blur)="onChange([entry],$event)">{{ tracker()[entry] }}</dd>
-                        }
+                    <dt>{{ entry }}</dt>
+                    @if(entry == "location"){
+                        <dd  contenteditable="true" (focus)="onFocus([entry],$event)" (blur)="onChange([entry],$event, true)" [innerHtml]="replace(tracker()[entry])"></dd>
                         
+                    }@else{
+                        <dd  contenteditable="true"   (blur)="onChange([entry],$event)">{{ tracker()[entry] }}</dd>
                     }
-                    </dl>
-            </div>
-            <div class="sep"></div>
-        }
+                    
+                }
+                </dl>
+        </div>
+        <div class="sep"></div> -->
+        
         <div class="left">
+            <dl>
+                @for (entry of trackerFieldAry; let index = $index; track index; ) {
 
+                    <dt>{{ entry }}</dt>
+                    @if(entry == "location"){
+                        <dd  contenteditable="true" (focus)="onFocus([entry],$event)" (blur)="onChange([entry],$event, true)" [innerHtml]="replace(tracker()[entry])"></dd>
+                        <!-- dddd {{ replace(tracker()[entry]) }} sss -->
+                    }@else{
+                        <dd  contenteditable="true"   (blur)="onChange([entry],$event)">{{ tracker()[entry] }}</dd>
+                    }
+                    
+                }
+                </dl>
 
             @for (character of tracker().characterspresent; let index = $index; track index; ) {
 
@@ -64,6 +73,7 @@
            
         </div>
     </div>
+    }
     
    
 

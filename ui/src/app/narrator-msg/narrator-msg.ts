@@ -40,12 +40,17 @@ export class NarratorMsg {
     effect(async () => {
 
 
-      const tracker = this.tracker();
+      const tracker:any = this.tracker();
       if (tracker && tracker !== this.dataObj().tracker) {
         if(_.size(tracker) > 0){
           console.log(" this.tracker", tracker, this.dataObj())
-          ST().chat[this.dataObj().id].narratorObj.tracker = tracker
+          this.dataObj.set({...this.dataObj(), tracker, msg: tracker.newscene })
+          ST().chat[this.dataObj().id].narratorObj = this.dataObj()
+          ST().chat[this.dataObj().id].mes = tracker.newscene
+
           await ST().saveChat();
+
+           console.log(" this.tracker after" ,  ST().chat[this.dataObj().id])
 
         }
          
@@ -112,9 +117,9 @@ export class NarratorMsg {
         this.tracker.set(tracker)
         this.dataObj.set({...this.dataObj(), tracker})
 
-        console.log('daaaaddddd status 1 -', this.dataObj().status);
+        console.log('daaaaddddd tracker', tracker);
         // setTimeout(() => {
-          this.sendDone("");
+          this.sendDone(tracker.newscene);
         // }, 500);
       }
     });

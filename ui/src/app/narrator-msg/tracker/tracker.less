@@ -1,5 +1,6 @@
 :host{
     display: block;
+    width: 100%;
 }
 
 
@@ -22,6 +23,7 @@ dt{
 dd{
     // white-space: wrap;
         word-wrap: normal;
+        min-height: 1lh;
     // display: block;
    
     // margin: 0;
@@ -37,10 +39,11 @@ dd{
 .smallView{
   display: flex;
     justify-content: space-between;
-    font-size: 0.7;
+    font-size: calc(var(--mainFontSize) * 0.7);
+    line-height: 1;
     opacity: 0.7;
     white-space: nowrap;
-    gap:2em;
+    gap: 2em;
 
     // dt{
     //     display: block;

@@ -3,13 +3,14 @@ import { init } from './src/init.js';
 import { extension_settings } from "/scripts/extensions.js";
 import { log, warn, debug, error, unescapeJsonString } from "./lib/utils.js";
 import { yamlToJSON, jsonToYAML } from "./lib/ymlParser.js";
+import { getDefaultTracker, getTrackerPrompt, getExampleTrackers } from "./trackerDataHandler.js";
 
 export const extensionName = "Objectives";
 const extensionNameLong = `Objectives`;
 export const extensionFolderPath = `scripts/extensions/third-party/${extensionNameLong}`;
 export const extensionSettings = extension_settings[extensionName] | {};
 
-window.Objectives = { log, warn, debug, error, unescapeJsonString,  yamlToJSON, jsonToYAML } 
+ window.Objectives = { log, warn, debug, error, unescapeJsonString,  yamlToJSON, jsonToYAML, getDefaultTracker, getTrackerPrompt, getExampleTrackers } 
 
 
 
@@ -31,9 +32,19 @@ function loadAngular(){
 
 
 jQuery(() => {
+   
+
+
+    // $(document).on('click', '.last_mes .swipe_right', (event)=>{
+    //     // event.preventDefault()
+
+
+    //     SillyTavern.getContext().swipe.right()
+    // });
+    // $(document).on('click', '.last_mes .swipe_left', swipe_left);
     
     // $(".recentChat:first-child").click()
-    loadAngular()
+    // loadAngular()
 
      let bla = setInterval(() => { 
         if($(".welcomePanel").length > 0){
@@ -51,8 +62,8 @@ jQuery(() => {
     }, 5000)
 
 
-
-   
+    
+    
 
         
 });
@@ -68,16 +79,98 @@ jQuery(() => {
         if(!tracker) return ;
         window.currentTracker = tracker
     };
-    const newScene = `Wichtig: ${window.currentTracker.newscene}`
     //@ts-ignore
     let tracker = jsonToYAML(window.currentTracker)
-    return `\n\n<Tracker>${tracker}</Tracker>\n\n \n\n  Wichtig:Diese "<Tracker>" Informationen sind nur für deinen context, inkludiere die niemals in deine Antwort 
-    
-    \n\n
-
-    ${newScene}
-    \n\n
-    
-    `;
+    return `\n\n<Tracker>${tracker}</Tracker>\n\n \n\n  Wichtig:Diese "<Tracker>" Informationen sind nur für deinen context, inkludiere die niemals in deine Antwort`;
 
 });
+
+
+
+
+
+import { eventSource, event_types} from '/script.js';
+
+jQuery(function(){
+
+    
+
+    try{
+        function debug(){
+            console.log("AnySwipe:", ...arguments)
+        }
+
+        eventSource.on(event_types.CHAT_CHANGED, (data) => {
+            debug("CHAT_CHANGED", data)
+            $("#chat").find('.swipe_right,.swipe_left').css('display', 'flex').css('opacity', '0.3');
+        });
+
+
+
+
+
+        $(document).on("click", '#chat .swipe_right, #chat .swipe_left', function(e){
+            const $element = $(this)
+            if ($element.closest(".mes").hasClass("last_mes")) return;
+
+            debug("click", e)
+            
+
+        })
+    }catch(e){
+        debug("catch", e)
+    }
+
+
+
+
+    function observeSwipeStyleChanges() {
+        const chat = document.getElementById('chat');
+        if (!chat) return;
+
+        // Callback für Attribut-Änderungen
+        function swipeIdChanged(mutation, el) {
+            console.log('AnySwipe swipeid geändert:', el, el.getAttribute('swipeid'));
+
+            $("#chat").find('.swipe_right,.swipe_left').css('display', 'flex').css('opacity', '0.3');
+        
+            // Hier kannst du beliebigen Code ausführen!
+        }
+
+        function addObservers() {
+                const lastMesElements = chat.querySelectorAll('.mes.last_mes');
+                lastMesElements.forEach(el => {
+                    if (el.__swipeIdObserver) return;
+                    const observer = new MutationObserver(mutations => {
+                        mutations.forEach(mutation => {
+                            if (mutation.type === 'attributes' && mutation.attributeName === 'swipeid') {
+                                swipeIdChanged(mutation, el);
+                            }
+                        });
+                    });
+                    observer.observe(el, { attributes: true, attributeFilter: ['swipeid'], attributeOldValue: true });
+                    el.__swipeIdObserver = observer;
+                });
+            }
+
+            // Beobachte DOM-Änderungen, falls neue .mes.last_mes dazukommen
+            const domObserver = new MutationObserver(() => addObservers());
+            domObserver.observe(chat, { childList: true, subtree: true });
+
+            // Initial einmal ausführen
+            addObservers();
+        }
+    
+
+
+    observeSwipeStyleChanges();
+
+
+});
+
+
+
+
+
+
+// ...existing code...

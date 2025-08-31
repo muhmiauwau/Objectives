@@ -1,25 +1,22 @@
 @if(dataObj()) {
     @if( dataObj().id >-1) {
 
+        <div class="" style="float: left;min-height: 1em; line-height: 1;font-size: calc(var(--mainFontSize) * 0.7);">
+            @if(dataObj().status  == "init") {
+                <i class="fa-solid fa-spinner fa-spin"></i>
+            }@else{
+            ✅ 
+            } 
+        </div>
+        
         @if(dataObj().tracker) {
             <narrator-msg-tracker  mode="inline" [(tracker)]="tracker"></narrator-msg-tracker>
           
         }
 
-
-<!-- 
-        {{dataObj().id}}
-        <br> -->
-        
-        @if(dataObj().status  == "init") {
-            <i class="fa-solid fa-spinner fa-spin"></i>
-        }@else{
-           
-        } 
-         <br>
-        Status: {{dataObj().status  }}
-        <br>
-       {{dataObj().tracker.newscene  }}
+         @if(dataObj().tracker) {
+            {{dataObj().msg}}
+         }
      
 
     } 

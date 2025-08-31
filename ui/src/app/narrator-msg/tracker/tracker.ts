@@ -8,7 +8,7 @@ import * as _ from 'lodash-es';
   styleUrl: './tracker.less',
 })
 export class Tracker {
-  trackerFieldAry: any = ['location', 'time', 'weather'];
+  trackerFieldAry: any = ['location', 'time', 'weather', 'background', 'newscene'];
 
   tracker: any = model({});
   mode: any = input<any>();
@@ -29,9 +29,14 @@ export class Tracker {
     });
   }
 
-  replace(data: any) {
+  replace(data: string) {
     // const data = data
-    return data.replaceAll(',', '<br>').replaceAll('\n', '<br>');
+    if(data && typeof data == "string"){
+      return data.replaceAll(',', '<br>').replaceAll('\n', '<br>');
+    }else{
+      return data || ""
+    }
+   
   }
 
   onFocus(path: any, $event: any) {

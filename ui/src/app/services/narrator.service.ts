@@ -205,7 +205,7 @@ export class NarratorService {
      async function callAPi(prompt:any) {
 
       //  const pro = 'objectives api deepseek';
-      const pro = 'openrouter - narrator 2';
+      const pro = 'openrouter - narrator 3';
       const profiles = ConnectionManagerRequestService.getSupportedProfiles();
       const find = _.find(profiles, (entry) => entry.name == pro);
       console.log('Profile find', find);
@@ -299,7 +299,17 @@ export class NarratorService {
         {
           role: (lastChatMsg.is_user)? "user": "assistant",
           content: ST().substituteParamsExtended(`${((lastChatMsg.is_user)? "{{user}}": "{{char}}")}: ${lastChatMsg.mes}`)
-        }
+        },
+        {
+            role: "system",
+            content: "Answer only in english." 
+        },
+         {
+            role: "system",
+            content: "Important Rule for newscene: Fill this fields only if really nessary, do not descripe whats happening here. But if included It should set the setting for the new scene" 
+        },
+
+        
     ]
 
 
@@ -317,8 +327,8 @@ export class NarratorService {
 		console.log("Failed to parse tracker:", tracker, e);
 		// toastr.error("Failed to parse the generated tracker. Make sure your token count is not low or set the response length override.");
 	}
-;
 
+// ```yaml
 
 // console.log("Parsed tracker:", { newTracker });
 // const result = false
@@ -353,9 +363,10 @@ export class NarratorService {
 
 
   lastMsgIsNarrator() {
-    const chat = {...ST().chat}
-    const last:any = _.last(chat)
-    return !!(last.narratorObj)
+    const last:any = ST().chat.at(-1)
+    const isNarrator = _.has(last, ["narratorObj"])
+    console.warn("lastMsgIsNarrator", last, isNarrator)
+    return isNarrator
   }
 
 }

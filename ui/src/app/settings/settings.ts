@@ -66,7 +66,7 @@ export class Settings {
 console.log("saveNarratorForId orgMsg", orgMsg)
      
     const naratorMsg = {
-      orgMsg,
+      ...orgMsg,
       name: 'Narrator',
       mes: "",
       narratorObj,
@@ -109,11 +109,21 @@ console.log("saveNarratorForId orgMsg", orgMsg)
     
     if($element){
        narratorObj.status = mode
-      const $new = $(`<objectives-narrator-msg data='${JSON.stringify(narratorObj)}' ></objectives-narrator-msg>`)
-      $element.find(".mes_text").html($new)
+      const $new = $(`  <div class="for_checkbox"></div><input type="checkbox" class="del_checkbox"><objectives-narrator-msg data='${JSON.stringify(narratorObj)}' ></objectives-narrator-msg>`)
+      $element.html($new)
       if(mode == "init"){
+
+        // $('#chat .mes:not([ch_name="Narrator"])').last().addClass("last_mes").siblings().removeClass("last_mes")
         $(`#chat .mes:last-child`).addClass("last_mes").siblings().removeClass("last_mes")
-        $(`#chat .mes:last-child`).get(0).scrollIntoView();
+        // $(`#chat .mes:last-child`)
+        // var $element = $(`#chat .mes:last-child`)
+        // var $previous = $element.prev();
+        // $element.insertBefore($previous);
+        // // $(`#chat .mes:last-child`).detach();
+        // const chatElement = $('#chat .last_mes)').last()
+        // chatElement.find('.swipe_right').show();
+        // chatElement.find('.last_mes .swipes-counter').show();
+        // chatElement.find('.swipe_left').show();
        
       }
     }
@@ -143,7 +153,10 @@ console.log("saveNarratorForId orgMsg", orgMsg)
 //@ts-ignore
          console.log('daaaaddddd window.currentTracker', window.currentTracker, this.narratorData.tracker); 
 
-        //  ST().executeSlashCommandsWithOptions("/trigger", {await:true})
+        if(this.narratorData.is_user){
+          ST().executeSlashCommandsWithOptions("/trigger", {await:true})
+        }
+         
         
        
       }
@@ -183,6 +196,9 @@ console.log("saveNarratorForId orgMsg", orgMsg)
 
     eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, async (id: any, type: any) => {
       console.log('✅ ✅ CHARACTER_MESSAGE_RENDERED', id, type);
+      if(type == "extension") return;
+      // if()
+      await this.runNarration();
       // await this.setNarratorForId(id);
     });
 
@@ -238,8 +254,9 @@ console.log("saveNarratorForId orgMsg", orgMsg)
       if (event.dryRun) return;
       console.log('✅ Final Prompt', event, event.chat, ST().chat);
 
-        console.log('✅ blocked', this.blocked, this.type);
-      if(!this.blocked) return;
+        console.log('✅ blocked', this.blocked, this.type, this.narratorService.lastMsgIsNarrator());
+      // if(!this.blocked) return;
+      if(this.narratorService.lastMsgIsNarrator()) return;
 
       if(this.type == "impersonate") {
         this.blocked = false
@@ -262,7 +279,7 @@ console.log("saveNarratorForId orgMsg", orgMsg)
 
     eventSource.on(event_types.MESSAGE_RECEIVED, async (id: any, type:string) => {
       if(type == "first_message"){
-         await this.runNarration();
+        //  await this.runNarration();
       };
       console.log('✅ MESSAGE_RECEIVED', id, type);
      
@@ -312,9 +329,18 @@ console.log("saveNarratorForId orgMsg", orgMsg)
 
     const narratorObj = {
       id: id + 1,
-      msg: `${id}:(dummy msg)`
+      msg: `${id}:(dummy msg)`,
+      is_user: ST().chat.at(-1).is_user
     }
     await this.saveNarratorForId(id, narratorObj);
+  }
+
+
+
+
+
+  openPromptManager(){
+    ST().callGenericPopup($("<div>sdasdasd</div>"), 4)
   }
   
 }
