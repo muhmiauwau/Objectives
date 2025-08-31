@@ -224,30 +224,6 @@ console.log("saveNarratorForId orgMsg", orgMsg)
         const narratorObj = chat.at($element.attr("mesid")).narratorObj
         this.insertElement($element, narratorObj, "done")
       });
-
-
-        //@ts-ignore
-      
-      
-
-      //@ts-ignore
-      // window.currentTracker = {...(last.tracker||{})}
-
-
-
-      // //@ts-ignore
-      // const $msgs = jQuery(`#chat .mes`)
-      // console.log('✅ ✅ CHAT_CHANGED', $msgs)
-
-      // $msgs.each((key:any,value:any) => {
-
-      //   //@ts-ignore
-      //   const ele = $(value)
-      //   // if(ele.attr("ch_name") == "Narrator"){
-      //   //   ele.find(".mesAvatarWrapper,.mes_block .flex-container.flex1.alignitemscenter * ").remove()
-      //   // }
-
-      // });
     });
 
     eventSource.on(event_types.CHAT_COMPLETION_PROMPT_READY, async (event: any) => {
@@ -292,9 +268,9 @@ console.log("saveNarratorForId orgMsg", orgMsg)
       // await this.runNarration();
     });
 
-    // eventSource.on(event_types.GENERATE_BEFORE_COMBINE_PROMPTS, (data: any, a: any) => {
-    //   console.log('✅ ✅ GENERATE_BEFORE_COMBINE_PROMPTS', data, a);
-    // });
+    eventSource.on(event_types.MESSAGE_DELETED, (data: any,) => {
+      console.log('✅ ✅ MESSAGE_DELETED', data);
+    });
 
     // ST().eventSource.on(ST().event_types.GENERATE_BEFORE_COMBINE_PROMPTS, (data: any, a: any) => {
     //   console.log('✅ ✅ GENERATE_AFTER_COMBINE_PROMPTS', data, a);

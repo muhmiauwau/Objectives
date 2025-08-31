@@ -179,7 +179,7 @@ display:none !important;
 } */
 
 #chat .mes:not([ch_name="Narrator"]){
-    padding-bottom: 30px !important;
+    padding-bottom: calc((var(--mainFontSize) * +1.7) + 10px) !important;
 }
 
 
@@ -195,5 +195,5 @@ display:none !important;
     margin-top: calc((var(--mainFontSize) * -1.7) - 10px);
     background: none !important;
     border: 0;
-    padding: 0;
+    padding: 0 !important;
 }
