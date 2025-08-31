@@ -1,8 +1,10 @@
 import { Component ,effect,signal, model, inject} from '@angular/core';
+import { TrackerService } from 'services/tracker.service';
 import { NarratorService } from 'services/narrator.service';
 import * as _ from 'lodash-es';
 import ST from 'data/SillyTavern';
 import { Tracker } from 'narrator-msg/tracker/tracker';
+
 
 @Component({
   selector: 'app-current-tracker',
@@ -11,12 +13,13 @@ import { Tracker } from 'narrator-msg/tracker/tracker';
   styleUrl: './current-tracker.less'
 })
 export class CurrentTracker {
-  
+  trackerService = inject(TrackerService);
   narratorService = inject(NarratorService);
   headline = "Current Tracker"
   narratioStr: string = '';
 
   tracker = model({})
+
   constructor() {
 
 
@@ -31,10 +34,21 @@ export class CurrentTracker {
     effect(async () => {
 
 
-      const narratorData = this.narratorService.narratorData()
-      if(narratorData && narratorData?.tracker !== this.tracker()){
-        this.tracker.set(narratorData?.tracker)
+      
+
+      const panelTracker = this.trackerService.panelTracker()
+      if(panelTracker && panelTracker !== this.tracker()){
+      
+
+    console.log("TrackerService ", panelTracker)
+        this.tracker.set(panelTracker.tracker)
       }
+
+
+      // const narratorData = this.narratorService.narratorData()
+      // if(narratorData && narratorData?.tracker !== this.tracker()){
+      //   this.tracker.set(narratorData?.tracker)
+      // }
 
       
       
@@ -54,5 +68,14 @@ export class CurrentTracker {
 
        
     });
+
+
+
+
+
+   
+
+
+
   }
 }

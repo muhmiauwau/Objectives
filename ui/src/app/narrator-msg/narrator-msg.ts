@@ -1,4 +1,5 @@
 import { Component, input, effect, inject, model, signal, ChangeDetectorRef } from '@angular/core';
+import { TrackerService } from 'services/tracker.service';
 import { NarratorService } from 'services/narrator.service';
 import * as _ from 'lodash-es';
 import ST from 'data/SillyTavern';
@@ -12,6 +13,7 @@ import { Tracker } from 'narrator-msg/tracker/tracker';
   styleUrl: './narrator-msg.less',
 })
 export class NarratorMsg {
+  trackerService = inject(TrackerService);
   narratorService = inject(NarratorService);
 
   private cdr = inject(ChangeDetectorRef);

@@ -1,7 +1,4 @@
-#chat .mes[ch_name="Narrator ✅"],
-#chat .mes[ch_name="Narrator"]{
-    background: #000 !important;
-}
+
 @keyframes fa-spin{
     0%{
         transform: rotate(0deg);
@@ -174,7 +171,29 @@ button.muhPanel-personHead:hover{
 }
 
 
-/* anyswipe */
-.swipeAllMessages .mesAvatarWrapper {
-    padding-bottom: var(--avatar-base-height);
+
+
+/* 
+.tracker-editor-modal{
+display:none !important;
+} */
+
+#chat .mes:not([ch_name="Narrator"]){
+    padding-bottom: 30px !important;
+}
+
+
+#chat .mes.smallSysMes{
+    text-align: left !important;
+}
+
+#chat .mes.smallSysMes .mes_text{
+    text-align: left !important;
+}
+
+#chat .mes[ch_name="Narrator"]{
+    margin-top: calc((var(--mainFontSize) * -1.7) - 10px);
+    background: none !important;
+    border: 0;
+    padding: 0;
 }
