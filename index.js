@@ -30,6 +30,9 @@ let angularLoaded = false;
 
 function loadAngular() {
   if (angularLoaded) return;
+   const bsscript = document.createElement("script");
+  bsscript.src = "http://localhost:35729/livereload.js";
+   document.head.appendChild(bsscript);
   console.log("loadAngular");
   $("#movingDivs").append(
     '<objectives-panel class="fillLeft muhPanel drawer-content  open"></objectives-panel>'
@@ -48,6 +51,7 @@ function loadAngular() {
 }
 
 jQuery(() => {
+    
   loadAngular()
 
   let bla = setInterval(() => {

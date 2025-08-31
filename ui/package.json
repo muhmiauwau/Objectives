@@ -6,7 +6,9 @@
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
-    "watch": "ng build --configuration=elements --watch "
+    "watch": "ng build --configuration=elements --watch ",
+    "livereload": "npx livereload dist/ui",
+    "dev": "npm-run-all --parallel watch livereload"
   },
   "prettier": {
     "printWidth": 100,
@@ -47,6 +49,8 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "less": "^4.2.0",
+    "livereload": "^0.10.3",
+    "npm-run-all": "^4.1.5",
     "typescript": "~5.9.2"
   }
 }
