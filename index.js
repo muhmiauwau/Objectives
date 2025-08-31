@@ -21,6 +21,8 @@ function loadAngular(){
      console.log('loadAngular');
     $('#movingDivs').append('<objectives-panel class="fillLeft muhPanel drawer-content  open"></objectives-panel>');
     $('#extensions_settings').append('<objectives-settings class="expression_settings"></objectives-settings>');
+    $('#movingDivs').append('<objectives-current-tracker class="fillRight muhPanel muhPanel-current-tracker drawer-content  open"></objectives-current-tracker>');
+    
     const script = document.createElement('script');
     script.src = extensionFolderPath + '/ui/dist/ui/browser/main.js';
     document.head.appendChild(script);

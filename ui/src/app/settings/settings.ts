@@ -143,7 +143,7 @@ console.log("saveNarratorForId orgMsg", orgMsg)
 //@ts-ignore
          console.log('daaaaddddd window.currentTracker', window.currentTracker, this.narratorData.tracker); 
 
-         ST().executeSlashCommandsWithOptions("/trigger", {await:true})
+        //  ST().executeSlashCommandsWithOptions("/trigger", {await:true})
         
        
       }
@@ -261,9 +261,11 @@ console.log("saveNarratorForId orgMsg", orgMsg)
     });
 
     eventSource.on(event_types.MESSAGE_RECEIVED, async (id: any, type:string) => {
-      if(type == "first_message") return;
+      if(type == "first_message"){
+         await this.runNarration();
+      };
       console.log('✅ MESSAGE_RECEIVED', id, type);
-      // await this.runNarration();
+     
     });
 
     eventSource.on(event_types.MESSAGE_SENT, async (id: any) => {

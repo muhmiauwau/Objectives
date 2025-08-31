@@ -205,7 +205,7 @@ export class NarratorService {
      async function callAPi(prompt:any) {
 
       //  const pro = 'objectives api deepseek';
-      const pro = 'openrouter - narrator';
+      const pro = 'openrouter - narrator 2';
       const profiles = ConnectionManagerRequestService.getSupportedProfiles();
       const find = _.find(profiles, (entry) => entry.name == pro);
       console.log('Profile find', find);
@@ -279,7 +279,7 @@ export class NarratorService {
       }
 
       // @ts-ignore
-      const currentTracker = this.getCurrentTracker()
+      const currentTracker = await this.getCurrentTracker()
       
     // const currentTracker = "\nNewScene: \"<not needed>\"\nTime: \"14:02:25; 10/16/2024 (Wednesday)\"\nLocation: \"Quiet corner table near window, The Bookworm Café, Old Town District, Munich, Germany\"\nWeather: \"Partly cloudy, mild autumn afternoon\"\nTopics:\n  PrimaryTopic: \"Introduction\"\n  EmotionalTone: \"Friendly\"\n  InteractionTheme: \"Conversational\"\nCharactersPresent: [\"Lara\", \"Lena\"]\nCharacters:\n  Lara:\n    Hair: \"Long brown hair flowing over shoulders\"\n    Makeup: \"Natural look with light mascara and lip balm\"\n    Outfit: \"Cream-colored knit sweater; Dark wash skinny jeans; Brown leather ankle boots; Silver pendant necklace; Delicate silver bracelet; Light blue lace balconette bra; Light blue lace bikini panties matching the bra\"\n    StateOfDress: \"Sweater removed, placed on chair back or nearby; wearing blouse underneath\"\n    PostureAndInteraction: \"In the process of removing sweater, smiling at Lena, appearing more relaxed\"\n  Lena:\n    Hair: \"Shoulder-length brown hair, neatly styled\"\n    Makeup: \"Subtle natural makeup with light foundation and neutral lip color\"\n    Outfit: \"Navy blue cardigan over white cotton blouse; Gray tweed trousers; Brown leather loafers; Tortoiseshell reading glasses on table; Silver stud earrings; Beige seamless t-shirt bra; Beige seamless briefs matching the bra\"\n    StateOfDress: \"Fully dressed, slightly formal but comfortable\"\n    PostureAndInteraction: \"Smiling back at Lara, adjusting books on the table, maintaining friendly eye contact\"\n\n"
 
@@ -329,8 +329,13 @@ export class NarratorService {
   }
 
 
-  getCurrentTracker() {
+  async getCurrentTracker():Promise<any> {
     const chat = {...ST().chat}
+
+    if(_.size(chat) == 0){
+      await new Promise(r => setTimeout(r, 100));
+      return this.getCurrentTracker()
+    }
 
     const filtered: any = _.filter(chat, (entry: any) =>{
       return _.has(entry,["narratorObj", "tracker"])
@@ -340,10 +345,17 @@ export class NarratorService {
     if(!filtered) return {};
 
     const lastEntry:any = _.last(filtered)
-    console.assert(lastEntry, "getCurrentTracker: no lastEntry found")
+    console.assert(lastEntry, "getCurrentTracker: no lastEntry found", chat)
     if(!lastEntry) return {};
 
     return lastEntry.narratorObj.tracker
+  }
+
+
+  lastMsgIsNarrator() {
+    const chat = {...ST().chat}
+    const last:any = _.last(chat)
+    return !!(last.narratorObj)
   }
 
 }

@@ -2,9 +2,8 @@
     @if( dataObj().id >-1) {
 
         @if(dataObj().tracker) {
-            <narrator-msg-tracker [(tracker)]="tracker"></narrator-msg-tracker>
-            Tracker: {{dataObj().tracker}}
-            <br>
+            <narrator-msg-tracker  mode="inline" [(tracker)]="tracker"></narrator-msg-tracker>
+          
         }
 
 
@@ -15,16 +14,12 @@
         @if(dataObj().status  == "init") {
             <i class="fa-solid fa-spinner fa-spin"></i>
         }@else{
-            
-            <!-- @if(dataObj().tracker) {
-                <narrator-msg-tracker [(tracker)]="tracker"></narrator-msg-tracker>
-                Tracker: {{dataObj().tracker}}
-                <br>
-            } -->
-            ssss {{dataObj().msg}}
+           
         } 
          <br>
         Status: {{dataObj().status  }}
+        <br>
+       {{dataObj().tracker.newscene  }}
      
 
     } 

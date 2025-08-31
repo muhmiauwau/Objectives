@@ -4,6 +4,7 @@ import { createCustomElement } from '@angular/elements';
 import { Panel } from 'panel/panel';
 import { Settings } from 'settings/settings';
 import { NarratorMsg } from 'narrator-msg/narrator-msg';
+import { CurrentTracker } from 'current-tracker/current-tracker';
 
 
 // Zoneless Custom Elements Setup
@@ -20,11 +21,13 @@ createApplication({
     const panelElement = createCustomElement(Panel, { injector: appRef.injector });
     const settingsElement = createCustomElement(Settings, { injector: appRef.injector });
     const narratorMsgElement = createCustomElement(NarratorMsg, { injector: appRef.injector });
+    const currentTracker = createCustomElement(CurrentTracker, { injector: appRef.injector });
 
     // Custom Elements registrieren
     customElements.define('objectives-panel', panelElement);
     customElements.define('objectives-settings', settingsElement);
     customElements.define('objectives-narrator-msg', narratorMsgElement);
+    customElements.define('objectives-current-tracker', currentTracker);
 // @ts-ignore
     console.log('✅ Custom Elements registered: objectives-panel, objectives-settings');
   } catch (error) {

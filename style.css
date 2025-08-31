@@ -17,6 +17,20 @@
 .muhPanel{
    
 }
+
+.muhPanel-current-tracker.open{
+    height: 100vh !important;
+    max-height: 100vh !important;
+}
+
+.muhPanel-current-tracker
+.muhPanel-contentScroll{
+    overflow: hidden;
+    overflow-y: auto;
+    max-height: calc(100vh - 63px);
+}
+
+
 .muhPanel.open{
     display: block; 
 }
@@ -95,7 +109,7 @@ button.muhPanel-personHead:hover{
 .muhPanel-contentScroll{
     overflow: hidden;
     overflow-y: auto;
-    max-height: calc(100vh - 148px)
+    max-height: calc(100vh - 148px);
 }
 
 .muhPanel-viewHeadline{

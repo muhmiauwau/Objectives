@@ -1,4 +1,4 @@
-import { Component, model } from '@angular/core';
+import { Component, model, input } from '@angular/core';
 import * as _ from 'lodash-es';
 
 @Component({
@@ -11,6 +11,7 @@ export class Tracker {
   trackerFieldAry: any = ['location', 'time', 'weather'];
 
   tracker: any = model({});
+  mode: any = input<any>();
 
   // trackerObj: any = model({})
 
