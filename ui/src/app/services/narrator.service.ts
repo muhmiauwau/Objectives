@@ -264,7 +264,7 @@ export class NarratorService {
           const secondsFormatted = seconds.toFixed(2);
 
 
-          return `CallTracker stats: ${token} tokens, ${secondsFormatted} seconds, rate: ${result} TPS `
+          return `CallTracker tokens: ${token} time: ${secondsFormatted}s , rate: ${result} TPS `
         }
   
         console.log('######### callAPi', profiles, res, response); 

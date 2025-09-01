@@ -1,4 +1,4 @@
-import { Component, model, input } from '@angular/core';
+import { Component, model, input, computed } from '@angular/core';
 import * as _ from 'lodash-es';
 
 @Component({
@@ -13,7 +13,7 @@ export class Tracker {
   tracker: any = model({});
   mode: any = input<any>();
 
-  // trackerObj: any = model({})
+
 
   log(data: any) {
     console.log('narrator-msg-tracker ', data);

@@ -1,26 +1,6 @@
-@if(tracker()){
+@if(tracker() && tracker().location){
 
-    <div class="smallView">
-        <!-- <div class="toggle">
-            <button><i class="fa-fw fa-solid fa-chevron-down"></i></button>
-        </div> -->
-        <div class="left">
-                @for (entry of trackerFieldAry; let index = $index; track index; ) {
-                     @if(entry == "location"){
-                        <div class="entry" [title]="tracker()[entry]">{{ tracker()[entry] }}</div>
-                    }
-                }
-        </div>
-        <div class="right">
-                @for (entry of trackerFieldAry; let index = $index; track index; ) {
-                    @if(entry == "time"){
-                         <div class="entry" [title]="tracker()[entry]">{{ tracker()[entry] }}</div>
-                    }
-
-                }
-        </div>
-    </div>
-    @if(mode() != "inline"){
+    
     <div class="fullView">
          <hr>
         <!-- <div class="right">
@@ -69,73 +49,10 @@
                 </dl>
             <!--    <dd>{{ character }}</dd> -->
 
-            }
-           
+            } 
         </div>
     </div>
-    }
+   
     
-   
 
-   
-
-
-<!-- <div class="tracker_default_mes_template">
-    <table>
-        <tr>
-            <td>Time:</td>
-            <td>{{Time}}</td>
-        </tr>
-        <tr>
-            <td>Location:</td>
-            <td>{{Location}}</td>
-        </tr>
-        <tr>
-            <td>Weather:</td>
-            <td>{{Weather}}</td>
-        </tr>
-    </table>
-    <details>
-        <summary><span>Tracker</span></summary>
-        <table>
-            <tr>
-                <td>Topics:</td>
-                <td>{{#join "; " Topics}}</td>
-            </tr>
-            <tr>
-                <td>Present:</td>
-                <td>{{#join "; " CharactersPresent}}</td>
-            </tr>
-        </table>
-        <div class="mes_tracker_characters">
-            {{#foreach Characters character}}
-            <hr>
-            <strong>{{character}}:</strong><br />
-            <table>
-                <tr>
-                    <td>Hair:</td>
-                    <td>{{character.Hair}}</td>
-                </tr>
-                <tr>
-                    <td>Makeup:</td>
-                    <td>{{character.Makeup}}</td>
-                </tr>
-                <tr>
-                    <td>Outfit:</td>
-                    <td>{{character.Outfit}}</td>
-                </tr>
-                <tr>
-                    <td>State:</td>
-                    <td>{{character.StateOfDress}}</td>
-                </tr>
-                <tr>
-                    <td>Position:</td>
-                    <td>{{character.PostureAndInteraction}}</td>
-                </tr>
-            </table>
-            {{/foreach}}
-        </div>
-    </details>
-</div>
-<hr> -->
 }

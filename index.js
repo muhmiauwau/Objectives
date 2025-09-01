@@ -13,6 +13,8 @@ const extensionNameLong = `Objectives`;
 export const extensionFolderPath = `scripts/extensions/third-party/${extensionNameLong}`;
 export const extensionSettings = extension_settings[extensionName] | {};
 
+window.ST = SillyTavern.getContext
+
 window.Objectives = {
   log,
   warn,

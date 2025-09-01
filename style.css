@@ -179,7 +179,7 @@ display:none !important;
 } */
 
 #chat .mes:not([ch_name="Narrator"]){
-    padding-bottom: calc((var(--mainFontSize) * +1.7) + 10px) !important;
+    padding-bottom: calc((var(--mainFontSize) * +1.7) + 5px) !important;
 }
 
 
@@ -192,7 +192,7 @@ display:none !important;
 }
 
 #chat .mes[ch_name="Narrator"]{
-    margin-top: calc((var(--mainFontSize) * -1.7) - 10px);
+    margin-top: calc((var(--mainFontSize) * -1.7) - 5px);
     background: none !important;
     border: 0;
     padding: 0 !important;
