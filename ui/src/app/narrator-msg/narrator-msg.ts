@@ -1,5 +1,7 @@
 import { Component, input, effect, inject, model, signal, ChangeDetectorRef, ChangeDetectionStrategy, computed } from '@angular/core';
 import { TrackerService } from 'services/tracker.service';
+import { TrackerStatusService } from 'services/tracker-status.service';
+
 import { NarratorService } from 'services/narrator.service';
 import * as _ from 'lodash-es';
 import ST from 'data/SillyTavern';
@@ -13,6 +15,7 @@ import { Tracker } from 'narrator-msg/tracker/tracker';
 })
 export class NarratorMsg {
   trackerService = inject(TrackerService);
+  trackerStatusService = inject(TrackerStatusService);
   narratorService = inject(NarratorService);
 
   private cdr = inject(ChangeDetectorRef);
@@ -33,6 +36,8 @@ export class NarratorMsg {
     const data = this.dataObj()
     return data?.tracker
   });
+
+  status = signal("init");
 
   // activeInPanel: signal<boolean> = false
 
@@ -58,6 +63,15 @@ export class NarratorMsg {
         this.dataObj.set({ ...this.dataObj(), tracker: update.tracker });
       }
 
+      const statusUpdate:any = this.trackerStatusService.statusUpdate()
+      if (statusUpdate) {
+        if (statusUpdate.id == this.dataObj().id) {
+          console.log('TrackerService statusUpdate', statusUpdate);
+          this.status.set(statusUpdate.status);
+        }
+      }
+
+
       const tracker: any = this.tracker();
       if (tracker && tracker !== this.dataObj().tracker) {
         if (_.size(tracker) > 0) {
@@ -76,8 +90,8 @@ export class NarratorMsg {
       // minimal, robust parsing: accept object or JSON-string
       const data = this.data();
       if (data && data !== this._data) {
-        this._data = data;
-        this.dataObj.set(JSON.parse(data));
+        // this._data = data;
+        // this.dataObj.set(JSON.parse(data));
 
         // if(this.dataObj().tracker){
         //   console.log("this.dataObj().tracker", this.dataObj().tracker)

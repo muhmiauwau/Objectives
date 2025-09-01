@@ -13,8 +13,6 @@ const extensionNameLong = `Objectives`;
 export const extensionFolderPath = `scripts/extensions/third-party/${extensionNameLong}`;
 export const extensionSettings = extension_settings[extensionName] | {};
 
-window.ST = SillyTavern.getContext
-
 window.Objectives = {
   log,
   warn,
@@ -79,7 +77,7 @@ SillyTavern.getContext().registerMacro("tracker", function () {
       .parents(".mes.smallSysMes")
       .attr("mesid");
     if (!id) return;
-    const tracker = SillyTavern.getContext().chat[id].narratorObj.tracker;
+    const tracker = SillyTavern.getContext().chat[id].tracker;
     if (!tracker) return;
     window.currentTracker = tracker;
   }

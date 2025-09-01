@@ -30,8 +30,7 @@ export class CurrentTracker {
     effect(async () => {
       const panelTracker = this.trackerService.panelTracker();
       if (panelTracker && panelTracker !== this.tracker()) {
-        if (panelTracker.id  !== this.id ) {
-          console.log('TrackerService CurrentTracker panelTracker', panelTracker, this.id);
+        if (panelTracker.id  !== this.id ){
           this.id = panelTracker.id
           this.tracker.set(panelTracker.tracker);
           this.setHeadline(panelTracker.id);
@@ -40,7 +39,7 @@ export class CurrentTracker {
 
       const tracker = this.tracker();
       if (tracker && panelTracker?.tracker) {
-        if (tracker !== panelTracker.tracker) {
+        if (tracker !== panelTracker.tracker && panelTracker.id > 0) {
           console.log('TrackerService CurrentTracker tracker', tracker);
           this.trackerService.update.set(panelTracker);
         }

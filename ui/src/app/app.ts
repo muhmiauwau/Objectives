@@ -14,7 +14,6 @@ export class App {
    title = signal('objectives');
 
    constructor(){
-    console.log("ddddd")
     //  console.log(trackerUserPromptTemplate, trackerSystemPromptTemplate) 
    }
     // 

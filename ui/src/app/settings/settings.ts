@@ -31,7 +31,7 @@ export class Settings {
   narratorMessage: any = {};
 
   getNarratorForId(id: number) {
-    // console.log('✅ ✅ getNarratorForId');
+    // // console.log('✅ ✅ getNarratorForId');
     // return ST().chat[id].narrator
     // ST().chat
   }
@@ -40,67 +40,42 @@ export class Settings {
 
   async saveNarratorForId(id: number, narratorObj: any) {
 
-    console.log("saveNarratorForId call", id, narratorObj, ST().chat[id])
-    const context = ST()
-    // this.narratorMessage = {id, mes}
+    const newId = (id + 1)
+
     const orgMsg: any = {...ST().chat[id]};
-    // if(orgMsg.name)return 
-    // orgMsg.name += " ✅"
-    // context.addOneMessage(orgMsg)
-
-
-    let tracker = {}
-    if(!orgMsg.is_user){
-      // @ts-ignore
-      // tracker = await window.generateTracker(id)
-     }
-
-    //@ts-ignore
-    window.currentTracker = tracker
-    // const tracker = { ...(orgMsg.tracker || {}) } 
-
-    // const tracker = jsonToYAML(mes.tracker);
-		// 	mes.mes = `<tracker>${tracker}</tracker>\n\n`;
-    orgMsg.tracker = {}
-
-console.log("saveNarratorForId orgMsg", orgMsg)
-     
     const naratorMsg = {
       ...orgMsg,
       name: 'Narrator',
       mes: "",
-      narratorObj,
-      swipes:[],
+      tracker: orgMsg.tracker || {},
       extra: {
         isSmallSys:true
       }
     };
-    // naratorMsg.extra = naratorMsg.extra ||{};
+
     naratorMsg.extra.isSmallSys = true;
-    // naratorMsg.is_system = true
-    // naratorMsg
 
-    await ST().chat.push({...naratorMsg, name: 'Narrator'});
+    await ST().chat.push(naratorMsg);
     await ST().saveChat();
-    ST().addOneMessage(naratorMsg,{forceId: narratorObj.id, showSwipes: false})
+    ST().addOneMessage(naratorMsg, {forceId: newId, showSwipes: false})
 
-    await new Promise(r => setTimeout(r, 200));
+    // await new Promise(r => setTimeout(r, 200));
    
     try{
       //@ts-ignore
-      const $element = $(`#chat .mes[mesid="${narratorObj.id}"]`)
+      const $element = $(`#chat .mes[mesid="${newId}"]`)
       this.insertElement($element, narratorObj)
-      console.log('aaaddddd runN saveNarratorForId', $element, `#chat .mes[mesid="${narratorObj.id}"]`);
+      // console.log('aaaddddd runN saveNarratorForId', $element, `#chat .mes[mesid="${narratorObj.id}"]`);
        
     }catch(err:any){
-      console.log(err)
+      // console.log(err)
 
     }
 
     this.blocked = false
 
     this.narratorMessage = { id, narratorObj, naratorMsg };
-    // console.log('aaaddddd runN saveNarratorForId', $element, `#chat .mes[mesid="${narratorObj.id}"]`);
+    // // console.log('aaaddddd runN saveNarratorForId', $element, `#chat .mes[mesid="${narratorObj.id}"]`);
 
   }
 
@@ -108,7 +83,6 @@ console.log("saveNarratorForId orgMsg", orgMsg)
   insertElement($element: any, narratorObj:any, mode: any = "init"){
     
     if($element){
-       narratorObj.status = mode
       const $new = $(`  <div class="for_checkbox"></div><input type="checkbox" class="del_checkbox"><objectives-narrator-msg data='${JSON.stringify(narratorObj)}' ></objectives-narrator-msg>`)
       $element.html($new)
       if(mode == "init"){
@@ -142,7 +116,7 @@ console.log("saveNarratorForId orgMsg", orgMsg)
       const narratorData = this.narratorService.narratorData()
       if(narratorData && narratorData !== this.narratorData){
         this.narratorData = narratorData;
-        console.log('daaaaddddd narratorData', this.narratorData); 
+        // // console.log('daaaaddddd narratorData', this.narratorData); 
 
         ST().chat[this.narratorData.id].narratorObj = this.narratorData
         ST().chat[this.narratorData.id].mes = this.narratorData.msg
@@ -151,7 +125,7 @@ console.log("saveNarratorForId orgMsg", orgMsg)
         window.currentTracker =  this.narratorData.tracker
 
 //@ts-ignore
-         console.log('daaaaddddd window.currentTracker', window.currentTracker, this.narratorData.tracker); 
+         // console.log('daaaaddddd window.currentTracker', window.currentTracker, this.narratorData.tracker); 
 
         if(this.narratorData.is_user){
           ST().executeSlashCommandsWithOptions("/trigger", {await:true})
@@ -165,7 +139,7 @@ console.log("saveNarratorForId orgMsg", orgMsg)
 
 
     // eventSource.on("TRACKER_PREVIEW_UPDATED", async (id: number, type: any) => {
-    //   console.log('✅ ✅ TRACKER_PREVIEW_UPDATED', id, type, ST().chat.length);
+    //   // console.log('✅ ✅ TRACKER_PREVIEW_UPDATED', id, type, ST().chat.length);
 
 
 
@@ -182,20 +156,20 @@ console.log("saveNarratorForId orgMsg", orgMsg)
 
 
      eventSource.on(event_types.USER_MESSAGE_RENDERED, async (id: number, type: any) => {
-      console.log('✅ ✅ ✅ ✅ USER_MESSAGE_RENDERED', id, type);
+      // console.log('✅ ✅ ✅ ✅ USER_MESSAGE_RENDERED', id, type);
 
       // await this.setNarratorForId(id);
     });
 
     eventSource.on(event_types.MESSAGE_RECEIVED, (id: number, type: any) => {
-      console.log('✅ ✅ ✅ ✅ MESSAGE_RECEIVED', id, type, ST().chatMetadata);
+      // console.log('✅ ✅ ✅ ✅ MESSAGE_RECEIVED', id, type, ST().chatMetadata);
       this.blocked = true
       
       // await this.setNarratorForId(id);
     });
 
     eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, async (id: any, type: any) => {
-      console.log('✅ ✅ CHARACTER_MESSAGE_RENDERED', id, type);
+      // console.log('✅ ✅ CHARACTER_MESSAGE_RENDERED', id, type);
       if(type == "extension") return;
       // if()
       await this.runNarration();
@@ -218,7 +192,7 @@ console.log("saveNarratorForId orgMsg", orgMsg)
       const chat = ST().chat
       // @ts-ignore
       $(`#chat .mes[ch_name="Narrator"]`).each((key, element:any) => {
-        console.log(element)
+        // console.log(element)
         //@ts-ignore
         const $element = $(element)
         const narratorObj = chat.at($element.attr("mesid")).narratorObj
@@ -228,9 +202,9 @@ console.log("saveNarratorForId orgMsg", orgMsg)
 
     eventSource.on(event_types.CHAT_COMPLETION_PROMPT_READY, async (event: any) => {
       if (event.dryRun) return;
-      console.log('✅ Final Prompt', event, event.chat, ST().chat);
+      // console.log('✅ Final Prompt', event, event.chat, ST().chat);
 
-        console.log('✅ blocked', this.blocked, this.type, this.narratorService.lastMsgIsNarrator());
+        // console.log('✅ blocked', this.blocked, this.type, this.narratorService.lastMsgIsNarrator());
       // if(!this.blocked) return;
       if(this.narratorService.lastMsgIsNarrator()) return;
 
@@ -249,7 +223,7 @@ console.log("saveNarratorForId orgMsg", orgMsg)
     eventSource.on(event_types.GENERATION_AFTER_COMMANDS, async (type:any, config:any, dryRun:any) =>{ 
       if(dryRun) return;
        if(!this.blocked) return;
-      console.log('GENERATION_AFTER_COMMANDS',type)
+      // console.log('GENERATION_AFTER_COMMANDS',type)
       this.type = type
     });
 
@@ -257,27 +231,27 @@ console.log("saveNarratorForId orgMsg", orgMsg)
       if(type == "first_message"){
         //  await this.runNarration();
       };
-      console.log('✅ MESSAGE_RECEIVED', id, type);
+      // console.log('✅ MESSAGE_RECEIVED', id, type);
      
     });
 
     eventSource.on(event_types.MESSAGE_SENT, async (id: any) => {
-      console.log('✅ MESSAGE_SENT', id);
+      // console.log('✅ MESSAGE_SENT', id);
       this.type = "user"
       this.blocked = true
       // await this.runNarration();
     });
 
     eventSource.on(event_types.MESSAGE_DELETED, (data: any,) => {
-      console.log('✅ ✅ MESSAGE_DELETED', data);
+      // console.log('✅ ✅ MESSAGE_DELETED', data);
     });
 
     // ST().eventSource.on(ST().event_types.GENERATE_BEFORE_COMBINE_PROMPTS, (data: any, a: any) => {
-    //   console.log('✅ ✅ GENERATE_AFTER_COMBINE_PROMPTS', data, a);
+    //   // console.log('✅ ✅ GENERATE_AFTER_COMBINE_PROMPTS', data, a);
     // });
 
     // ST().eventSource.on(ST().event_types.GENERATE_AFTER_COMBINE_PROMPTS, (data: any, a: any) => {
-    //   console.log('✅ ✅ GENERATE_AFTER_COMBINE_PROMPTS', data, a);
+    //   // console.log('✅ ✅ GENERATE_AFTER_COMBINE_PROMPTS', data, a);
     // });
   }
 
@@ -300,7 +274,7 @@ console.log("saveNarratorForId orgMsg", orgMsg)
     let id = $(`#chat .mes`).last().attr('mesid');
     id = parseInt(id)
 
-    console.log('daaaaddddd ✅ runNarration for', id, id + 1);
+    // console.log('daaaaddddd ✅ runNarration for', id, id + 1);
 
 
     const narratorObj = {
@@ -329,12 +303,12 @@ console.log("saveNarratorForId orgMsg", orgMsg)
 
   //   function onGenerationMutexCaptured(event:any) {
   //     const capturedBy = event.extension_name;
-  //     console.log('[daaaaddddd MUTEX] Generation mutex captured by', capturedBy);
+  //     // console.log('[daaaaddddd MUTEX] Generation mutex captured by', capturedBy);
   // }
 
   //   function onGenerationMutexReleased() {
   //     // capturedBy = NO_CAPTURES;
-  //     console.log('[daaaaddddd MUTEX] Generation mutex released');
+  //     // console.log('[daaaaddddd MUTEX] Generation mutex released');
   // }
 
   //   eventSource.on(generationMutexEvents.MUTEX_CAPTURED, onGenerationMutexCaptured);

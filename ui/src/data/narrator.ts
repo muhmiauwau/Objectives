@@ -63,6 +63,16 @@ ${exampleTracker()}
 
 Your primary objective is to ensure clarity, consistency, and structured responses for scene tracking in YAML format, providing complete details even when specifics are not explicitly stated.`
 
+
+
+export const generateRequestPrompt = `[Analyze the previous messages and update the current scene tracker based on logical inferences and explicit details. Pause and ensure only the tracked data is provided, formatted in {{trackerFormat}}. Avoid adding, omitting, or rearranging fields unless specified. Respond with the full tracker every time.
+
+### Response Rules:
+${responseRules}
+
+Ensure the response remains consistent, strictly follows this structure in {{trackerFormat}}, and omits any extra data or deviations. You MUST enclose the tracker in <tracker></tracker> tags]`;
+
+
 /*
 - **newscene:** Only provide a transition sentence if an action or dialogue clearly and definitively ends the current social interaction (e.g., saying goodbye and leaving, exiting a room, abruptly ending the conversation, falling asleep). Otherwise, do not output anything.
 - **Time:** Analyze the content and complexity of the new message to estimate how much time has realistically passed. Consider the type of action or dialogue: quick exchanges (few seconds), complex actions (30 seconds to minutes), scene changes (minutes to hours). Use the 24-hour format: \"HH:MM:SS; MM/DD/YYYY (Day Name)\".
@@ -90,6 +100,25 @@ export const trackerUserPromptTemplate = `
 ${responseRules()}
 
 Ensure the response remains consistent, strictly follows this structure in YAML, and omits any extra data or deviations. You MUST enclose the tracker in <tracker></tracker> tags]`
+
+
+export const trackerFullSystemPromptTemplate:any = `${trackerSystemPrompt}
+
+<!-- Start of Context -->
+Characters: "{{user}}", "{{char}}"
+
+{{user}}: {{persona}}
+
+{{char}}: {{description}}
+
+scenario: {{scenario}}
+
+### Example Trackers
+<!-- Start of Example Trackers -->
+${trackerExamples()}
+<!-- End of Example Trackers -->
+`
+
 
 
 

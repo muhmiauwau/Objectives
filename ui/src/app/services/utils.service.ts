@@ -36,9 +36,6 @@ export class UtilsService {
             });
         }
 
-         console.log("dddd", ST().chatMetadata);
-
-        console.log("ddddd characterId", ST().characterId);
         const personasInChat = _.uniq([...ST().chat].filter(msg => (msg.is_user == true)).map(entry => entry.name));
         personasInChat.push(ST().powerUserSettings.personas[ST().chatMetadata.persona]);
 

@@ -1,17 +1,36 @@
+@if(status()) {
+     Status({{status()}})
+    @switch (status()) {
+        @case ("done") {
+            <i class="fa-solid fa-square-check"></i>
+        }
+        @case ("fullGen") {
+            gen
+        }
+        @default {
+            <i class="fa-solid fa-spinner fa-spin"></i>
+        }
+    }
+}
+
 @if(dataObj()) {
     @if( dataObj().id >-1) {
+
+       
+
+
+        {{status()}}
+        <div class="status" style="position: absolute; top: -20px;right: 10px;width: 29px; text-align: center;">
+            @if(status()  == "init") {
+                <i class="fa-solid fa-spinner fa-spin"></i>
+            }@if(status()  == "fullGen"){
+                gen
+            } @else{
+                <i class="fa-solid fa-square-check"></i>
+            } 
+        </div>
         @if(tracker()) {
             <div class="holder">
-                <div class="status" style="position: absolute; top: -20px;right: 10px;width: 29px; text-align: center;">
-                    @if(dataObj().status  == "init") {
-                        <i class="fa-solid fa-spinner fa-spin"></i>
-                    }@else{
-                        <i class="fa-solid fa-square-check"></i>
-                    } 
-                </div>
-
-                
-
                 <div class="entry location">
                     {{tracker().location || ''}}
                 </div>
