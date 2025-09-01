@@ -31,6 +31,9 @@ export class CurrentTracker {
       const panelTracker = this.trackerService.panelTracker();
       if (panelTracker && panelTracker !== this.tracker()) {
         if (panelTracker.id  !== this.id ){
+
+          console.log("CurrentTracker", panelTracker);
+          
           this.id = panelTracker.id
           this.tracker.set(panelTracker.tracker);
           this.setHeadline(panelTracker.id);
@@ -48,7 +51,7 @@ export class CurrentTracker {
   }
 
   setHeadline(id: number) {
-    console.assert(typeof id == 'number', 'setHeadline not id');
+    // console.assert(typeof id == 'number', 'setHeadline not id');
     if (id < 0) {
       this.headline = 'Current Tracker';
     } else {

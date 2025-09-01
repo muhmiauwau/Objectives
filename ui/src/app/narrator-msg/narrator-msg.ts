@@ -19,36 +19,19 @@ export class NarratorMsg {
   narratorService = inject(NarratorService);
 
   private cdr = inject(ChangeDetectorRef);
+  _id: any = -1;
   _data: any = {};
   data: any = input<any>();
-  dataObj: any = signal<any>(
-    {
-      id: -1,
-      status: 'none',
-      msg: '',
-      tracker: {},
-    },
-    { equal: _.isEqual }
-  );
+  _mode: any = {};
+  mode: any = input<any>();
+  id: any = input<any>();
   narratioStr: string = '';
 
-  tracker = computed(() => {
-    const data = this.dataObj()
-    return data?.tracker
-  });
+  tracker:any = signal({});
 
-  status = signal("init");
+  status:any = signal("init");
+  workflow:any = signal([]);
 
-  // activeInPanel: signal<boolean> = false
-
-  // status = "";
-
-  // @HostBinding('attr.status') status = "none"
-
-  // @HostBinding('attr.data-feedback') feedback: any = ""
-
-  // message = signal('');
-  // state = computed(() => (this.message() ? 'opened' : 'closed'));
 
   constructor() {
     // this.trackerService.update.on(({id, tracker}: {id: number, tracker: unknown}) => {
@@ -56,16 +39,39 @@ export class NarratorMsg {
     //   // this.dataObj.set({...this.dataObj(), tracker})
     // });
 
+
+    console.log("ddd", this.id())
+
     effect(async () => {
+      const id = this.id()
+      if (id && id !== this._id) {
+        this._id = id
+
+      }
+
+      
+      const statusAll:any = this.trackerStatusService.statusAll()
+      if (statusAll &&  this.mode() != "new") {
+          console.log("Tracker id", id, this.trackerStatusService.get(id))
+          this.status.set("done")
+
+          const tracker = this.trackerService.get(id);
+          if(tracker){
+            console.log("Tracker statusAll", tracker)
+            this.tracker.set(tracker)
+          }
+      }
+
+
       const update = this.trackerService.update();
-      if (update && update.id == this.dataObj().id) {
+      if (update && update.id == this.id()) {
         console.log('TrackerService update', update);
-        this.dataObj.set({ ...this.dataObj(), tracker: update.tracker });
+        this.tracker.set({ ...update.tracker });
       }
 
       const statusUpdate:any = this.trackerStatusService.statusUpdate()
       if (statusUpdate) {
-        if (statusUpdate.id == this.dataObj().id) {
+        if (statusUpdate.id == this.id()) {
           console.log('TrackerService statusUpdate', statusUpdate);
           this.status.set(statusUpdate.status);
         }
@@ -73,65 +79,49 @@ export class NarratorMsg {
 
 
       const tracker: any = this.tracker();
-      if (tracker && tracker !== this.dataObj().tracker) {
+      if (tracker && tracker !== this.tracker()) {
         if (_.size(tracker) > 0) {
-          console.log(' this.tracker', tracker, this.dataObj());
-          this.dataObj.set({ ...this.dataObj(), tracker, msg: tracker.newscene });
-          ST().chat[this.dataObj().id].narratorObj = this.dataObj();
-          ST().chat[this.dataObj().id].mes = tracker.newscene;
+          console.log(' this.tracker', tracker, this.tracker());
+          this.tracker.set({...tracker});
+          ST().chat[this.id()].tracker = this.tracker();
+          ST().chat[this.id()].mes = _.get(this.tracker(), ["newscene"],"");
 
           await ST().saveChat();
 
-          console.log(' this.tracker after', ST().chat[this.dataObj().id]);
+          console.log(' this.tracker after', ST().chat[this.id()]);
         }
       }
 
-      // console.log(this.dataObj());
-      // minimal, robust parsing: accept object or JSON-string
-      const data = this.data();
-      if (data && data !== this._data) {
-        // this._data = data;
-        // this.dataObj.set(JSON.parse(data));
 
-        // if(this.dataObj().tracker){
-        //   console.log("this.dataObj().tracker", this.dataObj().tracker)
-        //   this.tracker.set((this.dataObj().tracker))
-        // }
+      const mode = this.mode()
+      if (mode && mode !== this._mode) {
+        this._mode = mode;
 
-        // // feedback
-        // console.log('daaaaddddd status 1 --', this.dataObj().status);
-        // if (this.dataObj().status !== 'init') return;
+        const workflow = this.trackerStatusService.getWorkflow(mode)
+        this.workflow.set(workflow)
 
-       
 
-        // tracker = await this.narratorService.callTracker(this.dataObj());
-        // tracker.newscene = tracker?.newscene?.replace(/([<,>].)/g, '');
-        // // this.tracker.set(tracker)
-        // this.dataObj.set({ ...this.dataObj(), tracker });
 
-        // console.log('daaaaddddd tracker', tracker);
-        // // setTimeout(() => {
-        // this.sendDone(tracker.newscene);
-        // // }, 500);
+        if(mode == "new"){
+
+          console.log('NEsW Tracker', mode);
+
+          const tracker = await this.narratorService.callTracker({});
+
+          tracker.newscene = (tracker?.newscene || "").replace(/([<,>].)/g, '');
+          // this.tracker.set(tracker)
+          this.tracker.set({ ...tracker });
+
+          await this.trackerService.saveTracker(this.id(), tracker)
+          this.status.set("done");
+          this.narratorService.narratorDone.set(!this.narratorService.narratorDone())
+        }
       }
     });
   }
-
-  sendDone(msg: any) {
-    if (this.dataObj().status !== 'init') return;
-    console.log('NarratorMsg sendDone - ', 'done', this.dataObj().id);
-    const newData = this.dataObj();
-    newData.status = 'done';
-    newData.msg = msg;
-    this.dataObj.set(newData);
-    console.log('NarratorMsg sendDone 2- ', 'done', this.dataObj());
-    this.narratorService.narratorData.set(this.dataObj());
-    this.cdr.markForCheck();
-  }
-
   openInPanel() {
-    const id = this.dataObj().id;
-    const tracker = {...this.dataObj().tracker};
+    const id = this.id();
+    const tracker = {...this.tracker()};
     console.log('TrackerService openInPanel', id, tracker);
 
     this.trackerService.panelTracker.set({

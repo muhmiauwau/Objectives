@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, effect } from '@angular/core';
 import * as _ from 'lodash-es';
 
 import { trackerUserPromptTemplate, trackerSystemPromptTemplate } from 'data/narrator';
@@ -13,89 +13,43 @@ export class NarratorService {
 
   narratorData: any = signal(false);
 
-  status: any = []
-  statusUpdate: any = signal(false);
+  _trigger: boolean = false;
+  narratorDone: any = signal(this._trigger);
 
-  setStatus(id: any, newStatus: string, data?: any) {
-     console.log(`Status setzen ${id} auf '${newStatus}'`, this.status);
-    // Finde den existierenden Status-Eintrag oder erstelle einen neuen
-    const existingIndex = this.status.findIndex((item: any) => item.id === id);
-    
-    if (existingIndex !== -1) {
-      // Aktualisiere den existierenden Status
-      this.status[existingIndex].status = newStatus;
-      this.status[existingIndex].lastUpdated = new Date().toISOString();
-      
-      // Füge Daten hinzu (z.B. Analyse-Ergebnisse)
-      if (data !== undefined) {
-        this.status[existingIndex].data = data;
+
+  constructor(){
+
+    effect(async () => {
+      const narratorDone = this.narratorDone()
+      if(narratorDone !== this._trigger){
+        this._trigger = narratorDone
+        const entry = ST().chat.at(-2)
+
+        console.log("narratorDone", entry, this.lastMsgIsNarrator())
+
+        if(entry.is_user){
+          ST().executeSlashCommandsWithOptions("/trigger", {await:true})
+        }
       }
-      
-      // Triggere das statusUpdate Signal mit dem aktualisierten Eintrag
-      this.statusUpdate.set(this.status[existingIndex]);
-    } else {
-      // Erstelle einen neuen Status-Eintrag
-      const newEntry: any = {
-        id: id,
-        status: newStatus,
-        createdAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString()
-      };
-      
-      // Füge Daten hinzu falls vorhanden
-      if (data !== undefined) {
-        newEntry.data = data;
-      }
-      
-      this.status.push(newEntry);
-      
-      // Triggere das statusUpdate Signal mit dem neuen Eintrag
-      this.statusUpdate.set(newEntry);
-    }
-    
-   
+    });
+
   }
 
-  // Hilfsmethode um den Status einer bestimmten ID abzurufen
-  getStatus(id: any): string | null {
-    const statusEntry = this.status.find((item: any) => item.id === id);
-    return statusEntry ? statusEntry.status : null;
-  }
 
-  // Hilfsmethode um die Daten einer bestimmten ID abzurufen
-  getStatusData(id: any): any {
-    const statusEntry = this.status.find((item: any) => item.id === id);
-    return statusEntry ? statusEntry.data : null;
-  }
 
-  // Hilfsmethode um den kompletten Status-Eintrag abzurufen
-  getStatusEntry(id: any): any {
-    return this.status.find((item: any) => item.id === id) || null;
-  }
 
-  // Hilfsmethode um zu prüfen ob eine Komponente fertig geladen ist
-  isStatusDone(id: any): boolean {
-    return this.getStatus(id) === 'done';
-  }
 
-  // Hilfsmethode um zu prüfen ob eine Komponente einen bestimmten Status hat
-  hasStatus(id: any, status: string): boolean {
-    return this.getStatus(id) === status;
-  }
 
-  // Hilfsmethode um alle Status abzurufen
-  getAllStatus(): any[] {
-    return [...this.status];
-  }
 
-  // Hilfsmethode um Status zu entfernen (cleanup)
-  removeStatus(id: any): void {
-    const index = this.status.findIndex((item: any) => item.id === id);
-    if (index !== -1) {
-      this.status.splice(index, 1);
-      this.statusUpdate.set(!this.statusUpdate());
-    }
-  }
+
+
+
+
+
+
+
+
+
 
   async callNarrator(data: any) {
     const { eventSource, event_types, ConnectionManagerRequestService } = ST();
@@ -450,8 +404,8 @@ export class NarratorService {
 
   lastMsgIsNarrator() {
     const last:any = ST().chat.at(-1)
-    const isNarrator = _.has(last, ["narratorObj"])
-    console.warn("lastMsgIsNarrator", last, isNarrator)
+    const isNarrator = last.name == "Narrator"
+    console.warn("lastMsgIsNarrator", isNarrator, last)
     return isNarrator
   }
 

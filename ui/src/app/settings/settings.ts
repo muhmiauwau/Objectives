@@ -64,7 +64,7 @@ export class Settings {
     try{
       //@ts-ignore
       const $element = $(`#chat .mes[mesid="${newId}"]`)
-      this.insertElement($element, narratorObj)
+      this.insertElement($element, newId, "new")
       // console.log('aaaddddd runN saveNarratorForId', $element, `#chat .mes[mesid="${narratorObj.id}"]`);
        
     }catch(err:any){
@@ -80,12 +80,13 @@ export class Settings {
   }
 
 
-  insertElement($element: any, narratorObj:any, mode: any = "init"){
+  insertElement($element: any, id:any, type: any = "normal"){
     
     if($element){
-      const $new = $(`  <div class="for_checkbox"></div><input type="checkbox" class="del_checkbox"><objectives-narrator-msg data='${JSON.stringify(narratorObj)}' ></objectives-narrator-msg>`)
+      type = (id == 1)? "first": type;
+      const $new = $(`  <div class="for_checkbox"></div><input type="checkbox" class="del_checkbox"><objectives-narrator-msg id="${id}" mode='${type}' ></objectives-narrator-msg>`)
       $element.html($new)
-      if(mode == "init"){
+      if(type == "new"){
 
         // $('#chat .mes:not([ch_name="Narrator"])').last().addClass("last_mes").siblings().removeClass("last_mes")
         $(`#chat .mes:last-child`).addClass("last_mes").siblings().removeClass("last_mes")
@@ -195,8 +196,9 @@ export class Settings {
         // console.log(element)
         //@ts-ignore
         const $element = $(element)
-        const narratorObj = chat.at($element.attr("mesid")).narratorObj
-        this.insertElement($element, narratorObj, "done")
+        const id = $element.attr("mesid")
+        // const narratorObj = chat.at(id).narratorObj
+        this.insertElement($element,id, "normal")
       });
     });
 

@@ -4,6 +4,62 @@
    position: relative;
 }
 
+.simple-progress {
+    // height: 29px;
+    
+    .progress-bar {
+        display: flex;
+        height: 29px;
+        color: var(--SmartThemeEmColor);
+        border-radius: 12px;
+        overflow: hidden;
+        border-top: 1px solid hsla(0, 0%, 0%, 0.3);
+
+      
+        .progress-segment {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: hsla(0, 0%, 0%, 0);
+            // color: white;
+            font-weight: bold;
+            position: relative;
+            // border-right: 1px solid #ffffff6e;
+
+            &:last-child{
+                border-right: none;
+            }
+            
+           
+          
+            
+            &.completed { 
+                // background: #22c55e;
+                @c:  hsla(0, 0%, 0%,.2);
+                background: @c;
+                &::after {
+                    border-left-color: @c;
+                }
+            }
+            
+            &.active {
+                // background: #1d4ed8;
+                
+                @c: hsla(0, 0%, 0%,.1);
+                background: @c;
+                &::after {
+                    border-left-color: @c;
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
 
 .holder{
     margin-bottom: 5px;
@@ -73,3 +129,57 @@ button{
 
 
 
+/**
+ * ==============================================
+ * Dot Flashing
+ * ==============================================
+ */
+
+ @dot-color: var(--SmartThemeQuoteColor); 
+.dot-flashing {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color:  @dot-color;
+  color:  @dot-color;
+  animation: dot-flashing 1s infinite linear alternate;
+  animation-delay: 0.5s;
+  transform: translateX(20px);
+  
+}
+.dot-flashing::before, .dot-flashing::after {
+  content: "";
+  display: inline-block;
+  position: absolute;
+  top: 0;
+}
+.dot-flashing::before {
+  left: -15px;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color:  @dot-color;
+  color:  @dot-color;
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 0s;
+}
+.dot-flashing::after {
+  left: 15px;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color:  @dot-color;
+  color:  @dot-color;
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 1s;
+}
+
+@keyframes dot-flashing {
+  0% {
+    opacity:  1;
+  }
+  50%, 100% {
+    opacity:  .5;
+  }
+}

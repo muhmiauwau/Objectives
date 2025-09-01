@@ -1,25 +1,27 @@
-@if(status()) {
-     Status({{status()}})
-    @switch (status()) {
-        @case ("done") {
-            <i class="fa-solid fa-square-check"></i>
-        }
-        @case ("fullGen") {
-            gen
-        }
-        @default {
-            <i class="fa-solid fa-spinner fa-spin"></i>
-        }
-    }
+@if(status() && status() !== "done") {
+    <div class="simple-progress">
+        <div class="progress-bar">
+            @for (step of workflow(); let index = $index; track index;) {
+                @let completed = trackerStatusService.isStepCompleted(workflow(), step, status());
+                <div class="progress-segment" 
+                     [class.completed]="completed" 
+                     [class.active]="status() === step">
+                    @if(completed) {
+                        <i class="fa-solid fa-square-check"></i>&nbsp;{{step}}
+                    } @else if(status() === step) {
+                        <!-- <div class="">{{step}}</div> -->
+                        {{step}}&nbsp;<div class="dot-flashing"></div>
+                    } @else {
+                        {{step}}
+                    }                   
+                </div> 
+            }
+        </div>
+    </div>
 }
 
-@if(dataObj()) {
-    @if( dataObj().id >-1) {
-
-       
-
-
-        {{status()}}
+@if(tracker()) {
+    @if(id() >-1) {
         <div class="status" style="position: absolute; top: -20px;right: 10px;width: 29px; text-align: center;">
             @if(status()  == "init") {
                 <i class="fa-solid fa-spinner fa-spin"></i>
@@ -29,10 +31,10 @@
                 <i class="fa-solid fa-square-check"></i>
             } 
         </div>
-        @if(tracker()) {
+        @if(tracker() && tracker().time) {
             <div class="holder">
                 <div class="entry location">
-                    {{tracker().location || ''}}
+                    {{tracker().location}}
                 </div>
 
                 <div class="entry time">
@@ -41,13 +43,13 @@
 
                     
 
-                <button class="tracker mes_button" (click)="openInPanel()" [class.active]="trackerService.panelTracker()?.id == dataObj()?.id">
+                <button class="tracker mes_button" (click)="openInPanel()" [class.active]="trackerService.panelTracker()?.id == id()">
                     <i class="fa-solid fa-clipboard-list interactable"></i>
                 </button>
             </div>
         }
  
-        @if(tracker() && tracker().newscene ) {
+        @if(tracker() && tracker()?.newscene ) {
             <div class="msg">
                 {{tracker().newscene}}
             </div>

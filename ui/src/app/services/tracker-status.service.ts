@@ -1,15 +1,58 @@
 import { Injectable, signal} from '@angular/core';
 import * as _ from 'lodash-es';
 
+import ST from 'data/SillyTavern';
+
+const workflows = {
+    normal: [
+      'init',
+      'done'
+    ],
+    first: [
+      'init',
+      'fullGen',
+      'done'
+    ],
+    new: [
+      'init',
+      'analyse',
+      'genFields',
+      'done'
+    ]
+};
+
 @Injectable({
   providedIn: 'root',
 })
 export class TrackerStatusService {
   status: any = []
   statusUpdate = signal({})
+  statusAll = signal(false)
+
+
+
+  constructor(){
+    const { eventSource, event_types } = ST();
+    
+    eventSource.on(event_types.CHAT_CHANGED, async (data: any) => {
+      this.status = []
+      _.forEach(ST().chat, (entry, id) => {
+        if(entry.tracker && _.size(entry.tracker) > 0){
+          this.status.push({
+            id: id,
+            status: "done"
+          })
+        }
+      })
+
+       console.log("TrackerStatusService",this.status)
+       this.statusAll.set(!this.statusAll())
+    });
+  }
+
 
   set(id: any, newStatus: string, data?: any) {
-     console.log(`Status setzen ${id} auf '${newStatus}'`, this.status);
+     console.log(`TrackerStatusService Status setzen ${id} auf '${newStatus}'`, this.status);
     // Finde den existierenden Status-Eintrag oder erstelle einen neuen
     const existingIndex = this.status.findIndex((item: any) => item.id === id);
     
@@ -23,15 +66,14 @@ export class TrackerStatusService {
         this.status[existingIndex].data = data;
       }
       
-      // Triggere das statusUpdate Signal mit dem aktualisierten Eintrag
-      this.statusUpdate.set(this.status[existingIndex]);
+       console.log("TrackerStatusService -", id, newStatus, this.status[existingIndex]);
+      // this.statusUpdate.set(this.status[existingIndex]);
+      return this.status[existingIndex]
     } else {
       // Erstelle einen neuen Status-Eintrag
       const newEntry: any = {
         id: id,
         status: newStatus,
-        createdAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString()
       };
       
       // Füge Daten hinzu falls vorhanden
@@ -41,7 +83,8 @@ export class TrackerStatusService {
       
       this.status.push(newEntry);
       
-      this.statusUpdate.set(newEntry);
+      // this.statusUpdate.set(newEntry);
+      return newEntry
     }
     return false
   }
@@ -74,5 +117,24 @@ export class TrackerStatusService {
       this.statusUpdate.set(!this.statusUpdate());
     }
   }
+
+  // Hilfsmethode um Status zu entfernen (cleanup)
+  setAndUpdate(id: any, newStatus: string, data?: any): void {
+    const status = this.set(id, newStatus, data)
+    this.statusUpdate.set(status);
+  }
+
+
+  getWorkflow(type: string){
+    return _.get(workflows, type,[])  
+  }
+
+  isStepCompleted(workflow: any, step: string, currentStatus: string): boolean {
+    const stepIndex = _.indexOf(workflow, step)
+    const currentIndex = _.indexOf(workflow, currentStatus)
+    return stepIndex < currentIndex && stepIndex !== -1;
+  }
+
+  
 
 }
