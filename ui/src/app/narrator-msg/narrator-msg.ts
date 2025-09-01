@@ -104,17 +104,16 @@ export class NarratorMsg {
 
         if(mode == "new"){
 
-          console.log('NEsW Tracker', mode);
+          console.log('NEWs Tracker', mode);
 
-          const tracker = await this.narratorService.callTracker({});
+          const tracker = await this.trackerService.segmentedTracker(this.id());
+          // tracker.newscene = (tracker?.newscene || "").replace(/([<,>].)/g, '');
+          // // this.tracker.set(tracker)
+          // this.tracker.set({ ...tracker });
 
-          tracker.newscene = (tracker?.newscene || "").replace(/([<,>].)/g, '');
-          // this.tracker.set(tracker)
-          this.tracker.set({ ...tracker });
-
-          await this.trackerService.saveTracker(this.id(), tracker)
-          this.status.set("done");
-          this.narratorService.narratorDone.set(!this.narratorService.narratorDone())
+          // await this.trackerService.saveTracker(this.id(), tracker)
+          // this.status.set("done");
+          // this.narratorService.narratorDone.set(!this.narratorService.narratorDone())
         }
       }
     });

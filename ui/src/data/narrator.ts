@@ -142,3 +142,117 @@ ${trackerExamples()}
 <!-- End of Context -->
 `
 
+
+const getTrackerFieldPaths = () => {
+    const trackerDef = ST().extensionSettings.tracker.trackerDef;
+    const defaultTracker = helper.getDefaultTracker(trackerDef);
+    
+    // Rekursive Funktion um alle Feldpfade zu extrahieren
+    const extractPaths = (obj: any, prefix = ''): string[] => {
+        let paths: string[] = [];
+        
+        for (const key in obj) {
+            const currentPath = prefix ? `${prefix}.${key}` : key;
+            
+            if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+                // Für verschachtelte Objekte
+                paths.push(currentPath);
+                paths = paths.concat(extractPaths(obj[key], currentPath));
+            } else {
+                // Für primitive Werte und Arrays
+                paths.push(currentPath);
+            }
+        }
+        
+        return paths;
+    };
+    
+    return extractPaths(defaultTracker);
+};
+
+
+// export const trackerAnalysePrompt = `
+// You are a Scene Tracker Analysis Assistant. Your task is to analyze the latest message and current tracker to identify only the specific fields that need updates.
+
+// Analyze the latest message against the current tracker and determine which fields require changes based on:
+// - New information provided in the message
+// - Logical inferences from actions or dialogue
+// - State changes (clothing, position, mood, etc.)
+
+// ### Instructions:
+// 1. Compare the latest message with the current tracker
+// 2. Identify ONLY the fields that need to be updated (be selective - not everything changes!)
+// 3. Return field paths separated by | (pipe character)
+// 4. Use dot notation for nested fields
+// 5. Only include fields where actual changes are needed, not fields that stay the same
+
+// ### Available Field Paths:
+// ${getTrackerFieldPaths().map(path => `- "${path}"`).join('\n')}
+
+// ### Analysis Guidelines:
+// - **Be selective**: Most messages only change 1-3 fields
+// - **Location**: Only if characters moved to a different place
+// - **Characters**: Only update specific attributes that actually changed
+// - **Topics**: Only if the conversation topic or mood shifted
+// - **Weather**: Only if explicitly mentioned or logically changed
+
+// Latest Message: {{trackerLastMsg}}
+
+// ### Current Tracker
+// <tracker>
+// {{currentTracker}}
+// </tracker>
+
+// Respond with ONLY the field paths that need updates, separated by | (pipe character). If no changes are needed, return "none".
+
+// DO NOT add explanations, descriptions, or any other text. ONLY the field paths or "none".
+
+// Example responses:
+// characters.tim.mood|characters.lara.hair
+// location
+// characters.sarah.outfit|characters.sarah.stateofdress
+// none
+// `
+
+export const trackerAnalysePrompt = `
+You are a Scene Tracker Analysis Assistant. Your task is to analyze the latest message and current tracker to identify only the specific fields that need updates.
+
+Analyze the latest message against the current tracker and determine which fields require changes based on:
+- New information provided in the message
+- Logical inferences from actions or dialogue
+- State changes (clothing, position, mood, etc.)
+
+### Instructions:
+1. Compare the latest message with the current tracker
+2. Identify ONLY the fields that need to be updated (be selective - not everything changes!)
+3. Return field paths separated by | (pipe character)
+4. Use dot notation for nested fields
+5. Only include fields where actual changes are needed, not fields that stay the same
+
+### Available Field Paths:
+${getTrackerFieldPaths().map(path => `- "${path}"`).join('\n')}
+
+### Analysis Guidelines:
+- **Be selective**: Most messages only change 1-3 fields
+- **Location**: Only if characters moved to a different place
+- **Characters**: Only update specific attributes that actually changed
+- **Topics**: Only if the conversation topic or mood shifted
+- **Weather**: Only if explicitly mentioned or logically changed
+
+Latest Message: {{trackerLastMsg}}
+
+### Current Tracker
+<tracker>
+{{currentTracker}}
+</tracker>
+
+Respond with ONLY the field paths that need updates, separated by | (pipe character). If no changes are needed, return "none".
+
+DO NOT add explanations, descriptions, or any other text. ONLY the field paths or "none".
+
+Example responses:
+characters.tim.mood|characters.lara.hair
+location
+characters.sarah.outfit|characters.sarah.stateofdress
+none
+`

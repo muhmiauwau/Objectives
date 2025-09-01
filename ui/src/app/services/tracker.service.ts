@@ -6,6 +6,7 @@ import {
   trackerFullSystemPromptTemplate,
   trackerSystemPromptTemplate,
   generateRequestPrompt,
+  trackerAnalysePrompt
 } from 'data/narrator';
 
 import ST from 'data/SillyTavern';
@@ -124,7 +125,7 @@ export class TrackerService {
     }
 
     const filtered: any = _.filter(chat, (entry: any) => {
-      return _.has(entry, ['narratorObj', 'tracker']);
+      return _.has(entry, ['tracker']);
     });
 
     console.assert(filtered, 'getCurrentTracker:_ no narratorObj found');
@@ -134,14 +135,116 @@ export class TrackerService {
     console.assert(lastEntry, 'getCurrentTracker: no lastEntry found', chat);
     if (!lastEntry) return {};
 
-    return lastEntry.narratorObj.tracker;
+    return lastEntry.tracker;
   }
+
+
+
+  getChatHistory(){
+    return  _.map(ST().chat, (msg: any) => {
+      return {
+        role: msg.is_user ? 'user' : 'assistant',
+        content: ST().substituteParamsExtended(
+          `${msg.is_user ? '{{user}}' : '{{char}}'}: ${msg.mes}`
+        ),
+      };
+    });
+  }
+
+  getLastMessage(){
+    const lastMsg =  _.filter(ST().chat, (entry: any) => entry.name != "Narrator").at(-1);
+    return `${lastMsg.name}: ${lastMsg.mes}`
+  }
+
+  getLast(id:number){
+    const entry =  _.last(_.filter(ST().chat, (entry: any) => (entry.name == "Narrator" && _.size(entry.tracker) > 0)))
+    return entry.tracker
+  }
+
+
+
+  // #region segmentedTracker
+  async segmentedTracker(id:number) {
+    const currentTracker = this.getLast(id)
+    this.trackerStatusService.setAndUpdate(id, 'analyse');
+    const analyseResult =  await this.analyseStep(currentTracker)
+    return analyseResult
+  }
+
+
+
+  async analyseStep(currentTracker: any) {
+    const trackerLastMsg = this.getLastMessage()
+    currentTracker = JSON.stringify(currentTracker)
+
+    console.log("segmentedTracker analyseStep", currentTracker)
+
+    const prompt = [
+      {
+        role: 'system',
+        content: ST().substituteParamsExtended(trackerAnalysePrompt, {trackerLastMsg, currentTracker}),
+      },
+    ];
+
+
+    // await new Promise(r => setTimeout(r, 2000000));
+
+    const tracker = await this.callAPI(prompt);
+
+    console.log("segmentedTracker analyseStep", trackerLastMsg, prompt, tracker)
+     return true
+    // return this.parseAPIResult(tracker);
+  }
+
+
+
+
+
+
+
+
+
+
+  async generateFullTracker() {
+    const chat = this.getChatHistory()
+
+    const prompt = [
+      {
+        role: 'user',
+        content: ST().substituteParamsExtended(trackerFullSystemPromptTemplate),
+      }
+    ];
+
+    const tracker = await this.callAPI(prompt);
+    return this.parseAPIResult(tracker);
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   async callAPI(prompt: any) {
     const { ConnectionManagerRequestService } = ST();
 
+    // #region callAPI
     //  const pro = 'objectives api deepseek';
-    const pro = 'openrouter - narrator 2';
+    const pro = 'openrouter - narrator 2'; 
     const profiles = ConnectionManagerRequestService.getSupportedProfiles();
     const find = _.find(profiles, (entry) => entry.name == pro);
     console.log('Profile find', find);
@@ -209,31 +312,7 @@ export class TrackerService {
     return res;
   }
 
-  async generateFullTracker() {
-    const chat = _.map(ST().chat, (msg: any) => {
-      return {
-        role: msg.is_user ? 'user' : 'assistant',
-        content: ST().substituteParamsExtended(
-          `${msg.is_user ? '{{user}}' : '{{char}}'}: ${msg.mes}`
-        ),
-      };
-    });
 
-    const prompt = [
-      {
-        role: 'system',
-        content: ST().substituteParamsExtended(trackerFullSystemPromptTemplate),
-      },
-      ...chat,
-      {
-        role: 'system',
-        content: generateRequestPrompt,
-      },
-    ];
-
-    const tracker = await this.callAPI(prompt);
-    return this.parseAPIResult(tracker);
-  }
 
   parseAPIResult(tracker: string): any {
     let newTracker;

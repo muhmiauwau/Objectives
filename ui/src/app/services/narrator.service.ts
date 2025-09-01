@@ -24,11 +24,9 @@ export class NarratorService {
       if(narratorDone !== this._trigger){
         this._trigger = narratorDone
         const entry = ST().chat.at(-2)
-
-        console.log("narratorDone", entry, this.lastMsgIsNarrator())
-
+        
         if(entry.is_user){
-          ST().executeSlashCommandsWithOptions("/trigger", {await:true})
+          // ST().executeSlashCommandsWithOptions("/trigger", {await:true})
         }
       }
     });
