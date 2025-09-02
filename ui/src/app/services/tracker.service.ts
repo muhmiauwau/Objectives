@@ -190,18 +190,54 @@ export class TrackerService {
 
   // #region segmentedTracker
   async segmentedTracker(id:number) {
-    const currentTracker = this.getLast()
+    const currentTracker = structuredClone(this.getLast())
     const newTracker = structuredClone(currentTracker)
     const fieldsPrompts = this.getFieldPrompts();
     this.trackerStatusService.setAndUpdate(id, 'analyse');
 
     const analyseResult =  await this.analyseStep(currentTracker)
+    // const analyseResult = {data: ['location', 'characters.Lara.outfit', 'characters.Lara.locationofoutfititems']}
 
-    // const analyseResult = {data: ['location', 'characters.lara.postureandinteraction']}
 
+ console.log("segmentedTracker analyseResult", analyseResult.data);
     if(analyseResult && analyseResult.data){
-      console.log("segmentedTracker analyseResult", analyseResult.data);
+      // console.log("segmentedTracker analyseResult", analyseResult.data);
       this.trackerStatusService.setAndUpdate(id, 'genFields');
+
+
+
+
+      const findOutfit:string[] = _.filter(analyseResult.data, (entry: any) =>{
+          return entry.split(".").at(-1) == "outfit"
+      })
+
+      const hasOutfit = (_.size(findOutfit) > 0)
+      console.warn("segmentedTracker analyseResult", hasOutfit, analyseResult.data);
+return
+      if(hasOutfit){
+        // analyseResult.data
+
+
+
+        const fillFn = (path:string[], key:string) => {
+          const newKey = [...path, key].join(".")
+          analyseResult.data.push(newKey)
+          _.set(currentTracker, newKey, [])
+        }
+
+
+        findOutfit.forEach((element:string) => {
+          const path = _.initial(element.split("."))
+
+          fillFn(path, "locationofoutfititems")
+          fillFn(path, "stateofoutfititems")
+          fillFn(path, "stateofdress")
+        });
+
+        analyseResult.data = _.uniq(analyseResult.data)
+        console.log("analyseResult.data", hasOutfit,currentTracker, analyseResult.data)    
+      }
+      
 
 
       // Alle Promises parallel starten
@@ -210,7 +246,6 @@ export class TrackerService {
             return this.singleStep(key, currentTracker, fieldsPrompts)
         })
       );
-
       
 
       // Ergebnisse in stepsResults einsortieren
@@ -256,7 +291,7 @@ export class TrackerService {
 
     const result = await this.callAPI(prompt, {
       temperature: 0.1,
-      max_tokens: 100,
+      max_tokens: 1000,
     });
 
     console.log("segmentedTracker analyseStep", trackerLastMsg, prompt, result)

@@ -311,25 +311,24 @@ const getTrackerFieldPaths = (currentTracker?: any) => {
 export const trackerAnalysePrompt = (currentTracker?: any) => `
 Analyze the Message and identify fields that need to update based on logical inferences 
 and explicit details. 
-
-## Important Rules: 
-Here is a concise, token-efficient English version of the rule:
-
-- "outfit" only changes if new clothing is put on or the outfit is swapped. Simply removing items (e.g. undressing) is not an outfit change; update "stateofoutfititems" and "locationofoutfititems" instead.
-- if "outfit" changes "stateofoutfititems" and "locationofoutfititems" changes
-
+f the outfit or part are removed or the character is undressing completely, add a field called "characters.<name>.undressing". Omit that field if not undressing.
 State before Message: {{currentTracker}}
 
 Message: "{{trackerLastMsg}}"
 
-Changed fields? Pick from: ${getTrackerFieldPaths(currentTracker).join('|')}
+Changed fields?
 
 Format: {"data":["path1","path2"]}
 
 Example: {"data":["characters.john.feet","location"]}
+
 Respond with a valid JSON Object only
 `
+//Explain your decision for the outfit change ,in max. 3 sentences
+// Respond with a valid JSON Object only
+// Pick from: ${getTrackerFieldPaths(currentTracker).join('|')}
 
+// Important: "characters.Lara.outfit" change: undress = false, dress = yes.
 
 export const singleStepPrompt = `
 Analyze the previous messages and execute the prompt based on logical inferences and explicit details. 
