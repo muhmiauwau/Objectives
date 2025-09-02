@@ -59,7 +59,6 @@ export class TrackerStatusService {
     if (existingIndex !== -1) {
       // Aktualisiere den existierenden Status
       this.status[existingIndex].status = newStatus;
-      this.status[existingIndex].lastUpdated = new Date().toISOString();
       
       // Füge Daten hinzu (z.B. Analyse-Ergebnisse)
       if (data !== undefined) {
@@ -121,7 +120,10 @@ export class TrackerStatusService {
   // Hilfsmethode um Status zu entfernen (cleanup)
   setAndUpdate(id: any, newStatus: string, data?: any): void {
     const status = this.set(id, newStatus, data)
-    this.statusUpdate.set(status);
+    this.statusUpdate.set({
+        id: id,
+        status: newStatus,
+    });
   }
 
 

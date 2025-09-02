@@ -6,7 +6,9 @@ import {
   trackerFullSystemPromptTemplate,
   trackerSystemPromptTemplate,
   generateRequestPrompt,
-  trackerAnalysePrompt
+  trackerAnalysePrompt,
+  trackerPromptMap,
+  singleStepPrompt
 } from 'data/narrator';
 
 import ST from 'data/SillyTavern';
@@ -163,13 +165,79 @@ export class TrackerService {
 
 
 
+
+  extractShortKey(longKey: string): string {
+    const parts = longKey.split('.');
+    if (parts.length <= 2) return longKey;
+    // Nimmt das erste, jedes mit geradem Index ab 2 und das letzte Segment
+    const shortParts = [parts[0]];
+    for (let i = 2; i < parts.length - 1; i += 2) {
+      shortParts.push(parts[i]);
+    }
+    shortParts.push(parts[parts.length - 1]);
+    return shortParts.join('.');
+  }
+
+
+  
+  getFieldPrompts(){
+
+    return trackerPromptMap
+
+  }
+
+
+
+
+
   // #region segmentedTracker
   async segmentedTracker(id:number) {
     const currentTracker = this.getLast(id)
+    const newTracker = {...currentTracker}
     this.trackerStatusService.setAndUpdate(id, 'analyse');
     const analyseResult =  await this.analyseStep(currentTracker)
-    return analyseResult
+
+    // const analyseResult = {data: ['location', 'characters.lara.postureandinteraction']}
+
+    if(analyseResult && analyseResult.data){
+      console.log("segmentedTracker analyseResult", analyseResult.data);
+      this.trackerStatusService.setAndUpdate(id, 'genFields');
+
+      const fieldsPrompts = this.getFieldPrompts();
+
+      // Alle Promises parallel starten
+      const results = await Promise.all(
+        analyseResult.data.map((key:string) => {
+            return this.singleStep(key, currentTracker, fieldsPrompts)
+        })
+      );
+
+      
+
+      // Ergebnisse in stepsResults einsortieren
+      const stepsResults: Record<string, unknown> = {};
+      analyseResult.data.forEach((key:string, idx:number) => {
+        stepsResults[key] = results[idx];
+        _.set(newTracker, key, results[idx])
+      });
+
+      console.log("segmentedTracker analyseResult stepsResults",analyseResult.data,  stepsResults, newTracker);
+      
+    }
+    this.trackerStatusService.setAndUpdate(id, 'done');
+    return newTracker
   }
+
+
+ 
+
+
+
+
+
+
+
+
 
 
 
@@ -187,15 +255,132 @@ export class TrackerService {
       },
     ];
 
-    const tracker = await this.callAPI(prompt, {
+    const result = await this.callAPI(prompt, {
       temperature: 0.1,
       max_tokens: 100,
     });
 
-    console.log("segmentedTracker analyseStep", trackerLastMsg, prompt, tracker)
-     return tracker
-    // return this.parseAPIResult(tracker);
+    console.log("segmentedTracker analyseStep", trackerLastMsg, prompt, result)
+     return JSON.parse(result)
   }
+
+
+
+
+
+
+
+
+
+  async singleStep(key:string, currentTracker: any, fieldsPrompts:any) {
+
+    const fieldCharacterspresent = (currentTracker["characterspresent"] || []).join(",")
+    
+    const currentValue = _.get(currentTracker, key)
+    const promptObj = _.get(fieldsPrompts, this.extractShortKey(key))
+
+    const fieldKey =  key.split(".").at(-1)
+    const fieldExamples = promptObj.exampleValues
+    const fieldPrompt = promptObj.prompt
+
+    if(!promptObj) return;
+
+    const trackerLastMsg = this.getLastMessage()
+ 
+    const content = ST().substituteParamsExtended(singleStepPrompt, {
+      fieldKey,
+      fieldCharacterspresent, 
+      fieldExamples,
+      fieldPrompt, 
+      trackerLastMsg,  
+      currentValue
+    })
+
+
+    const prompt = [
+      {
+        role: 'system',
+        content
+       }
+    ];
+
+
+    const result = await this.callAPI(prompt, {
+      temperature: 0.1,
+      max_tokens: 100,
+    });
+
+    const res = JSON.parse(result)
+
+    console.log("segmentedTracker singleStep", trackerLastMsg, prompt, res.data)
+     return res.data
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -213,27 +398,14 @@ export class TrackerService {
       {
         role: 'user',
         content: ST().substituteParamsExtended(trackerFullSystemPromptTemplate),
-      }
+      },
+      ...chat,
+
     ];
 
     const tracker = await this.callAPI(prompt);
     return this.parseAPIResult(tracker);
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -252,7 +424,6 @@ export class TrackerService {
     console.log('Profile find', find);
 
     if (!find) return false;
-    console.time(`callTracker`);
     console.log('callTracker prompt', prompt);
     const startTime = performance.now();
     const response = await ConnectionManagerRequestService.sendRequest(
@@ -289,9 +460,7 @@ export class TrackerService {
       */
 
     console.log('######### callAPi before', response);
-    const res = (response?.choices[0]?.text || response?.choices[0]?.message.content || '')
-      .trim()
-      .toLowerCase();
+    const res = (response?.choices[0]?.text || response?.choices[0]?.message.content || '').trim()
 
     function calcTime(startTime: any, endTime: any, usage: any) {
       const ms = endTime - startTime;
@@ -307,7 +476,6 @@ export class TrackerService {
 
     console.log('######### callAPi', profiles, res, response);
     const endTime = performance.now();
-    console.timeEnd(`callTracker`);
     console.warn(calcTime(startTime, endTime, response.usage));
     console.warn('callAPi', response.usage);
 

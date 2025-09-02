@@ -27,6 +27,66 @@ const trackerExamples = () => {
 	return trackerExamples;
 }
 
+
+
+const getExamples = (exampleValues:any) => {
+    if(!Array.isArray(exampleValues)) return "";
+    let out = "## Examples:"
+    exampleValues.forEach((example) => {
+        let ex = example.trim()
+
+        if(ex.at(0) !== "[" && ex.at(-1) !== "]" ){
+            ex = `"${example}"`
+        }
+        
+        out += `\n{"data":${ex}}`
+    })
+    //  console.log("segmentedTracker",out );
+    return out
+}
+
+
+const trackerPromptMapFN = () => {
+   const trackerDef = ST().extensionSettings.tracker.trackerDef    
+
+    const recursiveFN = (objIN: any) => {
+        const obj:any = {}
+        _.forEach(objIN, (entry: any) => {
+            // console.log("segmentedTracker entry",entry)
+            entry.name = entry.name.trim().toLowerCase()
+            let out = {}
+            if(_.size(entry.nestedFields) > 0){
+                out = recursiveFN(entry.nestedFields)
+            }else{
+                const examples = getExamples(entry.exampleValues)
+                //@ts-ignore
+                window.test = examples
+                out = {
+                    exampleValues: examples,
+                    prompt: entry.prompt,
+                }
+            }
+            obj[entry.name] = out
+        })
+
+        // console.log("segmentedTracker recursiveFN",obj)   
+        return obj
+    }
+
+    const d = recursiveFN(trackerDef)
+    // console.log("segmentedTracker ",trackerDef , d)   
+    return  d
+}
+
+//@ts-ignore
+export const trackerPromptMap = trackerPromptMapFN()
+
+
+
+
+
+
+
 const trackerSystemPrompt = `You are a Scene Tracker Assistant, tasked with providing clear, consistent, and structured updates to a scene tracker for a roleplay. Use the latest message, previous tracker details, and context from recent messages to accurately update the tracker. Your response must follow the specified YAML structure exactly, ensuring that each field is filled and complete. If specific information is not provided, make reasonable assumptions based on prior descriptions, logical inferences, or default character details.
 
 ### Key Instructions:
@@ -249,5 +309,25 @@ Changed fields? Pick from: ${getTrackerFieldPaths(currentTracker).join('|')}
 Format: {"data":["path1","path2"]}
 
 Example: {"data":["characters.john.feet","location"]}
+Respond with a valid JSON Object only
+`
+
+
+export const singleStepPrompt = `
+Analyze the previous messages and execute the prompt based on logical inferences and explicit details. 
+Do not include a reason in your answer. Only descripe the current state. Omit ongoing actions.
+Note: If the message indicates no change then output the "State before Message"
+
+Characters present: {{fieldCharacterspresent}}
+Key:{{fieldkey}}
+State before Message: {{currentValue}}
+
+Message: "{{trackerLastMsg}}"
+
+Prompt: {{fieldPrompt}}
+
+{{fieldExamples}}
+
+Respond only with the format in the Examples.
 Respond with a valid JSON Object only
 `

@@ -40,8 +40,6 @@ export class NarratorMsg {
     // });
 
 
-    console.log("ddd", this.id())
-
     effect(async () => {
       const id = this.id()
       if (id && id !== this._id) {
@@ -107,13 +105,13 @@ export class NarratorMsg {
           console.log('NEWs Tracker', mode);
 
           const tracker = await this.trackerService.segmentedTracker(this.id());
-          // tracker.newscene = (tracker?.newscene || "").replace(/([<,>].)/g, '');
-          // // this.tracker.set(tracker)
-          // this.tracker.set({ ...tracker });
+          tracker.newscene = (tracker?.newscene || "").replace(/([<,>].)/g, '');
+          // this.tracker.set(tracker)
+          this.tracker.set({ ...tracker });
 
-          // await this.trackerService.saveTracker(this.id(), tracker)
-          // this.status.set("done");
-          // this.narratorService.narratorDone.set(!this.narratorService.narratorDone())
+          await this.trackerService.saveTracker(this.id(), tracker)
+          this.status.set("done");
+          this.narratorService.narratorDone.set(!this.narratorService.narratorDone())
         }
       }
     });
