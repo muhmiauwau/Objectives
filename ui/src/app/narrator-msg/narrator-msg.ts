@@ -50,12 +50,12 @@ export class NarratorMsg {
       
       const statusAll:any = this.trackerStatusService.statusAll()
       if (statusAll &&  this.mode() != "new") {
-          console.log("Tracker id", id, this.trackerStatusService.get(id))
+          // console.log("Tracker id", id, this.trackerStatusService.get(id))
           this.status.set("done")
 
           const tracker = this.trackerService.get(id);
           if(tracker){
-            console.log("Tracker statusAll", tracker)
+            // console.log("Tracker statusAll", tracker)
             this.tracker.set(tracker)
           }
       }
@@ -63,14 +63,14 @@ export class NarratorMsg {
 
       const update = this.trackerService.update();
       if (update && update.id == this.id()) {
-        console.log('TrackerService update', update);
+        // console.log('TrackerService update', update);
         this.tracker.set({ ...update.tracker });
       }
 
       const statusUpdate:any = this.trackerStatusService.statusUpdate()
       if (statusUpdate) {
         if (statusUpdate.id == this.id()) {
-          console.log('TrackerService statusUpdate', statusUpdate);
+          // console.log('TrackerService statusUpdate', statusUpdate);
           this.status.set(statusUpdate.status);
         }
       }
@@ -79,14 +79,14 @@ export class NarratorMsg {
       const tracker: any = this.tracker();
       if (tracker && tracker !== this.tracker()) {
         if (_.size(tracker) > 0) {
-          console.log(' this.tracker', tracker, this.tracker());
+          // console.log(' this.tracker', tracker, this.tracker());
           this.tracker.set({...tracker});
           ST().chat[this.id()].tracker = this.tracker();
           ST().chat[this.id()].mes = _.get(this.tracker(), ["newscene"],"");
 
           await ST().saveChat();
 
-          console.log(' this.tracker after', ST().chat[this.id()]);
+          // console.log(' this.tracker after', ST().chat[this.id()]);
         }
       }
 
@@ -102,7 +102,7 @@ export class NarratorMsg {
 
         if(mode == "new"){
 
-          console.log('NEWs Tracker', mode);
+          // console.log('NEWs Tracker', mode);
 
           const tracker = await this.trackerService.segmentedTracker(this.id());
           tracker.newscene = (tracker?.newscene || "").replace(/([<,>].)/g, '');
@@ -119,7 +119,7 @@ export class NarratorMsg {
   openInPanel() {
     const id = this.id();
     const tracker = {...this.tracker()};
-    console.log('TrackerService openInPanel', id, tracker);
+    // console.log('TrackerService openInPanel', id, tracker);
 
     this.trackerService.panelTracker.set({
       id,

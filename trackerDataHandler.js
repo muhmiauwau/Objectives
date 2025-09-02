@@ -58,7 +58,7 @@ export function getExampleTrackers(backendObject, includeFields = FIELD_INCLUDE_
  */
 export function getDefaultTracker(backendObject, includeFields = FIELD_INCLUDE_OPTIONS.DYNAMIC, outputFormat = OUTPUT_FORMATS.JSON) {
 	const tracker = {};
-	processFieldDefaults(backendObject, tracker, includeFields);
+	processFieldDefaults(backendObject, tracker, includeFields);	
 	return formatOutput(tracker, outputFormat);
 }
 
@@ -246,14 +246,16 @@ function handleArray(field, includeFields, index = null, trackerValue = null, ex
 		}
 	}
 
+
 	let value;
 	if (index !== null && field.exampleValues && field.exampleValues[index]) {
 		try {
 			const arr = JSON.parse(field.exampleValues[index]);
 			if (Array.isArray(arr)) {
-				if (charIndex !== null && charIndex < arr.length) {
-					return arr[charIndex];
-				}
+				// if (charIndex !== null && charIndex < arr.length) {
+				// 	return arr[charIndex];
+				// }
+
 				// If no charIndex or out of range, return the whole array or first element
 				return arr;
 			} else {
@@ -270,6 +272,9 @@ function handleArray(field, includeFields, index = null, trackerValue = null, ex
 			value = field.defaultValue ? [field.defaultValue] : [];
 		}
 	}
+
+	// console.log("lalaal end ",field.name, value);
+	
 	return value;
 }
 

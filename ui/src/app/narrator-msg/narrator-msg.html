@@ -22,7 +22,7 @@
 
 @if(tracker()) {
     @if(id() >-1) {
-        <div class="status" style="position: absolute; top: -20px;right: 10px;width: 29px; text-align: center;">
+        <!-- <div class="status" style="position: absolute; top: -20px;right: 10px;width: 29px; text-align: center;">
             @if(status()  == "init") {
                 <i class="fa-solid fa-spinner fa-spin"></i>
             }@if(status()  == "fullGen"){
@@ -30,7 +30,7 @@
             } @else{
                 <i class="fa-solid fa-square-check"></i>
             } 
-        </div>
+        </div> -->
         @if(tracker() && tracker().time) {
             <div class="holder">
                 <div class="entry location">

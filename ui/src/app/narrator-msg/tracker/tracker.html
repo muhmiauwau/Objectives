@@ -1,57 +1,54 @@
 @if(tracker() && tracker().location){
 
+    <dl>
+        @for (entry of trackerFieldAry; let index = $index; track index; ) {
+
+            <dt>{{ entry }}</dt>
+            @if(entry == "location"){
+                <dd  contenteditable="true" (focus)="onFocus([entry],$event)" (blur)="onChange([entry],$event, true)" [innerHtml]="replace(tracker()[entry])"></dd>
+            }@else{
+                <dd  contenteditable="true"   (blur)="onChange([entry],$event)">{{ tracker()[entry] }}</dd>
+            }
+            
+        }
+    </dl> 
+
+    @for (character of tracker().characterspresent; let index = $index; track index; ) {
+
+        <div class="charName">{{ character }}</div>
+        <hr>
+        <dl>
+        @for (characterEntry of entries(tracker().characters[character]); let index = $index; track index; ) {
+        <!-- {{ log(characterEntry) }} -->
+            <dt>
+                <div>{{ characterEntry.key }}:</div>
+                @if(isArray(characterEntry.value)){
+                    
+                    <button class="menu_button menu_button_icon interactable" (click)="addItem(['characters', character, characterEntry.key])">
+                        <i _ngcontent-ng-c3521599881="" class="fa-solid fa-add"></i>
+                    </button>
+                    <button class="menu_button menu_button_icon interactable" (click)="cleanItems(['characters', character, characterEntry.key])">
+                        <i _ngcontent-ng-c3521599881="" class="fa-solid fa-broom"></i>
+                    </button>
+                    
+                }
+            </dt>
+
+            @if(isArray(characterEntry.value)){
+                    @for (characterEntryValue of characterEntry.value; let index = $index; track index; ) {
+                    <dd contenteditable="true" (focus)="toggleClass($event)" (blur)="onChange(['characters', character, characterEntry.key, index], $event)">{{ characterEntryValue }}</dd>
+                }
+                
+            }@else{
+                    <dd contenteditable="true" (focus)="toggleClass($event)" (blur)="onChange(['characters', character, characterEntry.key], $event)">{{ characterEntry.value }}</dd>
+            }
+            
+        } 
+        </dl>
+    <!--    <dd>{{ character }}</dd> -->
+
+    } 
     
-    <div class="fullView">
-         <hr>
-        <!-- <div class="right">
-            <dl>
-                @for (entry of trackerFieldAry; let index = $index; track index; ) {
-
-                    <dt>{{ entry }}</dt>
-                    @if(entry == "location"){
-                        <dd  contenteditable="true" (focus)="onFocus([entry],$event)" (blur)="onChange([entry],$event, true)" [innerHtml]="replace(tracker()[entry])"></dd>
-                        
-                    }@else{
-                        <dd  contenteditable="true"   (blur)="onChange([entry],$event)">{{ tracker()[entry] }}</dd>
-                    }
-                    
-                }
-                </dl>
-        </div>
-        <div class="sep"></div> -->
-        
-        <div class="left">
-            <dl>
-                @for (entry of trackerFieldAry; let index = $index; track index; ) {
-
-                    <dt>{{ entry }}</dt>
-                    @if(entry == "location"){
-                        <dd  contenteditable="true" (focus)="onFocus([entry],$event)" (blur)="onChange([entry],$event, true)" [innerHtml]="replace(tracker()[entry])"></dd>
-                        <!-- dddd {{ replace(tracker()[entry]) }} sss -->
-                    }@else{
-                        <dd  contenteditable="true"   (blur)="onChange([entry],$event)">{{ tracker()[entry] }}</dd>
-                    }
-                    
-                }
-                </dl>
-
-            @for (character of tracker().characterspresent; let index = $index; track index; ) {
-
-                <div class="charName">{{ character }}</div>
-                <hr>
-                <dl>
-                @for (characterEtry of entries(tracker().characters[character]); let index = $index; track index; ) {
-                <!-- {{ log(characterEtry) }} -->
-                    <dt>{{ characterEtry.key }}</dt>
-                    <dd contenteditable="true" (blur)="onChange(['characters', character, characterEtry.key],$event)">{{ characterEtry.value }}</dd>
-
-                } 
-                </dl>
-            <!--    <dd>{{ character }}</dd> -->
-
-            } 
-        </div>
-    </div>
    
     
 

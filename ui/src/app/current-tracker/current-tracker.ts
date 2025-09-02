@@ -32,7 +32,7 @@ export class CurrentTracker {
       if (panelTracker && panelTracker !== this.tracker()) {
         if (panelTracker.id  !== this.id ){
 
-          console.log("CurrentTracker", panelTracker);
+          // console.log("CurrentTracker", panelTracker);
           
           this.id = panelTracker.id
           this.tracker.set(panelTracker.tracker);
@@ -43,7 +43,7 @@ export class CurrentTracker {
       const tracker = this.tracker();
       if (tracker && panelTracker?.tracker) {
         if (tracker !== panelTracker.tracker && panelTracker.id > 0) {
-          console.log('TrackerService CurrentTracker tracker', tracker);
+          console.log('TrackerService CurrentTracker tracker', panelTracker);
           this.trackerService.update.set(panelTracker);
         }
       }

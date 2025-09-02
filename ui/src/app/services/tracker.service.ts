@@ -23,14 +23,14 @@ export class TrackerService {
   panelTracker: any = signal(null);
 
   constructor() {
-    console.log('TrackerService constructor');
+    // console.log('TrackerService constructor');
     const { eventSource, event_types } = ST();
 
     effect(async () => {
       const update = this.update();
       if (update) {
-        console.count('TrackerService');
-        console.log('TrackerService updatesavechat', update);
+        // console.count('TrackerService');
+        // console.log('TrackerService updatesavechat', update);
 
         const chatEntry = ST().chat.at(update.id);
         const tracker = update.tracker;
@@ -45,13 +45,13 @@ export class TrackerService {
       // this.onChatChange(data)
 
       // this.panelTracker.set({ id: 1, tracker: {} });
-      console.log('TrackerService CHAT_CREATED', data);
+      // console.log('TrackerService CHAT_CREATED', data);
       this.onChatChange(data, true);
     });
     eventSource.on(event_types.CHAT_CHANGED, async (data: any) => {
-      console.log('TrackerService CHAT_CREATED', data);
+      // console.log('TrackerService CHAT_CHANGED', data, !ST().chatMetadata.tainted);
 
-      if (ST().chatMetadata.tainted) {
+      if (!ST().chatMetadata.tainted) {
         this.onChatChange(data, false);
       }
     });
@@ -59,7 +59,7 @@ export class TrackerService {
 
   async onChatChange(data: any, freshChat: boolean) {
     const id = _.size(ST().chat);
-    console.log('TrackerService onChatChange freshChat', freshChat);
+    // console.log('TrackerService onChatChange freshChat', freshChat);
 
     let tracker = {};
     if (freshChat) {
@@ -67,11 +67,11 @@ export class TrackerService {
         this.trackerStatusService.setAndUpdate(id, 'fullGen');
       }, 20);
 
-      console.log('TrackerService onChatChange', 'no tracker present generate new one');
+      // console.log('TrackerService onChatChange', 'no tracker present generate new one');
       tracker = await this.generateFullTracker();
       const entry = ST().chat.at(-1);
       _.set(entry, ['tracker'], tracker);
-      console.log('TrackerService onChatChange', 'no tracker present generate new one', tracker);
+      // console.log('TrackerService onChatChange', 'no tracker present generate new one', tracker);
       if (_.size(tracker) == 0) return;
 
      
@@ -87,19 +87,17 @@ export class TrackerService {
        await ST().saveChat();
 
     } else {
-      let tracker: any = await this.getCurrentTracker(data);
-      if (!tracker) return;
-    }
 
-
+        const tracker = this.getLast()
   
-    this.panelTracker.set({
-      id,
-      tracker: tracker,
-    });
+        this.panelTracker.set({
+          id: id -1,
+          tracker: tracker,
+        });
 
+        // console.log('TrackerService onChatChange ',tracker);
 
-    console.log('TrackerService onChatChange end', id, 'done');
+     }
   }
 
   get(id: number) {
@@ -115,7 +113,7 @@ export class TrackerService {
   }
 
   async getCurrentTracker(chatId: string = ''): Promise<any> {
-    console.log('TrackerService getCurrentTracker', chatId, ST().chatId);
+    // console.log('TrackerService getCurrentTracker', chatId, ST().chatId);
     // return;
     const chat = { ...ST().chat };
     chatId = ST().chatId;
@@ -158,9 +156,9 @@ export class TrackerService {
     return `${lastMsg.name}: ${lastMsg.mes}`
   }
 
-  getLast(id:number){
+  getLast(){
     const entry =  _.last(_.filter(ST().chat, (entry: any) => (entry.name == "Narrator" && _.size(entry.tracker) > 0)))
-    return entry.tracker
+    return entry.tracker || {}
   }
 
 
@@ -192,7 +190,7 @@ export class TrackerService {
 
   // #region segmentedTracker
   async segmentedTracker(id:number) {
-    const currentTracker = this.getLast(id)
+    const currentTracker = this.getLast()
     const newTracker = structuredClone(currentTracker)
     const fieldsPrompts = this.getFieldPrompts();
     this.trackerStatusService.setAndUpdate(id, 'analyse');
@@ -271,7 +269,9 @@ export class TrackerService {
   getExtraSingleStepContext(key:string, currentTracker: any) {
     
     const contextMap = {
-      "stateofdress" : ["outfit"]
+      "stateofdress" : ["outfit"],
+      "locationofoutfititems" : ["outfit"],
+      "stateofoutfititems" : ["outfit"]
     }
     
     const sKey:any = key.split(".").at(-1)
@@ -317,7 +317,9 @@ export class TrackerService {
     
     const fieldExtraContext = this.getExtraSingleStepContext(key, currentTracker)
    
-    const currentValue = _.get(currentTracker, key)
+
+    const currentValue = JSON.stringify({data: _.get(currentTracker, key)})
+
     const promptObj = _.get(fieldsPrompts, this.extractShortKey(key))
 
     const fieldKey =  key.split(".").at(-1)
@@ -487,10 +489,10 @@ export class TrackerService {
     const pro = 'openrouter - narrator 4'; 
     const profiles = ConnectionManagerRequestService.getSupportedProfiles();
     const find = _.find(profiles, (entry) => entry.name == pro);
-    console.log('Profile find', find);
+    // console.log('Profile find', find);
 
     if (!find) return false;
-    console.log('callTracker prompt', prompt);
+    // console.log('callTracker prompt', prompt);
     const startTime = performance.now();
     const response = await ConnectionManagerRequestService.sendRequest(
       find.id,
@@ -525,7 +527,7 @@ export class TrackerService {
 
       */
 
-    console.log('######### callAPi before', response);
+    // console.log('######### callAPi before', response);
     const res = (response?.choices[0]?.text || response?.choices[0]?.message.content || '').trim()
 
     function calcTime(startTime: any, endTime: any, usage: any) {
@@ -540,7 +542,7 @@ export class TrackerService {
       return `CallTracker tokens: ${token} time: ${secondsFormatted}s , rate: ${result} TPS `;
     }
 
-    console.log('######### callAPi', profiles, res, response);
+    // console.log('######### callAPi', profiles, res, response);
     const endTime = performance.now();
     console.warn(calcTime(startTime, endTime, response.usage));
     console.warn('callAPi', response.usage);
@@ -553,13 +555,14 @@ export class TrackerService {
   parseAPIResult(tracker: string): any {
     let newTracker;
     try {
-      // if(extensionSettings.trackerFormat == trackerFormat.JSON) tracker = unescapeJsonString(tracker);
+      // @ts-ignore
+      if(true) tracker = window.Objectives.unescapeJsonString(tracker);
       const trackerContent = tracker.match(
         /<(?:tracker|Tracker)>([\s\S]*?)<\/(?:tracker|Tracker)>/
       );
       let result: any = trackerContent ? trackerContent[1].trim() : null;
       // @ts-ignore
-      result = window.Objectives.yamlToJSON(result);
+      // result = window.Objectives.yamlToJSON(result);
       newTracker = JSON.parse(result);
     } catch (e) {
       console.log('Failed to parse tracker:', tracker, e);

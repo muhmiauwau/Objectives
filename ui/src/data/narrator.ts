@@ -1,4 +1,4 @@
-import * as _ from 'lodash-es';
+ import * as _ from 'lodash-es';
 
 import ST from 'data/SillyTavern';
 
@@ -6,14 +6,16 @@ import ST from 'data/SillyTavern';
 const helper:any = window.Objectives ;
 
 const trackerDef = ST().extensionSettings.tracker.trackerDef
-console.log("#narrator", trackerDef )
-console.log("#narrator",helper.getDefaultTracker(trackerDef))
+// // console.log("#narrator", trackerDef )
+// // console.log("#narrator",helper.getDefaultTracker(trackerDef))
 
 
 const exampleTracker = () => {
     const trackerDef = ST().extensionSettings.tracker.trackerDef
-    return helper.jsonToYAML(helper.getDefaultTracker(trackerDef))
+    return helper.getDefaultTracker(trackerDef, 'all',"json")
 }
+
+console.log("exampleTracker",exampleTracker(), helper.getDefaultTracker(trackerDef, null, 2))
 
 const responseRules = () => {
     const trackerDef = ST().extensionSettings.tracker.trackerDef
@@ -23,9 +25,13 @@ const responseRules = () => {
 const trackerExamples = () => {
     const trackerDef = ST().extensionSettings.tracker.trackerDef
     let trackerExamples  = helper.getExampleTrackers(trackerDef,'all',"JSON")
+	trackerExamples = trackerExamples.map((ex:any) => JSON.stringify(ex, null, 2));
     trackerExamples = "<START>\n<tracker>\n" + trackerExamples.join("\n</tracker>\n<END>\n<START>\n<tracker>\n") + "\n</tracker>\n<END>";
 	return trackerExamples;
 }
+
+console.log("trackerExamples",trackerExamples())
+
 
 
 
@@ -41,11 +47,13 @@ const getExamples = (entry:any) => {
         
         out += `\n{"data":${ex}}`
     })
-     console.log("segmentedTracker",out );
+     // console.log("segmentedTracker",out );
      //@ts-ignore
-window.test = out
+
     return out
 }
+
+
 
 
 
@@ -56,15 +64,14 @@ const trackerPromptMapFN = () => {
     const recursiveFN = (objIN: any) => {
         const obj:any = {}
         _.forEach(objIN, (entry: any) => {
-            // console.log("segmentedTracker entry",entry)
+            // // console.log("segmentedTracker entry",entry)
             entry.name = entry.name.trim().toLowerCase()
             let out = {}
             if(_.size(entry.nestedFields) > 0){
                 out = recursiveFN(entry.nestedFields)
             }else{
                 const examples = getExamples(entry)
-                //@ts-ignore
-                window.test = examples
+                
                 out = {
                     exampleValues: examples,
                     prompt: entry.prompt,
@@ -73,16 +80,17 @@ const trackerPromptMapFN = () => {
             obj[entry.name] = out
         })
 
-        // console.log("segmentedTracker recursiveFN",obj)   
+        // // console.log("segmentedTracker recursiveFN",obj)   
         return obj
     }
 
     const d = recursiveFN(trackerDef)
-    // console.log("segmentedTracker ",trackerDef , d)   
+    // // console.log("segmentedTracker ",trackerDef , d)   
     return  d
 }
+     //@ts-ignore
+window.test = trackerPromptMapFN()
 
-//@ts-ignore
 export const trackerPromptMap = trackerPromptMapFN()
 
 
@@ -132,7 +140,7 @@ Your primary objective is to ensure clarity, consistency, and structured respons
 export const generateRequestPrompt = `[Analyze the previous messages and update the current scene tracker based on logical inferences and explicit details. Pause and ensure only the tracked data is provided, formatted in {{trackerFormat}}. Avoid adding, omitting, or rearranging fields unless specified. Respond with the full tracker every time.
 
 ### Response Rules:
-${responseRules}
+${responseRules()}
 
 Ensure the response remains consistent, strictly follows this structure in {{trackerFormat}}, and omits any extra data or deviations. You MUST enclose the tracker in <tracker></tracker> tags]`;
 
@@ -304,6 +312,12 @@ export const trackerAnalysePrompt = (currentTracker?: any) => `
 Analyze the Message and identify fields that need to update based on logical inferences 
 and explicit details. 
 
+## Important Rules: 
+Here is a concise, token-efficient English version of the rule:
+
+- "outfit" only changes if new clothing is put on or the outfit is swapped. Simply removing items (e.g. undressing) is not an outfit change; update "stateofoutfititems" and "locationofoutfititems" instead.
+- if "outfit" changes "stateofoutfititems" and "locationofoutfititems" changes
+
 State before Message: {{currentTracker}}
 
 Message: "{{trackerLastMsg}}"
@@ -321,10 +335,6 @@ export const singleStepPrompt = `
 Analyze the previous messages and execute the prompt based on logical inferences and explicit details. 
 Do not include a reason in your answer. Only descripe the current state. Omit ongoing actions.
 Note: If the message indicates no change then output the "State before Message"
-
-### Response Rules:
-${responseRules()}
-
 
 Characters present: {{fieldCharacterspresent}}
 Key:{{fieldkey}}

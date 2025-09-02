@@ -324,7 +324,7 @@ export class NarratorService {
 
 
     const lastChatMsg = ST().chat.at(-2)
-    console.log("lastChatMsg currentTracker", lastChatMsg, currentTracker)
+    // console.log("lastChatMsg currentTracker", lastChatMsg, currentTracker)
     const prompt = [
       {
           role: "system",

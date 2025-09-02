@@ -42,6 +42,22 @@ export class Tracker {
   onFocus(path: any, $event: any) {
     console.log('onFocus ', path, _.get(this.tracker(), path));
     $event.target.innerText = _.get(this.tracker(), path);
+    //  $event.target.addCass  text_pole
+    
+    $event.target.classList.add('text_pole');
+  }
+
+  toggleClass($event: any){
+    const cl:any = $event.target.classList
+    const c:string = "text_pole"
+
+    
+    // $event.target.classList.add(c);
+     if (cl.contains(c)) {
+        cl.remove(c);
+      } else {
+        cl.add(c);
+      }
   }
 
   onChange(path: any, $event: any, replace: boolean = false) {
@@ -50,18 +66,54 @@ export class Tracker {
       newValue = newValue.replaceAll('\n', ',');
     }
 
+    console.log("onChange save=", newValue, path)
+
     if (newValue !== _.get(this.tracker(), path)) {
+       console.log("onChange save=", newValue)
       this.tracker.update((obj: any) => {
         _.set(obj, path, newValue);
         return obj;
       });
 
-      this.tracker.set({ ...this.tracker() });
+      this.tracker.set(structuredClone(this.tracker()));
     }
 
     if (replace) {
       console.log('onChange replace', replace, this.replace(newValue));
       $event.target.innerHTML = this.replace(newValue);
+    }else{
+       $event.target.innerHTML = newValue.trim();
     }
+    
+    this.toggleClass($event)
+  }
+
+
+
+  addItem(path: any) {
+    const data = _.get(this.tracker(), path);
+    if(!this.isArray(data)) return;
+    this.tracker.update((obj: any) => {
+      _.set(obj, path, [...data , ""]);
+      return obj;
+    });
+    this.tracker.set(structuredClone(this.tracker()));
+  }
+
+  cleanItems(path: any) {
+    const data:any = _.get(this.tracker(), path);
+    if(!this.isArray(data)) return;
+    const cleanData = data.filter((str:string) => str.trim() !== '')
+    this.tracker.update((obj: any) => {
+      _.set(obj, path, cleanData);
+      return obj;
+    });
+
+    this.tracker.set(structuredClone(this.tracker()));
+  }
+
+
+  isArray(data:any){
+    return Array.isArray(data)
   }
 }
