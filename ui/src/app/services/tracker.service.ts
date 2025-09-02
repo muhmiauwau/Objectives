@@ -193,8 +193,10 @@ export class TrackerService {
   // #region segmentedTracker
   async segmentedTracker(id:number) {
     const currentTracker = this.getLast(id)
-    const newTracker = {...currentTracker}
+    const newTracker = structuredClone(currentTracker)
+    const fieldsPrompts = this.getFieldPrompts();
     this.trackerStatusService.setAndUpdate(id, 'analyse');
+
     const analyseResult =  await this.analyseStep(currentTracker)
 
     // const analyseResult = {data: ['location', 'characters.lara.postureandinteraction']}
@@ -203,7 +205,6 @@ export class TrackerService {
       console.log("segmentedTracker analyseResult", analyseResult.data);
       this.trackerStatusService.setAndUpdate(id, 'genFields');
 
-      const fieldsPrompts = this.getFieldPrompts();
 
       // Alle Promises parallel starten
       const results = await Promise.all(
@@ -267,6 +268,44 @@ export class TrackerService {
 
 
 
+  getExtraSingleStepContext(key:string, currentTracker: any) {
+    
+    const contextMap = {
+      "stateofdress" : ["outfit"]
+    }
+    
+    const sKey:any = key.split(".").at(-1)
+
+    const path:any = _.initial(key.split("."))
+
+    if(path[0] == 'characters'){
+      function capitalizeFirstLetter(val:string) {
+          return String(val).charAt(0).toUpperCase() + String(val).slice(1);
+      }
+      path[1] = capitalizeFirstLetter(path[1])
+    }
+    
+    
+
+    const context = _.get(contextMap, sKey, false)
+
+    if(!context) return "";
+
+    const extras:any = []
+    context.forEach((element:string) => {
+      const extra = _.get(currentTracker, [...path, element], false)
+      if(extra){
+        extras.push(`\n ${element}: [${extra}]`)
+      }
+      
+    });
+
+
+    return `## Extra Context:
+      ${extras.join("")}
+    `
+
+  }
 
 
 
@@ -276,6 +315,8 @@ export class TrackerService {
 
     const fieldCharacterspresent = (currentTracker["characterspresent"] || []).join(",")
     
+    const fieldExtraContext = this.getExtraSingleStepContext(key, currentTracker)
+   
     const currentValue = _.get(currentTracker, key)
     const promptObj = _.get(fieldsPrompts, this.extractShortKey(key))
 
@@ -289,6 +330,7 @@ export class TrackerService {
  
     const content = ST().substituteParamsExtended(singleStepPrompt, {
       fieldKey,
+      fieldExtraContext,
       fieldCharacterspresent, 
       fieldExamples,
       fieldPrompt, 
@@ -312,7 +354,7 @@ export class TrackerService {
 
     const res = JSON.parse(result)
 
-    console.log("segmentedTracker singleStep", trackerLastMsg, prompt, res.data)
+    console.log(`segmentedTracker singleStep - ${key} -`, trackerLastMsg, prompt, res.data)
      return res.data
   }
 
@@ -391,22 +433,46 @@ export class TrackerService {
 
 
 
+  // async generateFullTracker() {
+  //   const chat = this.getChatHistory()
+
+  //   const prompt = [
+  //     {
+  //       role: 'user',
+  //       content: ST().substituteParamsExtended(trackerFullSystemPromptTemplate),
+  //     },
+  //     ...chat,
+
+  //   ];
+
+  //   const tracker = await this.callAPI(prompt);
+  //   return this.parseAPIResult(tracker);
+  // }
+
+
   async generateFullTracker() {
+
     const chat = this.getChatHistory()
 
     const prompt = [
       {
-        role: 'user',
-        content: ST().substituteParamsExtended(trackerFullSystemPromptTemplate),
-      },
-      ...chat,
+          role: "system",
+          content: ST().substituteParamsExtended(trackerFullSystemPromptTemplate)
+        },
+        ...chat,
+        {
+            role: "system",
+            content: generateRequestPrompt 
+        }
+    ]
 
-    ];
 
-    const tracker = await this.callAPI(prompt);
-    return this.parseAPIResult(tracker);
+    const tracker = await this.callAPI(prompt, {
+      temperature: 0.1,
+      max_tokens: 2000,
+    });
+    return this.parseAPIResult(tracker)
   }
-
 
 
 

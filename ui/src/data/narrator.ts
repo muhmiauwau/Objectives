@@ -22,28 +22,32 @@ const responseRules = () => {
 
 const trackerExamples = () => {
     const trackerDef = ST().extensionSettings.tracker.trackerDef
-    let trackerExamples  = helper.getExampleTrackers(trackerDef,'all',"yaml")
+    let trackerExamples  = helper.getExampleTrackers(trackerDef,'all',"JSON")
     trackerExamples = "<START>\n<tracker>\n" + trackerExamples.join("\n</tracker>\n<END>\n<START>\n<tracker>\n") + "\n</tracker>\n<END>";
 	return trackerExamples;
 }
 
 
 
-const getExamples = (exampleValues:any) => {
-    if(!Array.isArray(exampleValues)) return "";
+const getExamples = (entry:any) => {
+    if(!Array.isArray(entry.exampleValues)) return "";
     let out = "## Examples:"
-    exampleValues.forEach((example) => {
+    entry.exampleValues.forEach((example:any) => {
         let ex = example.trim()
 
-        if(ex.at(0) !== "[" && ex.at(-1) !== "]" ){
+        if(entry.type=="STRING"){
             ex = `"${example}"`
         }
         
         out += `\n{"data":${ex}}`
     })
-    //  console.log("segmentedTracker",out );
+     console.log("segmentedTracker",out );
+     //@ts-ignore
+window.test = out
     return out
 }
+
+
 
 
 const trackerPromptMapFN = () => {
@@ -58,7 +62,7 @@ const trackerPromptMapFN = () => {
             if(_.size(entry.nestedFields) > 0){
                 out = recursiveFN(entry.nestedFields)
             }else{
-                const examples = getExamples(entry.exampleValues)
+                const examples = getExamples(entry)
                 //@ts-ignore
                 window.test = examples
                 out = {
@@ -318,8 +322,13 @@ Analyze the previous messages and execute the prompt based on logical inferences
 Do not include a reason in your answer. Only descripe the current state. Omit ongoing actions.
 Note: If the message indicates no change then output the "State before Message"
 
+### Response Rules:
+${responseRules()}
+
+
 Characters present: {{fieldCharacterspresent}}
 Key:{{fieldkey}}
+{{fieldExtraContext}}
 State before Message: {{currentValue}}
 
 Message: "{{trackerLastMsg}}"
