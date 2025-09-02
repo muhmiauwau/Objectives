@@ -143,31 +143,53 @@ ${trackerExamples()}
 `
 
 
-const getTrackerFieldPaths = () => {
-    const trackerDef = ST().extensionSettings.tracker.trackerDef;
-    const defaultTracker = helper.getDefaultTracker(trackerDef);
-    
-    // Rekursive Funktion um alle Feldpfade zu extrahieren
-    const extractPaths = (obj: any, prefix = ''): string[] => {
-        let paths: string[] = [];
-        
-        for (const key in obj) {
-            const currentPath = prefix ? `${prefix}.${key}` : key;
+const getTrackerFieldPaths = (currentTracker?: any) => {
+    if (currentTracker) {
+        // Verwende den aktuellen Tracker um nur relevante Feldpfade zu extrahieren
+        const extractPaths = (obj: any, prefix = ''): string[] => {
+            let paths: string[] = [];
             
-            if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
-                // Für verschachtelte Objekte
-                paths.push(currentPath);
-                paths = paths.concat(extractPaths(obj[key], currentPath));
-            } else {
-                // Für primitive Werte und Arrays
-                paths.push(currentPath);
+            for (const key in obj) {
+                const currentPath = prefix ? `${prefix}.${key}` : key;
+                
+                if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+                    // Für verschachtelte Objekte
+                    paths.push(currentPath);
+                    paths = paths.concat(extractPaths(obj[key], currentPath));
+                } else {
+                    // Für primitive Werte und Arrays
+                    paths.push(currentPath);
+                }
             }
-        }
+            
+            return paths;
+        };
         
-        return paths;
-    };
-    
-    return extractPaths(defaultTracker);
+        return extractPaths(currentTracker);
+    } else {
+        // Fallback: Default Tracker
+        const trackerDef = ST().extensionSettings.tracker.trackerDef;
+        const defaultTracker = helper.getDefaultTracker(trackerDef);
+        
+        const extractPaths = (obj: any, prefix = ''): string[] => {
+            let paths: string[] = [];
+            
+            for (const key in obj) {
+                const currentPath = prefix ? `${prefix}.${key}` : key;
+                
+                if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+                    paths.push(currentPath);
+                    paths = paths.concat(extractPaths(obj[key], currentPath));
+                } else {
+                    paths.push(currentPath);
+                }
+            }
+            
+            return paths;
+        };
+        
+        return extractPaths(defaultTracker);
+    }
 };
 
 
@@ -214,45 +236,18 @@ const getTrackerFieldPaths = () => {
 // none
 // `
 
-export const trackerAnalysePrompt = `
-You are a Scene Tracker Analysis Assistant. Your task is to analyze the latest message and current tracker to identify only the specific fields that need updates.
+export const trackerAnalysePrompt = (currentTracker?: any) => `
+Analyze the Message and identify fields that need to update based on logical inferences 
+and explicit details. 
 
-Analyze the latest message against the current tracker and determine which fields require changes based on:
-- New information provided in the message
-- Logical inferences from actions or dialogue
-- State changes (clothing, position, mood, etc.)
+State before Message: {{currentTracker}}
 
-### Instructions:
-1. Compare the latest message with the current tracker
-2. Identify ONLY the fields that need to be updated (be selective - not everything changes!)
-3. Return field paths separated by | (pipe character)
-4. Use dot notation for nested fields
-5. Only include fields where actual changes are needed, not fields that stay the same
+Message: "{{trackerLastMsg}}"
 
-### Available Field Paths:
-${getTrackerFieldPaths().map(path => `- "${path}"`).join('\n')}
+Changed fields? Pick from: ${getTrackerFieldPaths(currentTracker).join('|')}
 
-### Analysis Guidelines:
-- **Be selective**: Most messages only change 1-3 fields
-- **Location**: Only if characters moved to a different place
-- **Characters**: Only update specific attributes that actually changed
-- **Topics**: Only if the conversation topic or mood shifted
-- **Weather**: Only if explicitly mentioned or logically changed
+Format: {"data":["path1","path2"]}
 
-Latest Message: {{trackerLastMsg}}
-
-### Current Tracker
-<tracker>
-{{currentTracker}}
-</tracker>
-
-Respond with ONLY the field paths that need updates, separated by | (pipe character). If no changes are needed, return "none".
-
-DO NOT add explanations, descriptions, or any other text. ONLY the field paths or "none".
-
-Example responses:
-characters.tim.mood|characters.lara.hair
-location
-characters.sarah.outfit|characters.sarah.stateofdress
-none
+Example: {"data":["characters.john.feet","location"]}
+Respond with a valid JSON Object only
 `

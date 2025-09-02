@@ -174,25 +174,26 @@ export class TrackerService {
 
 
   async analyseStep(currentTracker: any) {
+    const trackerHistoryMsg = this.getChatHistory()
     const trackerLastMsg = this.getLastMessage()
-    currentTracker = JSON.stringify(currentTracker)
+    const currentTrackerStr = JSON.stringify(currentTracker)
 
     console.log("segmentedTracker analyseStep", currentTracker)
 
     const prompt = [
       {
         role: 'system',
-        content: ST().substituteParamsExtended(trackerAnalysePrompt, {trackerLastMsg, currentTracker}),
+        content: ST().substituteParamsExtended(trackerAnalysePrompt(currentTracker), {trackerLastMsg,  currentTracker: currentTrackerStr}),
       },
     ];
 
-
-    // await new Promise(r => setTimeout(r, 2000000));
-
-    const tracker = await this.callAPI(prompt);
+    const tracker = await this.callAPI(prompt, {
+      temperature: 0.1,
+      max_tokens: 100,
+    });
 
     console.log("segmentedTracker analyseStep", trackerLastMsg, prompt, tracker)
-     return true
+     return tracker
     // return this.parseAPIResult(tracker);
   }
 
@@ -239,12 +240,13 @@ export class TrackerService {
 
 
 
-  async callAPI(prompt: any) {
+  async callAPI(prompt: any, customOptions?: any) {
     const { ConnectionManagerRequestService } = ST();
 
     // #region callAPI
     //  const pro = 'objectives api deepseek';
-    const pro = 'openrouter - narrator 2'; 
+    
+    const pro = 'openrouter - narrator 4'; 
     const profiles = ConnectionManagerRequestService.getSupportedProfiles();
     const find = _.find(profiles, (entry) => entry.name == pro);
     console.log('Profile find', find);
@@ -256,7 +258,7 @@ export class TrackerService {
     const response = await ConnectionManagerRequestService.sendRequest(
       find.id,
       prompt,
-      8000,
+      customOptions?.max_tokens ?? 300,
       {
         stream: false,
         signal: null,
@@ -267,11 +269,11 @@ export class TrackerService {
       },
       {
         options: {
-          // temperature: 0.2,
-          // max_tokens: 300,
-          // presence_penalty: 0,
-          // frequency_penalty: 0,
-          // top_p: 1,
+          temperature: customOptions?.temperature ?? 0.2,
+          max_tokens: customOptions?.max_tokens ?? 300,
+          presence_penalty: 0,
+          frequency_penalty: 0,
+          top_p: 1,
         },
       }
     );
