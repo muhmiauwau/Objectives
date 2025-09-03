@@ -96,8 +96,7 @@ export class TrackerService {
         });
 
 
-        //@ts-ignore
-         window.currentTracker = structuredClone(tracker)
+        this.setWindowTracker(tracker)
         // console.log('TrackerService onChatChange ',tracker);
 
      }
@@ -198,6 +197,8 @@ export class TrackerService {
     const fieldsPrompts = this.getFieldPrompts();
     this.trackerStatusService.setAndUpdate(id, 'analyse');
 
+    
+
     const analyseResult =  await this.analyseStep(currentTracker)
     // const analyseResult = {data: ['location', 'characters.Lara.outfit', 'characters.Lara.locationofoutfititems']}
 
@@ -206,7 +207,6 @@ export class TrackerService {
     if(analyseResult && analyseResult.data){
       // console.log("segmentedTracker analyseResult", analyseResult.data);
       this.trackerStatusService.setAndUpdate(id, 'genFields');
-
 
       const checkData: string[] = []
       
@@ -232,6 +232,8 @@ export class TrackerService {
           fillFn(path, "stateofoutfititems")
           fillFn(path, "stateofdress")
         });
+
+
       }
 
       // Kopiere alle Einträge außer undressing und zu entfernende outfit-Keys
@@ -241,8 +243,8 @@ export class TrackerService {
         }
       });
       
-      console.warn("segmentedTracker checkData", checkData);
-      analyseResult.data = checkData
+      analyseResult.data = _.uniq(checkData)
+      console.warn("segmentedTracker checkData",  analyseResult.data);
 
 
       // Alle Promises parallel starten
@@ -264,12 +266,28 @@ export class TrackerService {
       
     }
     this.trackerStatusService.setAndUpdate(id, 'done');
-    //@ts-ignore
-    window.currentTracker = structuredClone(newTracker)
+
+    this.setWindowTracker(newTracker)
+
+    this.panelTracker.set({
+      id: id,
+      tracker: newTracker,
+    });
+
     return newTracker
   }
 
 
+
+  setWindowTracker(tracki:any){
+    const tracker = structuredClone(tracki)
+
+    for (const char  in  tracker.characters) {
+      delete tracker.characters[char]["stateofdress"]
+    }
+    //@ts-ignore
+    window.currentTracker = tracker    
+  }
  
 
 
@@ -531,10 +549,10 @@ export class TrackerService {
     const pro = 'openrouter - narrator 4'; 
     const profiles = ConnectionManagerRequestService.getSupportedProfiles();
     const find = _.find(profiles, (entry) => entry.name == pro);
-    // console.log('Profile find', find);
+    console.log('ööö Profile find', find);
 
     if (!find) return false;
-    // console.log('callTracker prompt', prompt);
+    console.log('ööö callTracker prompt', prompt);
     const startTime = performance.now();
     const response = await ConnectionManagerRequestService.sendRequest(
       find.id,

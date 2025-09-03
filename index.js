@@ -81,6 +81,9 @@ SillyTavern.getContext().registerMacro("tracker", function () {
     if (!tracker) return;
     window.currentTracker = tracker;
   }
+
+
+  // stateofdress
   //@ts-ignore
   let tracker = jsonToYAML(window.currentTracker);
   return `\n\n<Tracker>${tracker}</Tracker>\n\n \n\n  Wichtig:Diese "<Tracker>" Informationen sind nur für deinen context, inkludiere die niemals in deine Antwort`;
