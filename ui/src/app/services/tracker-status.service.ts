@@ -45,7 +45,7 @@ export class TrackerStatusService {
         }
       })
 
-       console.log("TrackerStatusService",this.status)
+      //  console.log("TrackerStatusService",this.status)
        this.statusAll.set(!this.statusAll())
     });
   }
@@ -65,7 +65,7 @@ export class TrackerStatusService {
         this.status[existingIndex].data = data;
       }
       
-       console.log("TrackerStatusService -", id, newStatus, this.status[existingIndex]);
+      //  console.log("TrackerStatusService -", id, newStatus, this.status[existingIndex]);
       // this.statusUpdate.set(this.status[existingIndex]);
       return this.status[existingIndex]
     } else {

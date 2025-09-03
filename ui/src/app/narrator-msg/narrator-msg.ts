@@ -139,7 +139,7 @@ export class NarratorMsg {
     // this.workflow.set(workflow)
     // this.status.set("init");
 
-    console.log( "  this.workflow  this.workflow  this.workflow", this.workflow);
+    // console.log( "  this.workflow  this.workflow  this.workflow", this.workflow);
     
     this.changeMode("new", true)
   }

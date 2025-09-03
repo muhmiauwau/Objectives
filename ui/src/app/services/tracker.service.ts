@@ -1,6 +1,10 @@
 import { Injectable, signal, effect, inject } from '@angular/core';
 import * as _ from 'lodash-es';
 import { TrackerStatusService } from 'services/tracker-status.service';
+import { StoreService } from 'services/store.service';
+import { ApiService } from 'services/api.service';
+
+
 import {
   trackerUserPromptTemplate,
   trackerFullSystemPromptTemplate,
@@ -25,6 +29,8 @@ type TokenStats = {
   providedIn: 'root',
 })
 export class TrackerService {
+  private store = inject(StoreService);
+  private api = inject(ApiService);
   trackerStatusService = inject(TrackerStatusService);
   update: any = signal(false);
   tracker: any = signal(false);
@@ -33,6 +39,8 @@ export class TrackerService {
   constructor() {
     // console.log('TrackerService constructor');
     const { eventSource, event_types } = ST();
+
+    this.api.init()
 
     effect(async () => {
       const update = this.update();
@@ -209,6 +217,7 @@ export class TrackerService {
   // #region segmentedTracker
   async segmentedTracker(id:number, regen: boolean) {
     const startTime = performance.now();
+    console.groupCollapsed(`segmentedTracker ${id}`)
     const currentTracker = structuredClone(this.getBefore(id))
     const newTracker = structuredClone(currentTracker)
     const fieldsPrompts = this.getFieldPrompts();
@@ -226,20 +235,20 @@ export class TrackerService {
     // } 
     meta.push(analyseResultObj.meta)
 
-    const analyseResult = analyseResultObj.result
+    let analyseResult = analyseResultObj.result
 
-     console.log("segmentedTracker analyseResultObj", analyseResult.data, meta);
-    return 
+     console.log("segmentedTracker analyseResultObj", analyseResult, meta);
+    // return 
 
-    
-    if(analyseResult && analyseResult.data){
+
+    if(analyseResult){
       // console.log("segmentedTracker analyseResult", analyseResult.data);
       this.trackerStatusService.setAndUpdate(id, 'genFields');
 
       const checkData: string[] = []
       
       // Sammle alle undressing-Pfade
-      const undressingKeys = analyseResult.data.filter((entry: string) => entry.endsWith('.undressing'));
+      const undressingKeys = analyseResult.filter((entry: string) => entry.endsWith('.undressing'));
       const outfitKeysToRemove = new Set<string>();
       
       // Nur outfit-Keys entfernen, wenn undressing vorhanden ist
@@ -247,7 +256,7 @@ export class TrackerService {
 
          const fillFn = (path:string[], key:string) => {
           const newKey = [...path, key].join(".")
-          analyseResult.data.push(newKey)
+          analyseResult.push(newKey)
           _.set(currentTracker, newKey, [])
         }
 
@@ -265,19 +274,19 @@ export class TrackerService {
       }
 
       // Kopiere alle Einträge außer undressing und zu entfernende outfit-Keys
-      analyseResult.data.forEach((entry: string) => {
+      analyseResult.forEach((entry: string) => {
         if (!entry.endsWith('.undressing') && !outfitKeysToRemove.has(entry)) {
           checkData.push(entry);
         }
       });
       
-      analyseResult.data = _.uniq(checkData)
-      console.warn("segmentedTracker checkData",  analyseResult.data);
+      analyseResult = _.uniq(checkData)
+      console.warn("segmentedTracker checkData",  analyseResult);
 
 
       // Alle Promises parallel starten
       const results = await Promise.all(
-        analyseResult.data.map((key:string) => {
+        analyseResult.map((key:string) => {
             return this.singleStep(msg, key, currentTracker, fieldsPrompts)
         })
       );
@@ -288,8 +297,8 @@ export class TrackerService {
 
       // Ergebnisse in stepsResults einsortieren
       const stepsResults: Record<string, unknown> = {};
-      analyseResult.data.forEach((key:string, idx:number) => {
-        stepsResults[key] = results[idx].result.data;
+      analyseResult.forEach((key:string, idx:number) => {
+        stepsResults[key] = results[idx].result;
         meta.push(results[idx].meta)
         _.set(newTracker, key, stepsResults[key])
       });
@@ -320,19 +329,20 @@ export class TrackerService {
         const result = (token / seconds).toFixed(2); // tokens per second
         const secondsFormatted = seconds.toFixed(2);
 
-        return `${token} time: ${secondsFormatted}s , rate: ${result} TPS`;
+        return `token: ${token} time: ${secondsFormatted}s , rate: ${result} TPS`;
       }
 
       const endTime = performance.now();
-      console.warn("segmentedTracker analyseResult stepsResults",analyseResult.data,  stepsResults, newTracker);
-      console.warn("segmentedTracker", calcTime(startTime, endTime,reducedMeta));
+      console.groupEnd()
+      console.warn("segmentedTracker analyseResult stepsResults",analyseResult,  stepsResults, newTracker);
+      console.warn("segmentedTracker - ", calcTime(startTime, endTime,reducedMeta));
       console.warn("segmentedTracker meta", reducedMeta);
         
         
       this.panelTracker.set({
         id: id,
         tracker: newTracker,
-        changes: analyseResult.data
+        changes: analyseResult
       });
 
     }
@@ -383,25 +393,25 @@ export class TrackerService {
         name: 'analyse',
         strict: true,
         schema: {
-          type: 'object',
-          properties: {
-            data: {
-              type: 'array',
-              description: 'keys',
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
-          required: ['data'],
-          additionalProperties: false,
+          "required": ["data"]
         }
       }
     }
 
-    const resultObj:any = await this.callAPI(prompt, response_format , {
+    const resultObj:any = await this.api.cc(prompt, response_format , {
       temperature: 0.1,
       max_tokens: 200,
     });
 
-    resultObj.result = resultObj.result? JSON.parse(resultObj.result): resultObj.result;
 
     console.log("segmentedTracker analyseStep", trackerLastMsg, prompt, resultObj.result)
      return resultObj
@@ -470,6 +480,8 @@ export class TrackerService {
     const fieldExamples = promptObj.exampleValues
     const fieldPrompt = promptObj.prompt
 
+    console.log("###############", promptObj)
+
     if(!promptObj) return;
 
     const trackerLastMsg = msg
@@ -492,23 +504,51 @@ export class TrackerService {
        }
     ];
 
-    const response_format =  { "type": "json_object" }
+   
+    let fieldDef:any = {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
 
-    const resultObj:any = await this.callAPI(prompt, response_format,{
+
+    if(promptObj.type == "STRING"){
+        fieldDef = {
+          "type": "string"
+        }
+    }
+    
+
+
+    const response_format = {
+      type: 'json_schema',
+      json_schema: {
+        name: 'analyse',
+        strict: true,
+        schema: {
+          "type": "object",
+          "properties": {
+            "data": fieldDef
+          },
+          "required": ["data"]
+        }
+      }
+    }
+
+    const resultObj:any = await this.api.cc(prompt, response_format,{
       temperature: 0.1,
       max_tokens: 100,
     });
 
-    resultObj.result = resultObj.result? JSON.parse(resultObj.result): resultObj.result;
-
     // if no chnage return current value
-    if(resultObj.result.data == false){
-       console.log(`segmentedTracker singleStep - ${key} - false`, resultObj.result.data)
-      resultObj.result.data = _.get(currentTracker, key)
+    if(resultObj.result == false){
+       console.log(`segmentedTracker singleStep - ${key} - false`, resultObj.result)
+      resultObj.result = _.get(currentTracker, key)
     }
 
 
-    console.log(`segmentedTracker singleStep - ${key} -`, trackerLastMsg, prompt, resultObj.result.data)
+    console.log(`segmentedTracker singleStep - ${key} -`, trackerLastMsg, prompt, resultObj.result)
     console.log(`segmentedTracker singleStep - ${key} - \n`, prompt[0].content)
      return resultObj
   }
@@ -644,45 +684,75 @@ export class TrackerService {
     const pro = 'openrouter - narrator 4'; 
     const profiles = ConnectionManagerRequestService.getSupportedProfiles();
     const find = _.find(profiles, (entry) => entry.name == pro);
-    // console.log('Profile find', find);
+    console.log('Profile find', find);
 
     if (!find) return false;
 
     // console.log('callTracker prompt', prompt);
     const startTime = performance.now();
-    const response = await ConnectionManagerRequestService.sendRequest(
-      find.id,
-      prompt,
-      customOptions?.max_tokens ?? 300,
-      {
-        stream: false,
-        signal: null,
-        extractData: false,
-        includePreset: false,
-        includeInstruct: false,
-        instructSettings: {},
-      },
-      {
-        response_format,
-        options: {
-          temperature: customOptions?.temperature ?? 0.2,
-          max_tokens: customOptions?.max_tokens ?? 300,
-          presence_penalty: 0,
-          frequency_penalty: 0,
-          top_p: 1
-        },
-      }
-    );
+    // const response = await ConnectionManagerRequestService.sendRequest(
+    //   find.id,
+    //   prompt,
+    //   customOptions?.max_tokens ?? 300,
+    //   {
+    //     stream: false,
+    //     signal: null,
+    //     extractData: false,
+    //     includePreset: false,
+    //     includeInstruct: false,
+    //     instructSettings: {},
+    //   },
+    //   {
+    //     response_format,
+    //     prompt:"say moo",
+    //     options: {
+    //       temperature: customOptions?.temperature ?? 0.2,
+    //       max_tokens: customOptions?.max_tokens ?? 300,
+    //       presence_penalty: 0,
+    //       frequency_penalty: 0,
+    //       top_p: 1
+    //     },
+    //   }
+    // );
 
-    /*
-        inception/mercury 
-          128K
-          16.4K
-          $0,25
-          $1
-          Fast but no cache
 
-      */
+    const token = localStorage.getItem('opToken');
+    // console.log('######### callAPi before',response_format);
+    // const response:any = {choices:[{text:"nope"}], usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }};
+
+
+
+    
+  const response:any = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: find.model,
+      messages: prompt,
+      response_format
+    }),
+  });
+
+
+
+const data = await response.json();
+
+
+  console.log("#######",  data)
+
+return 
+
+
+
+
+
+
+
+
+
 
     // console.log('######### callAPi before', response);
     const res = (response?.choices[0]?.text || response?.choices[0]?.message.content || '').trim()

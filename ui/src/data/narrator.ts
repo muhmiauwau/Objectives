@@ -75,6 +75,7 @@ const trackerPromptMapFN = () => {
                 out = {
                     exampleValues: examples,
                     prompt: entry.prompt,
+                    type: entry.type
                 }
             }
             obj[entry.name] = out
