@@ -66,7 +66,8 @@
     padding: 5px 10px 10px;
     min-height: 29px;
     line-height: 14px;
-    padding-right: 40px;
+    // padding-right: 40px;
+
 
     display: flex;
     justify-content: space-between;
@@ -107,6 +108,31 @@ button{
    display: block;
 }
 
+.buttons{
+    display: flex;
+    flex-direction: row;
+    margin-left: 10px;
+
+    button{
+        //  position: absolute;
+        // right: 10px;
+        // top: 0;
+        // bottom: 5px;
+        margin: -5px;
+        height: 24px;
+        width: 29px;
+        text-align: center;
+        background: none;
+        margin-right: 5px;
+
+
+    
+        &.active{
+            color: #f00;
+            opacity: 1;
+        }
+    }
+}
 .tracker{
     position: absolute;
     right: 10px;

@@ -211,8 +211,9 @@ export const trackerDef = {
                 "name": "locationofoutfititems",
                 "type": "ARRAY",
                 "presence": "DYNAMIC",
-                "prompt": `Analyse the current location of each outfit item, that is not worn as intended or removed. Note where clothing items from outfit were discarded. Format: [item],[wearing/removed],[location]`,
-                "defaultValue": "<Current state of dress if no update is needed. Note location where discarded outfit items are placed if character is undressed>",
+                "prompt": `Analyse the current state of each outfit item, that is not worn as intended or removed. Note where clothing items from outfit were discarded. Format: [item],[wearing/removed],[location]`,
+                "defaultValue": "Descripe each outfit item that is not worn as intended or removed?",
+                "changeDetection": "outfit item: not worn as intended or removed?",
                 "exampleValues": [
                     "[\"Shirt,removed,on chair\",\"Socks,wearing,on hands\"]",
                     "[\"Shirt,removed,in closet\",\"Shoes,wearing,on hands\",\"Hat,removed,on table\"]",
@@ -223,13 +224,14 @@ export const trackerDef = {
             "field-17": {
                 "name": "stateofoutfititems",
                 "type": "ARRAY",
-                "presence": "DYNAMIC",
-                "prompt": "Analyse and describe character clothing appears. \nFormat: [item],[appearance]",
-                "defaultValue": "<>",
+                "presence": "DYNAMIC", 
+                "prompt": `Check if the message contains any changes to the physical state or condition of the clothing items, excluding removal or disappearance. Format: [item],[attribute]`,
+                "defaultValue": "<Describe the the physical state or condition of the clothing items, excluding removal or disappearance>",
+                "changeDetection": "the physical state or condition of the clothing items, excluding removal or disappearance.",
                 "exampleValues": [
-                    "[\"T-Shirt,dirty\",\"Socks,torn\"]",
-                    "[\"Shirt,stained\",\"Shoes,wornout\",\"Hat,faded\"]",
-                    "[\"Shoes,stained\"]"
+                    "[\"T-Shirt,clean\",\"Shorts,dirty\"]",
+                    "[\"Shirt,stained\",\"Socks,torn\"]",
+                    "[\"Hat,faded\"]"
                 ],
                 "nestedFields": {}
             }

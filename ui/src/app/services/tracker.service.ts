@@ -13,6 +13,14 @@ import {
 
 import ST from 'data/SillyTavern';
 
+
+type TokenStats = {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  time: number;
+};
+
 @Injectable({
   providedIn: 'root',
 })
@@ -153,8 +161,10 @@ export class TrackerService {
     });
   }
 
-  getLastMessage(){
-    const lastMsg =  _.filter(ST().chat, (entry: any) => entry.name != "Narrator").at(-1);
+  getLastMessage(id = -1){
+    const chat = [...ST().chat]
+    const chatBeforeId = _.take(chat, id)
+    const lastMsg =  _.filter(chatBeforeId, (entry: any) => entry.name != "Narrator").at(-1);
     return `${lastMsg.name}: ${lastMsg.mes}`
   }
 
@@ -163,6 +173,12 @@ export class TrackerService {
     return entry.tracker || {}
   }
 
+  getBefore(id: number){
+    const chat = [...ST().chat]
+    const chatBeforeId = _.take(chat, id)
+    const entry =  _.last(_.filter(chatBeforeId, (entry: any) => (entry.name == "Narrator" && _.size(entry.tracker) > 0)))
+    return entry.tracker || {}
+  }
 
 
 
@@ -191,19 +207,31 @@ export class TrackerService {
 
 
   // #region segmentedTracker
-  async segmentedTracker(id:number) {
-    const currentTracker = structuredClone(this.getLast())
+  async segmentedTracker(id:number, regen: boolean) {
+    const startTime = performance.now();
+    const currentTracker = structuredClone(this.getBefore(id))
     const newTracker = structuredClone(currentTracker)
     const fieldsPrompts = this.getFieldPrompts();
     this.trackerStatusService.setAndUpdate(id, 'analyse');
 
+    const msg = this.getLastMessage(id)
+
+    const meta = []
     
 
-    const analyseResult =  await this.analyseStep(currentTracker)
-    // const analyseResult = {data: ['location', 'characters.Lara.outfit', 'characters.Lara.locationofoutfititems']}
+    const analyseResultObj =  await this.analyseStep(msg, currentTracker)
+    // const analyseResultObj = {
+    //   result: {data:["characters.Lara.stateofoutfititems", "characters.Lara.locationofoutfititems"]}, 
+    //   meta: {prompt_tokens: 0, completion_tokens: 0, total_tokens: 0, time: 0}
+    // } 
+    meta.push(analyseResultObj.meta)
 
+    const analyseResult = analyseResultObj.result
 
- console.log("segmentedTracker analyseResult", analyseResult.data);
+     console.log("segmentedTracker analyseResultObj", analyseResult.data, meta);
+    return 
+
+    
     if(analyseResult && analyseResult.data){
       // console.log("segmentedTracker analyseResult", analyseResult.data);
       this.trackerStatusService.setAndUpdate(id, 'genFields');
@@ -229,8 +257,8 @@ export class TrackerService {
           const outfitKey = [...path, 'outfit'].join('.');
           outfitKeysToRemove.add(outfitKey);
           fillFn(path, "locationofoutfititems")
-          fillFn(path, "stateofoutfititems")
-          fillFn(path, "stateofdress")
+          // fillFn(path, "stateofoutfititems")
+          // fillFn(path, "stateofdress")
         });
 
 
@@ -250,29 +278,64 @@ export class TrackerService {
       // Alle Promises parallel starten
       const results = await Promise.all(
         analyseResult.data.map((key:string) => {
-            return this.singleStep(key, currentTracker, fieldsPrompts)
+            return this.singleStep(msg, key, currentTracker, fieldsPrompts)
         })
       );
       
+    //    meta.push(analyseResultObj.meta)
+
+    // const analyseResult = analyseResultObj.result
 
       // Ergebnisse in stepsResults einsortieren
       const stepsResults: Record<string, unknown> = {};
       analyseResult.data.forEach((key:string, idx:number) => {
-        stepsResults[key] = results[idx];
-        _.set(newTracker, key, results[idx])
+        stepsResults[key] = results[idx].result.data;
+        meta.push(results[idx].meta)
+        _.set(newTracker, key, stepsResults[key])
       });
 
-      console.log("segmentedTracker analyseResult stepsResults",analyseResult.data,  stepsResults, newTracker);
+     
+    
+      this.trackerStatusService.setAndUpdate(id, 'done');
+
+      this.setWindowTracker(newTracker)
+
+      const reducedMeta: TokenStats =  meta.reduce(
+        (acc, curr) => {
+          acc.prompt_tokens += curr.prompt_tokens;
+          acc.completion_tokens += curr.completion_tokens;
+          acc.total_tokens += curr.total_tokens;
+          return acc;
+        },
+        { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+      )
+
       
+
+      function calcTime(startTime:number, endTime:number,usage: TokenStats) {
+        const ms = endTime - startTime
+
+        const token = usage.completion_tokens;
+        const seconds = ms / 1000; // Convert ms to seconds first
+        const result = (token / seconds).toFixed(2); // tokens per second
+        const secondsFormatted = seconds.toFixed(2);
+
+        return `${token} time: ${secondsFormatted}s , rate: ${result} TPS`;
+      }
+
+      const endTime = performance.now();
+      console.warn("segmentedTracker analyseResult stepsResults",analyseResult.data,  stepsResults, newTracker);
+      console.warn("segmentedTracker", calcTime(startTime, endTime,reducedMeta));
+      console.warn("segmentedTracker meta", reducedMeta);
+        
+        
+      this.panelTracker.set({
+        id: id,
+        tracker: newTracker,
+        changes: analyseResult.data
+      });
+
     }
-    this.trackerStatusService.setAndUpdate(id, 'done');
-
-    this.setWindowTracker(newTracker)
-
-    this.panelTracker.set({
-      id: id,
-      tracker: newTracker,
-    });
 
     return newTracker
   }
@@ -300,27 +363,48 @@ export class TrackerService {
 
 
 
-  async analyseStep(currentTracker: any) {
+  async analyseStep(msg: string,currentTracker: any) {
     const trackerHistoryMsg = this.getChatHistory()
-    const trackerLastMsg = this.getLastMessage()
+    const trackerLastMsg = msg
     const currentTrackerStr = JSON.stringify(currentTracker)
 
     console.log("segmentedTracker analyseStep", currentTracker)
 
     const prompt = [
       {
-        role: 'system',
+        role: 'user',
         content: ST().substituteParamsExtended(trackerAnalysePrompt(currentTracker), {trackerLastMsg,  currentTracker: currentTrackerStr}),
       },
     ];
 
-    const result = await this.callAPI(prompt, {
+    const response_format = {
+      type: 'json_schema',
+      json_schema: {
+        name: 'analyse',
+        strict: true,
+        schema: {
+          type: 'object',
+          properties: {
+            data: {
+              type: 'array',
+              description: 'keys',
+            }
+          },
+          required: ['data'],
+          additionalProperties: false,
+        }
+      }
+    }
+
+    const resultObj:any = await this.callAPI(prompt, response_format , {
       temperature: 0.1,
       max_tokens: 200,
     });
 
-    console.log("segmentedTracker analyseStep", trackerLastMsg, prompt, result)
-     return JSON.parse(result)
+    resultObj.result = resultObj.result? JSON.parse(resultObj.result): resultObj.result;
+
+    console.log("segmentedTracker analyseStep", trackerLastMsg, prompt, resultObj.result)
+     return resultObj
   }
 
 
@@ -371,7 +455,7 @@ export class TrackerService {
 
 
 
-  async singleStep(key:string, currentTracker: any, fieldsPrompts:any) {
+  async singleStep(msg: string, key:string, currentTracker: any, fieldsPrompts:any) {
 
     const fieldCharacterspresent = (currentTracker["characterspresent"] || []).join(",")
     
@@ -388,7 +472,7 @@ export class TrackerService {
 
     if(!promptObj) return;
 
-    const trackerLastMsg = this.getLastMessage()
+    const trackerLastMsg = msg
  
     const content = ST().substituteParamsExtended(singleStepPrompt, {
       fieldKey,
@@ -408,16 +492,25 @@ export class TrackerService {
        }
     ];
 
+    const response_format =  { "type": "json_object" }
 
-    const result = await this.callAPI(prompt, {
+    const resultObj:any = await this.callAPI(prompt, response_format,{
       temperature: 0.1,
       max_tokens: 100,
     });
 
-    const res = JSON.parse(result)
+    resultObj.result = resultObj.result? JSON.parse(resultObj.result): resultObj.result;
 
-    console.log(`segmentedTracker singleStep - ${key} -`, trackerLastMsg, prompt, res.data)
-     return res.data
+    // if no chnage return current value
+    if(resultObj.result.data == false){
+       console.log(`segmentedTracker singleStep - ${key} - false`, resultObj.result.data)
+      resultObj.result.data = _.get(currentTracker, key)
+    }
+
+
+    console.log(`segmentedTracker singleStep - ${key} -`, trackerLastMsg, prompt, resultObj.result.data)
+    console.log(`segmentedTracker singleStep - ${key} - \n`, prompt[0].content)
+     return resultObj
   }
 
 
@@ -529,18 +622,20 @@ export class TrackerService {
     ]
 
 
-    const tracker = await this.callAPI(prompt, {
+    const resultObj:any = await this.callAPI(prompt, {
       temperature: 0.1,
       max_tokens: 2000,
     });
-    return this.parseAPIResult(tracker)
+
+    
+    return this.parseAPIResult(resultObj.result)
   }
 
 
 
 
 
-  async callAPI(prompt: any, customOptions?: any) {
+  async callAPI(prompt: any,response_format: any = {}, customOptions?: any) {
     const { ConnectionManagerRequestService } = ST();
 
     // #region callAPI
@@ -549,10 +644,11 @@ export class TrackerService {
     const pro = 'openrouter - narrator 4'; 
     const profiles = ConnectionManagerRequestService.getSupportedProfiles();
     const find = _.find(profiles, (entry) => entry.name == pro);
-    console.log('ööö Profile find', find);
+    // console.log('Profile find', find);
 
     if (!find) return false;
-    console.log('ööö callTracker prompt', prompt);
+
+    // console.log('callTracker prompt', prompt);
     const startTime = performance.now();
     const response = await ConnectionManagerRequestService.sendRequest(
       find.id,
@@ -567,12 +663,13 @@ export class TrackerService {
         instructSettings: {},
       },
       {
+        response_format,
         options: {
           temperature: customOptions?.temperature ?? 0.2,
           max_tokens: customOptions?.max_tokens ?? 300,
           presence_penalty: 0,
           frequency_penalty: 0,
-          top_p: 1,
+          top_p: 1
         },
       }
     );
@@ -607,7 +704,8 @@ export class TrackerService {
     console.warn(calcTime(startTime, endTime, response.usage));
     console.warn('callAPi', response.usage);
 
-    return res;
+    const meta = {... response.usage,  time: (endTime - startTime)}
+    return {result: res, meta};
   }
 
 

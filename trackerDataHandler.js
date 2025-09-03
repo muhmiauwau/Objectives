@@ -58,9 +58,16 @@ export function getExampleTrackers(backendObject, includeFields = FIELD_INCLUDE_
  */
 export function getDefaultTracker(backendObject, includeFields = FIELD_INCLUDE_OPTIONS.DYNAMIC, outputFormat = OUTPUT_FORMATS.JSON) {
 	const tracker = {};
-	processFieldDefaults(backendObject, tracker, includeFields);	
+	processFieldDefaults(backendObject, tracker, includeFields, true);	
 	return formatOutput(tracker, outputFormat);
 }
+
+export function getChangedTracker(backendObject, includeFields = FIELD_INCLUDE_OPTIONS.DYNAMIC, outputFormat = OUTPUT_FORMATS.JSON) {
+	const tracker = {};
+	processFieldDefaults(structuredClone(backendObject), tracker, includeFields, true);	
+	return formatOutput(tracker, outputFormat);
+}
+
 
 /**
  * Converts a tracker to match the backendObject structure, filling missing fields with defaults.
@@ -131,12 +138,24 @@ function processFieldExamples(backendObj, trackerObj, includeFields, exampleInde
 	}
 }
 
-function processFieldDefaults(backendObj, trackerObj, includeFields) {
+function processFieldDefaults(backendObj, trackerObj, includeFields, change) {
 	for (const field of Object.values(backendObj)) {
 		if (!shouldIncludeField(field, includeFields, true)) continue;
 
+		if(change){
+			field.defaultValue = field.changeDetection || ""
+		}
+		
+			// console.log("getDefaultTracker", field)
+
 		const handler = FIELD_TYPES_HANDLERS[field.type] || handleString;
-		trackerObj[field.name] = handler(field, includeFields, null, null, null, null, true);
+		if(change && field.defaultValue == "" && Object.values(field.nestedFields).length == 0){
+			// console.log("getDefaultTracker INNNN", field)
+
+
+		}else{
+			trackerObj[field.name] = handler(field, includeFields, null, null, null, null, true, change);
+		}
 	}
 }
 
@@ -278,7 +297,7 @@ function handleArray(field, includeFields, index = null, trackerValue = null, ex
 	return value;
 }
 
-function handleObject(field, includeFields, index = null, trackerValue = null, extraFields = null, charIndex = null, includeEphemeral = false) {
+function handleObject(field, includeFields, index = null, trackerValue = null, extraFields = null, charIndex = null, includeEphemeral = false, change = false) {
 	const obj = {};
 	const nestedFields = field.nestedFields || {};
 
@@ -288,7 +307,18 @@ function handleObject(field, includeFields, index = null, trackerValue = null, e
 			if (!shouldIncludeField(nestedField, includeFields, includeEphemeral)) continue;
 			const handler = FIELD_TYPES_HANDLERS[nestedField.type] || handleString;
 			const nestedValue = trackerValue[nestedField.name];
-			obj[nestedField.name] = handler(nestedField, includeFields, null, nestedValue, extraFields && typeof extraFields === "object" ? extraFields : null, charIndex, includeEphemeral);
+
+			if(change){
+				// console.log("getDefaultTracker",nestedField )
+				nestedField.defaultValue = nestedField.changeDetection || ""
+			}
+
+		
+			if(change && nestedField.defaultValue == ""){
+
+			}else{
+				obj[nestedField.name] = handler(nestedField, includeFields, null, nestedValue, extraFields && typeof extraFields === "object" ? extraFields : null, charIndex, includeEphemeral);
+			}
 		}
 
 		// Handle extra fields in the nested object
@@ -308,14 +338,24 @@ function handleObject(field, includeFields, index = null, trackerValue = null, e
 		for (const nestedField of Object.values(nestedFields)) {
 			if (!shouldIncludeField(nestedField, includeFields, includeEphemeral)) continue;
 			const handler = FIELD_TYPES_HANDLERS[nestedField.type] || handleString;
-			obj[nestedField.name] = handler(nestedField, includeFields, index, null, extraFields, charIndex, includeEphemeral);
+					if(change){
+				// console.log("getDefaultTracker",nestedField )
+				nestedField.defaultValue = nestedField.changeDetection || ""
+			}
+
+		
+			if(change && nestedField.defaultValue == ""){
+
+			}else{
+				obj[nestedField.name] = handler(nestedField, includeFields, index, null, extraFields, charIndex, includeEphemeral);
+			}
 		}
 	}
 
 	return obj;
 }
 
-function handleForEachObject(field, includeFields, index = null, trackerValue = null, extraFields = null, charIndex = null, includeEphemeral = false) {
+function handleForEachObject(field, includeFields, index = null, trackerValue = null, extraFields = null, charIndex = null, includeEphemeral = false, change = false) {
 	const nestedFields = field.nestedFields || {};
 	let keys = [];
 
@@ -342,7 +382,18 @@ function handleForEachObject(field, includeFields, index = null, trackerValue = 
 				if (!shouldIncludeField(nestedField, includeFields, includeEphemeral)) continue;
 				const handler = FIELD_TYPES_HANDLERS[nestedField.type] || handleString;
 				const nestedValue = value[nestedField.name];
-				obj[nestedField.name] = handler(nestedField, includeFields, null, nestedValue, extraNestedFields, null, includeEphemeral);
+				if(change){
+					// console.log("getDefaultTracker",nestedField )
+					nestedField.defaultValue = nestedField.changeDetection || ""
+				}
+
+			
+				if(change && nestedField.defaultValue == ""){
+
+				}else{
+					obj[nestedField.name] = handler(nestedField, includeFields, null, nestedValue, extraNestedFields, null, includeEphemeral);
+				}
+				
 			}
 
 			// Handle extra fields in the nested object
@@ -376,8 +427,17 @@ function handleForEachObject(field, includeFields, index = null, trackerValue = 
 			const obj = {};
 			for (const nestedField of Object.values(nestedFields)) {
 				if (!shouldIncludeField(nestedField, includeFields, includeEphemeral)) continue;
+				if(change){
+					// console.log("getDefaultTracker",nestedField )
+					nestedField.type = "STRING"
+					nestedField.defaultValue = nestedField.changeDetection || ""
+				}
 				const handler = FIELD_TYPES_HANDLERS[nestedField.type] || handleString;
-				obj[nestedField.name] = handler(nestedField, includeFields, index, null, extraFields, cIndex, includeEphemeral);
+				if(change && nestedField.defaultValue == ""){
+
+				}else{
+					obj[nestedField.name] = handler(nestedField, includeFields, index, null, extraFields, cIndex, includeEphemeral);
+				}
 			}
 			result[characterName] = obj;
 		}

@@ -1,4 +1,4 @@
-import { Component, model, input, computed } from '@angular/core';
+import { Component, model, input, computed, effect} from '@angular/core';
 import * as _ from 'lodash-es';
 
 @Component({
@@ -9,11 +9,21 @@ import * as _ from 'lodash-es';
 })
 export class Tracker {
   trackerFieldAry: any = ['location', 'time', 'weather', 'background', 'newscene'];
-
+  _chnages: any = []
+  changes: any = input([]);
   tracker: any = model({});
   mode: any = input<any>();
 
 
+   constructor() {
+
+    effect(async () => {
+      const changes = this.changes()
+      if (changes && changes !== this.changes) {
+        this.changes = changes
+      }
+    })
+  }
 
   log(data: any) {
     console.log('narrator-msg-tracker ', data);
@@ -115,5 +125,14 @@ export class Tracker {
 
   isArray(data:any){
     return Array.isArray(data)
+  }
+
+
+
+  checkChanges(path:string[]){
+    const changes =  this.changes() || []
+    if(changes.length == 0) return;
+    const pathstr = path.join(".")
+    return changes.includes(pathstr)
   }
 }

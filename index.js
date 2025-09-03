@@ -6,6 +6,7 @@ import {
   getDefaultTracker,
   getTrackerPrompt,
   getExampleTrackers,
+  getChangedTracker
 } from "./trackerDataHandler.js";
 
 export const extensionName = "Objectives";
@@ -24,6 +25,7 @@ window.Objectives = {
   getDefaultTracker,
   getTrackerPrompt,
   getExampleTrackers,
+  getChangedTracker
 };
 
 let angularLoaded = false;

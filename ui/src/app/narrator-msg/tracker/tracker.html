@@ -3,7 +3,7 @@
     <dl>
         @for (entry of trackerFieldAry; let index = $index; track index; ) {
 
-            <dt>{{ entry }}</dt>
+            <dt [class.changes]="checkChanges([entry])">{{ entry }}</dt>
             @if(entry == "location"){
                 <dd  contenteditable="true" (focus)="onFocus([entry],$event)" (blur)="onChange([entry],$event, true)" [innerHtml]="replace(tracker()[entry])"></dd>
             }@else{
@@ -21,7 +21,7 @@
         @for (characterEntry of entries(tracker().characters[character]); let index = $index; track index; ) {
         <!-- {{ log(characterEntry) }} -->
             <dt>
-                <div>{{ characterEntry.key }}:</div>
+                <div [class.changes]="checkChanges(['characters', character, characterEntry.key])">{{ characterEntry.key }}:</div>
                 @if(isArray(characterEntry.value)){
                     
                     <button class="menu_button menu_button_icon interactable" (click)="addItem(['characters', character, characterEntry.key])">

@@ -39,6 +39,8 @@ export class NarratorMsg {
     //   // this.dataObj.set({...this.dataObj(), tracker})
     // });
 
+    const workflow = this.trackerStatusService.getWorkflow("new")
+    this.workflow.set(workflow)
 
     effect(async () => {
       const id = this.id()
@@ -70,7 +72,7 @@ export class NarratorMsg {
       const statusUpdate:any = this.trackerStatusService.statusUpdate()
       if (statusUpdate) {
         if (statusUpdate.id == this.id()) {
-          // console.log('TrackerService statusUpdate', statusUpdate);
+          console.log('TrackerService statusUpdate', statusUpdate);
           this.status.set(statusUpdate.status);
         }
       }
@@ -93,37 +95,52 @@ export class NarratorMsg {
 
       const mode = this.mode()
       if (mode && mode !== this._mode) {
-        this._mode = mode;
-
-        const workflow = this.trackerStatusService.getWorkflow(mode)
-        this.workflow.set(workflow)
-
-
-
-        if(mode == "new"){
-
-          // console.log('NEWs Tracker', mode);
-
-          const tracker = await this.trackerService.segmentedTracker(this.id());
-          tracker.newscene = (tracker?.newscene || "").replace(/([<,>].)/g, '');
-          // this.tracker.set(tracker)
-          this.tracker.set({ ...tracker });
-
-          await this.trackerService.saveTracker(this.id(), tracker)
-          this.status.set("done");
-          this.narratorService.narratorDone.set(!this.narratorService.narratorDone())
-        }
+          this.changeMode(mode)
       }
     });
   }
+
+
+  async changeMode(mode:string, regen:boolean = false){
+    this._mode = mode;
+
+    // const workflow = this.trackerStatusService.getWorkflow(mode)
+    // this.workflow.set(workflow)
+
+
+
+    if(mode == "new"){
+      const tracker = await this.trackerService.segmentedTracker(this.id(), regen);
+      tracker.newscene = (tracker?.newscene || "").replace(/([<,>].)/g, '');
+      this.tracker.set(tracker);
+
+      await this.trackerService.saveTracker(this.id(), tracker)
+      this.status.set("done");
+      this.narratorService.narratorDone.set(!this.narratorService.narratorDone())
+    }
+  }
+
+
+
+
+
   openInPanel() {
     const id = this.id();
-    const tracker = {...this.tracker()};
-    // console.log('TrackerService openInPanel', id, tracker);
+    const tracker = structuredClone(this.tracker());
 
     this.trackerService.panelTracker.set({
       id,
       tracker,
     });
+  }
+
+  reGenerate(){
+    // const workflow = this.trackerStatusService.getWorkflow("new")
+    // this.workflow.set(workflow)
+    // this.status.set("init");
+
+    console.log( "  this.workflow  this.workflow  this.workflow", this.workflow);
+    
+    this.changeMode("new", true)
   }
 }

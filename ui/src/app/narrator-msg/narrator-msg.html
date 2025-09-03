@@ -1,7 +1,7 @@
 @if(status() && status() !== "done") {
     <div class="simple-progress">
         <div class="progress-bar">
-            @for (step of workflow(); let index = $index; track index;) {
+            @for (step of workflow(); track step) {
                 @let completed = trackerStatusService.isStepCompleted(workflow(), step, status());
                 <div class="progress-segment" 
                      [class.completed]="completed" 
@@ -20,7 +20,7 @@
     </div>
 }
 
-@if(tracker()) {
+@if(tracker() && status() == "done") {
     @if(id() >-1) {
         <!-- <div class="status" style="position: absolute; top: -20px;right: 10px;width: 29px; text-align: center;">
             @if(status()  == "init") {
@@ -41,11 +41,15 @@
                     {{tracker().time}}
                 </div>
 
-                    
-
-                <button class="tracker mes_button" (click)="openInPanel()" [class.active]="trackerService.panelTracker()?.id == id()">
-                    <i class="fa-solid fa-clipboard-list interactable"></i>
-                </button>
+                
+                <div class="buttons">
+                    <button class="mes_button" (click)="reGenerate()">
+                        <i class="fa-solid fa-rotate-right interactable"></i>
+                    </button>
+                    <button class="mes_button" (click)="openInPanel()" [class.active]="trackerService.panelTracker()?.id == id()">
+                        <i class="fa-solid fa-clipboard-list interactable"></i>
+                    </button>
+                </div>
             </div>
         }
  

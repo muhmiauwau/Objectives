@@ -17,35 +17,36 @@ export class CurrentTracker {
 
   id:number = -2
 
+  _tracker:any;
   tracker:any = model({});
+  changes:any = signal({});
 
-  // updatedTracker: any = computed(() => {
-  //   const panelTracker = this.trackerService.panelTracker();
-  //   const tracker = this.tracker()
-  //   return {tracker};
-  // })
+
 
 
   constructor() {
     effect(async () => {
       const panelTracker = this.trackerService.panelTracker();
-      if (panelTracker && panelTracker !== this.tracker()) {
-        if (panelTracker.id  !== this.id ){
+      if (panelTracker && panelTracker.tracker !== this._tracker) {
+        console.log( "panelTracker", panelTracker)
+        // if (panelTracker.id  !== this.id ){
+          this._tracker = panelTracker.tracker
 
-          // console.log("CurrentTracker", panelTracker);
-          
           this.id = panelTracker.id
-          this.tracker.set(panelTracker.tracker);
+          this.tracker.set({...panelTracker.tracker});
+
+          this.changes.set(panelTracker.changes)
           this.setHeadline(panelTracker.id);
-        }
+        // }
       }
 
       const tracker = this.tracker();
-      if (tracker && panelTracker?.tracker) {
-        if (tracker !== panelTracker.tracker && panelTracker.id > 0) {
-          console.log('TrackerService CurrentTracker tracker', panelTracker);
-          this.trackerService.update.set(panelTracker);
-        }
+      if (!_.isEqual(tracker,  this._tracker) && this.id > 0) {
+        console.log('TrackerService CurrentTracker tracker', tracker);
+        this.trackerService.update.set({
+          id: this.id,
+          tracker
+        });
       }
     });
   }
