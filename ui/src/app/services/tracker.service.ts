@@ -95,6 +95,9 @@ export class TrackerService {
           tracker: tracker,
         });
 
+
+        //@ts-ignore
+         window.currentTracker = structuredClone(tracker)
         // console.log('TrackerService onChatChange ',tracker);
 
      }
@@ -205,39 +208,41 @@ export class TrackerService {
       this.trackerStatusService.setAndUpdate(id, 'genFields');
 
 
+      const checkData: string[] = []
+      
+      // Sammle alle undressing-Pfade
+      const undressingKeys = analyseResult.data.filter((entry: string) => entry.endsWith('.undressing'));
+      const outfitKeysToRemove = new Set<string>();
+      
+      // Nur outfit-Keys entfernen, wenn undressing vorhanden ist
+      if (undressingKeys.length > 0) {
 
-
-      const findOutfit:string[] = _.filter(analyseResult.data, (entry: any) =>{
-          return entry.split(".").at(-1) == "outfit"
-      })
-
-      const hasOutfit = (_.size(findOutfit) > 0)
-      console.warn("segmentedTracker analyseResult", hasOutfit, analyseResult.data);
-return
-      if(hasOutfit){
-        // analyseResult.data
-
-
-
-        const fillFn = (path:string[], key:string) => {
+         const fillFn = (path:string[], key:string) => {
           const newKey = [...path, key].join(".")
           analyseResult.data.push(newKey)
           _.set(currentTracker, newKey, [])
         }
 
 
-        findOutfit.forEach((element:string) => {
-          const path = _.initial(element.split("."))
-
+        undressingKeys.forEach((entry: string) => {
+          const path = entry.split('.').slice(0, -1);
+          const outfitKey = [...path, 'outfit'].join('.');
+          outfitKeysToRemove.add(outfitKey);
           fillFn(path, "locationofoutfititems")
           fillFn(path, "stateofoutfititems")
           fillFn(path, "stateofdress")
         });
-
-        analyseResult.data = _.uniq(analyseResult.data)
-        console.log("analyseResult.data", hasOutfit,currentTracker, analyseResult.data)    
       }
+
+      // Kopiere alle Einträge außer undressing und zu entfernende outfit-Keys
+      analyseResult.data.forEach((entry: string) => {
+        if (!entry.endsWith('.undressing') && !outfitKeysToRemove.has(entry)) {
+          checkData.push(entry);
+        }
+      });
       
+      console.warn("segmentedTracker checkData", checkData);
+      analyseResult.data = checkData
 
 
       // Alle Promises parallel starten
@@ -259,6 +264,8 @@ return
       
     }
     this.trackerStatusService.setAndUpdate(id, 'done');
+    //@ts-ignore
+    window.currentTracker = structuredClone(newTracker)
     return newTracker
   }
 
@@ -291,7 +298,7 @@ return
 
     const result = await this.callAPI(prompt, {
       temperature: 0.1,
-      max_tokens: 1000,
+      max_tokens: 200,
     });
 
     console.log("segmentedTracker analyseStep", trackerLastMsg, prompt, result)

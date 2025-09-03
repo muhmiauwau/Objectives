@@ -26,7 +26,7 @@ export class NarratorService {
         const entry = ST().chat.at(-2)
         
         if(entry.is_user){
-          // ST().executeSlashCommandsWithOptions("/trigger", {await:true})
+          ST().executeSlashCommandsWithOptions("/trigger", {await:true})
         }
       }
     });
