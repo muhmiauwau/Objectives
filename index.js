@@ -14,8 +14,6 @@ const extensionNameLong = `Objectives`;
 export const extensionFolderPath = `scripts/extensions/third-party/${extensionNameLong}`;
 export const extensionSettings = extension_settings[extensionName] | {};
 
-import { SECRET_KEYS, secret_state } from '/scripts/secrets.js';
-console.log("SECRET_KEYS, secret_state", SECRET_KEYS, secret_state)
 
 window.Objectives = {
   log,
