@@ -1,0 +1,212 @@
+:host{
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.simple-progress {
+    // height: 29px;
+    
+    .progress-bar {
+        display: flex;
+        height: 29px;
+        color: var(--SmartThemeEmColor);
+        border-radius: 12px;
+        overflow: hidden;
+        border-top: 1px solid hsla(0, 0%, 0%, 0.3);
+
+      
+        .progress-segment {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: hsla(0, 0%, 0%, 0);
+            // color: white;
+            font-weight: bold;
+            position: relative;
+            // border-right: 1px solid #ffffff6e;
+
+            &:last-child{
+                border-right: none;
+            }
+            
+           
+          
+            
+            &.completed { 
+                // background: #22c55e;
+                @c:  hsla(0, 0%, 0%,.2);
+                background: @c;
+                &::after {
+                    border-left-color: @c;
+                }
+            }
+            
+            &.active {
+                // background: #1d4ed8;
+                
+                @c: hsla(0, 0%, 0%,.1);
+                background: @c;
+                &::after {
+                    border-left-color: @c;
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+
+.holder{
+    padding: 5px 10px 10px;
+    min-height: 29px;
+    line-height: 14px;
+    // padding-right: 40px;
+
+
+    display: flex;
+    justify-content: space-between;
+
+    .entry{
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        font-size: calc(var(--mainFontSize) * 0.7);
+        line-height: 1;
+        opacity: 0.7;
+        white-space: nowrap;
+        gap: 2em;
+
+        &.time{
+            margin-left: auto;
+        }
+    }
+}
+
+
+.msg{
+    padding: 10px;
+    border-radius: 10px;
+    background-color: var(--SmartThemeBotMesBlurTintColor);
+    border: 1px solid var(--SmartThemeBorderColor);
+}
+
+button{
+   background: none;
+   color: inherit;
+   border: none;
+   padding: 0;
+   font: inherit;
+   cursor: pointer;
+   outline: inherit;
+   text-align: inherit;
+   display: block;
+}
+
+.buttons{
+    display: flex;
+    flex-direction: row;
+    margin-left: 10px;
+
+    button{
+        //  position: absolute;
+        // right: 10px;
+        // top: 0;
+        // bottom: 5px;
+        margin: -5px;
+        height: 24px;
+        width: 29px;
+        text-align: center;
+        background: none;
+        margin-right: 5px;
+
+
+    
+        &.active{
+            color: #f00;
+            opacity: 1;
+        }
+    }
+}
+.tracker{
+    position: absolute;
+    right: 10px;
+    top: 0;
+    bottom: 5px;
+    height: 24px;
+    width: 29px;
+    text-align: center;
+    background: none;
+
+
+  
+    &.active{
+        color: #f00;
+        opacity: 1;
+    }
+
+
+}
+
+
+
+/**
+ * ==============================================
+ * Dot Flashing
+ * ==============================================
+ */
+
+ @dot-color: var(--SmartThemeQuoteColor); 
+.dot-flashing {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color:  @dot-color;
+  color:  @dot-color;
+  animation: dot-flashing 1s infinite linear alternate;
+  animation-delay: 0.5s;
+  transform: translateX(20px);
+  
+}
+.dot-flashing::before, .dot-flashing::after {
+  content: "";
+  display: inline-block;
+  position: absolute;
+  top: 0;
+}
+.dot-flashing::before {
+  left: -15px;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color:  @dot-color;
+  color:  @dot-color;
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 0s;
+}
+.dot-flashing::after {
+  left: 15px;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color:  @dot-color;
+  color:  @dot-color;
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 1s;
+}
+
+@keyframes dot-flashing {
+  0% {
+    opacity:  1;
+  }
+  50%, 100% {
+    opacity:  .5;
+  }
+}

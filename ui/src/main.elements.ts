@@ -5,8 +5,8 @@ import { Panel } from 'panel/panel';
 import { Settings } from 'settings/settings';
 import { NarratorMsg } from 'narrator-msg/narrator-msg';
 import { CurrentTracker } from 'current-tracker/current-tracker';
-
-
+import { TrackerElement } from 'app/modules/tracker/element';
+import { TrackerMesTracker } from 'app/modules/tracker/components/mes-tracker/mes-tracker';
 // Zoneless Custom Elements Setup
 createApplication({
   providers: [
@@ -23,13 +23,18 @@ createApplication({
     const narratorMsgElement = createCustomElement(NarratorMsg, { injector: appRef.injector });
     const currentTracker = createCustomElement(CurrentTracker, { injector: appRef.injector });
 
+    const trackerElement = createCustomElement(TrackerElement, { injector: appRef.injector });
+    const trackerMesTracker = createCustomElement(TrackerMesTracker, { injector: appRef.injector });
+
+
     // Custom Elements registrieren
     customElements.define('objectives-panel', panelElement);
     customElements.define('objectives-settings', settingsElement);
     customElements.define('objectives-narrator-msg', narratorMsgElement);
-    customElements.define('objectives-current-tracker', currentTracker);
-// @ts-ignore
-    console.log('✅ Custom Elements registered: objectives-panel, objectives-settings');
+    // customElements.define('objectives-current-tracker', currentTracker);
+    customElements.define('objectives-tracker-panel', trackerElement);
+    customElements.define('objectives-tracker-mes-tracker', trackerMesTracker);
+
   } catch (error) {
     console.error('❌ Failed to create custom elements:', error);
   }

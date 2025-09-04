@@ -177,7 +177,7 @@ button.muhPanel-personHead:hover{
 .tracker-editor-modal{
 display:none !important;
 } */
-
+/* 
 #chat .mes:not([ch_name="Narrator"]){
     padding-bottom: calc((var(--mainFontSize) * +1.7) + 5px) !important;
 }
@@ -196,10 +196,27 @@ display:none !important;
     background: none !important;
     border: 0;
     padding: 0 !important;
-    /* border: 1px solid #ddd; */
 }
 
 
 #chat .mes[ch_name="Narrator"] + .mes[ch_name="Narrator"]{
     margin-top: 5px !important;
+} */
+
+
+#chat .mes{
+    padding-bottom: calc((var(--mainFontSize) * +1.7) + 0px) !important;
+}
+
+#chat .mes.last_mes{
+    padding-bottom: calc((var(--mainFontSize) * +1.7) + 30px) !important;
+}
+
+
+.swipe_left  {
+    bottom: calc(var(--swipeCounterHeight) + var(--swipeCounterMargin) + 30px);
+}
+
+.swipeRightBlock  {
+    bottom: 30px;
 }

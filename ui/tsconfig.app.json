@@ -9,6 +9,7 @@
       "*": [
         "./src/*",
         "./src/app/*",
+        "./src/app/modules/*",
         "../node_modules/*",
       ],
       "environments/*": [

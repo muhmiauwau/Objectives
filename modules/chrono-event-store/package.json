@@ -1,0 +1,39 @@
+{
+  "name": "chrono-event-store",
+  "version": "1.0.0",
+  "description": "Zeitbasierter Event-Store für Node.js & Angular (universell, ESModule-kompatibel)",
+  "type": "module",
+  "main": "./dist/chrono-event-store.js",
+  "types": "./dist/chrono-event-store.d.ts",
+  "module": "./dist/chrono-event-store.js",
+  "exports": {
+    ".": {
+      "import": "./dist/chrono-event-store.js",
+      "require": "./dist/chrono-event-store.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "demo": "npm run build  && node dist/demo.js",
+    "start": "npm run demo"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.0.0"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/lodash-es": "^4.17.12",
+    "ts-node": "^10.9.2"
+  },
+  "dependencies": {
+    "aurelia-age": "file:../aurelia-age",
+    "fast-json-patch": "^3.1.1",
+    "lodash-es": "^4.17.21"
+  }
+}

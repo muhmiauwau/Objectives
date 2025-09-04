@@ -1,0 +1,34 @@
+@if(tracker()) {
+    @let trackerData = tracker().fields;
+    <!-- <div class="status" style="position: absolute; top: -20px;right: 10px;width: 29px; text-align: center;">
+        @if(status()  == "init") {
+            <i class="fa-solid fa-spinner fa-spin"></i>
+        }@if(status()  == "fullGen"){
+            gen
+        } @else{
+            <i class="fa-solid fa-square-check"></i>
+        } 
+    </div> -->
+    @if(trackerData) {
+        <div class="holder">
+            <div class="entry location">
+                {{trackerData.location}}
+            </div>
+
+            <div class="entry time">
+                {{trackerData.time}}
+            </div>
+
+            
+            <div class="buttons">
+                <button class="mes_button" (click)="reGenerate()">
+                    <i class="fa-solid fa-rotate-right interactable"></i>
+                </button>
+                <button class="mes_button" (click)="openInPanel()" >
+                    <i class="fa-solid fa-clipboard-list interactable"></i>
+                </button>
+            </div>
+        </div>
+    }
+
+} 

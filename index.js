@@ -37,14 +37,14 @@ function loadAngular() {
   bsscript.src = "http://localhost:35729/livereload.js";
    document.head.appendChild(bsscript);
   console.log("loadAngular");
+  // $("#movingDivs").append(
+  //   '<objectives-panel class="fillLeft muhPanel drawer-content  open"></objectives-panel>'
+  // );
+  // $("#extensions_settings").append(
+  //   '<objectives-settings class="expression_settings"></objectives-settings>'
+  // );
   $("#movingDivs").append(
-    '<objectives-panel class="fillLeft muhPanel drawer-content  open"></objectives-panel>'
-  );
-  $("#extensions_settings").append(
-    '<objectives-settings class="expression_settings"></objectives-settings>'
-  );
-  $("#movingDivs").append(
-    '<objectives-current-tracker class="fillRight muhPanel muhPanel-current-tracker drawer-content  open"></objectives-current-tracker>'
+    '<objectives-tracker-panel class="fillRight muhPanel muhPanel-current-tracker drawer-content  open"></objectives-tracker-panel>'
   );
 
   const script = document.createElement("script");
