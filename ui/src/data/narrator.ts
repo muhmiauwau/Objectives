@@ -3,19 +3,17 @@
 import ST from 'data/SillyTavern';
 
 import { trackerDef } from 'data/trackerDef';
-
+const trackerDef2 = structuredClone(trackerDef)
 // @ts-ignore 
 const helper:any = window.Objectives ;
 
 
-console.log("getDefaultTracker",helper.getDefaultTracker({},trackerDef))
+// console.log("getDefaultTracker",helper.getDefaultTracker({},trackerDef))
 
 
 const exampleTracker = () => {
-    return helper.getDefaultTracker(trackerDef, 'all',"json")
+    return helper.getDefaultTracker(trackerDef, 'all',"JSON")
 }
-
-// console.log("exampleTracker",exampleTracker())
 
 const responseRules = () => {
     return helper.getTrackerPrompt(trackerDef)
@@ -30,7 +28,7 @@ const trackerExamples = () => {
 
 
 
-console.log("getDefaultTracker",helper.getChangedTracker(trackerDef))
+// console.log("getDefaultTracker",helper.getDefaultTracker(trackerDef))
 
 
 
@@ -46,14 +44,11 @@ const getExamples = (entry:any) => {
             ex = `"${example}"`
         }
         
-        out += `\n{"data":${ex}}`
+        out += `\n${ex}`
     })
-     // console.log("segmentedTracker",out );
-     //@ts-ignore
 
     return out
 }
-
 
 
 
@@ -64,7 +59,7 @@ const trackerPromptMapFN = () => {
     const recursiveFN = (objIN: any) => {
         const obj:any = {}
         _.forEach(objIN, (entry: any) => {
-            // // console.log("segmentedTracker entry",entry)
+          
             entry.name = entry.name.trim().toLowerCase()
             let out = {}
             if(_.size(entry.nestedFields) > 0){
@@ -85,8 +80,8 @@ const trackerPromptMapFN = () => {
         return obj
     }
 
-    const d = recursiveFN(trackerDef)
-    // // console.log("segmentedTracker ",trackerDef , d)   
+    const d = recursiveFN(trackerDef2)
+    // console.log("segmentedTracker ",trackerDef2 , d)   
     return  d
 }
      //@ts-ignore
@@ -350,6 +345,8 @@ State before Message: {{currentTracker}}
 Message: "{{trackerLastMsg}}"
 
 Which fields changes, use the "Fields Definition" to identify?
+
+"undressing" needed?
 
 Examples: 
 ["characters.john.feet","location"]

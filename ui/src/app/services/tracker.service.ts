@@ -83,11 +83,11 @@ export class TrackerService {
         this.trackerStatusService.setAndUpdate(id, 'fullGen');
       }, 20);
 
-      // console.log('TrackerService onChatChange', 'no tracker present generate new one');
+      console.log('TrackerService onChatChange', 'no tracker present generate new one');
       tracker = await this.generateFullTracker();
       const entry = ST().chat.at(-1);
       _.set(entry, ['tracker'], tracker);
-      // console.log('TrackerService onChatChange', 'no tracker present generate new one', tracker);
+      console.log('TrackerService onChatChange', 'no tracker present generate new one', tracker);
       if (_.size(tracker) == 0) return;
 
      
@@ -105,7 +105,8 @@ export class TrackerService {
     } else {
 
         const tracker = this.getLast()
-  
+        if(_.size(tracker)==0) return;  
+
         this.panelTracker.set({
           id: id -1,
           tracker: tracker,
@@ -113,7 +114,7 @@ export class TrackerService {
 
 
         this.setWindowTracker(tracker)
-        // console.log('TrackerService onChatChange ',tracker);
+        console.log('TrackerService onChatChange ',tracker);
 
      }
   }
@@ -177,8 +178,8 @@ export class TrackerService {
   }
 
   getLast(){
-    const entry =  _.last(_.filter(ST().chat, (entry: any) => (entry.name == "Narrator" && _.size(entry.tracker) > 0)))
-    return entry.tracker || {}
+    const entry:any =  _.last(_.filter(ST().chat, (entry: any) => (entry.name == "Narrator" && _.size(entry.tracker) > 0)))
+    return entry?.tracker || {}
   }
 
   getBefore(id: number){
@@ -472,7 +473,7 @@ export class TrackerService {
     const fieldExtraContext = this.getExtraSingleStepContext(key, currentTracker)
    
 
-    const currentValue = JSON.stringify({data: _.get(currentTracker, key)})
+    const currentValue = _.get(currentTracker, key)
 
     const promptObj = _.get(fieldsPrompts, this.extractShortKey(key))
 
@@ -548,7 +549,7 @@ export class TrackerService {
     }
 
 
-    console.log(`segmentedTracker singleStep - ${key} -`, trackerLastMsg, prompt, resultObj.result)
+    console.log(`segmentedTracker singleStep - ${key} -`, trackerLastMsg, prompt, resultObj.result, fieldDef, promptObj.type)
     console.log(`segmentedTracker singleStep - ${key} - \n`, prompt[0].content)
      return resultObj
   }
@@ -662,11 +663,12 @@ export class TrackerService {
     ]
 
 
-    const resultObj:any = await this.callAPI(prompt, {
+    const resultObj:any = await this.callAPI(prompt,{}, {
       temperature: 0.1,
       max_tokens: 2000,
     });
 
+    console.log("resultObj",resultObj.result, this.parseAPIResult(resultObj.result), resultObj)
     
     return this.parseAPIResult(resultObj.result)
   }
@@ -690,65 +692,29 @@ export class TrackerService {
 
     // console.log('callTracker prompt', prompt);
     const startTime = performance.now();
-    // const response = await ConnectionManagerRequestService.sendRequest(
-    //   find.id,
-    //   prompt,
-    //   customOptions?.max_tokens ?? 300,
-    //   {
-    //     stream: false,
-    //     signal: null,
-    //     extractData: false,
-    //     includePreset: false,
-    //     includeInstruct: false,
-    //     instructSettings: {},
-    //   },
-    //   {
-    //     response_format,
-    //     prompt:"say moo",
-    //     options: {
-    //       temperature: customOptions?.temperature ?? 0.2,
-    //       max_tokens: customOptions?.max_tokens ?? 300,
-    //       presence_penalty: 0,
-    //       frequency_penalty: 0,
-    //       top_p: 1
-    //     },
-    //   }
-    // );
-
-
-    const token = localStorage.getItem('opToken');
-    // console.log('######### callAPi before',response_format);
-    // const response:any = {choices:[{text:"nope"}], usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }};
-
-
-
-    
-  const response:any = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: find.model,
-      messages: prompt,
-      response_format
-    }),
-  });
-
-
-
-const data = await response.json();
-
-
-  console.log("#######",  data)
-
-return 
-
-
-
-
-
+    const response = await ConnectionManagerRequestService.sendRequest(
+      find.id,
+      prompt,
+      customOptions?.max_tokens ?? 300,
+      {
+        stream: false,
+        signal: null,
+        extractData: false,
+        includePreset: false,
+        includeInstruct: false,
+        instructSettings: {},
+      },
+      {
+        response_format,
+        options: {
+          temperature: customOptions?.temperature ?? 0.2,
+          max_tokens: customOptions?.max_tokens ?? 300,
+          presence_penalty: 0,
+          frequency_penalty: 0,
+          top_p: 1
+        },
+      }
+    );
 
 
 
@@ -781,7 +747,7 @@ return
 
 
   parseAPIResult(tracker: string): any {
-    let newTracker;
+    let newTracker: any;
     try {
       // @ts-ignore
       if(true) tracker = window.Objectives.unescapeJsonString(tracker);
@@ -796,6 +762,18 @@ return
       console.log('Failed to parse tracker:', tracker, e);
       // toastr.error("Failed to parse the generated tracker. Make sure your token count is not low or set the response length override.");
     }
+
+
+  // _.forEach(newTracker.characters, (v,k) => {
+  //     _.forEach(v, (value,key) => {
+  //         if(value.indexOf(";")>0){
+  //             newTracker.characters[k][key] = value.split(";")
+  //         }else if(value.indexOf(",")>0){
+  //             newTracker.characters[k][key] = value.split(",")
+  //         }
+  //     })
+  // })
+
     return newTracker || false;
   }
 }

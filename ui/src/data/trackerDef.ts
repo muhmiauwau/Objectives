@@ -225,9 +225,9 @@ export const trackerDef = {
                 "name": "stateofoutfititems",
                 "type": "ARRAY",
                 "presence": "DYNAMIC", 
-                "prompt": `Check if the message contains any changes to the physical state or condition of the clothing items, excluding removal or disappearance. Format: [item],[attribute]`,
-                "defaultValue": "<Describe the the physical state or condition of the clothing items, excluding removal or disappearance>",
-                "changeDetection": "the physical state or condition of the clothing items, excluding removal or disappearance.",
+                "prompt": `Analyse the message and list all outfit items how they look. Make sure you list all items from "outfit". Format: [item],[]`,
+                "defaultValue": `<Analyse the message and list all outfit items how they look. Make sure you list all items from "outfit".`,
+                "changeDetection": "the physical state or condition of clothing items, excluding removal or disappearance.",
                 "exampleValues": [
                     "[\"T-Shirt,clean\",\"Shorts,dirty\"]",
                     "[\"Shirt,stained\",\"Socks,torn\"]",
