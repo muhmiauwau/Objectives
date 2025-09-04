@@ -14,6 +14,40 @@
 </h3>
 
 
+
 <div class="muhPanel-contentScroll">
- 
+    @if(tracker()?.fields) {
+        @let trackerData = asArray(tracker().fields);
+
+        <dl>
+            @for (entry of trackerData; track entry.key; ) {
+                @if(entry.key !== "characters" && entry.key !== "characterspresent"){
+
+
+                    @if(entry.type === "array"){
+                        <!-- <tracker-edit-field [(field)]="entry"></tracker-edit-field>     -->
+                    }@else{
+                        <dt>{{ entry.key }}</dt>
+                        <dd>{{ entry.value }}</dd>
+                    }
+                }
+            }
+        </dl> 
+
+
+   
+
+        @for (entry of trackerData;track entry.key; ) {
+            @if(entry.key == "characters"){
+                @for (character of asArray(entry.value); let index = $index; track index; ) {
+                    <div class="charName">{{ character.key }}</div>
+                    <hr>
+                    @for (chardata of asArray(character.value); let index = $index; track index; ) {
+                        <dt>{{ chardata.key }}</dt>
+                        <dd>{{ chardata.value }}</dd>
+                    }
+                }
+            }
+        } 
+     }
 </div>

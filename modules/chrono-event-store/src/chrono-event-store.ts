@@ -183,6 +183,8 @@ class ChronoEventStore {
     }
   }
 
+  
+
 
   /**
    * Fügt ein Changeset chronologisch ein (auch zwischen bestehende Events)

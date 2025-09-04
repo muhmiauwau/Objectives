@@ -24,7 +24,7 @@
                 <button class="mes_button" (click)="reGenerate()">
                     <i class="fa-solid fa-rotate-right interactable"></i>
                 </button>
-                <button class="mes_button" (click)="openInPanel()" >
+                <button class="mes_button" (click)="openInPanel()" [class.active]="Tracker.panelTracker()?.mesIdQueried == id()">
                     <i class="fa-solid fa-clipboard-list interactable"></i>
                 </button>
             </div>

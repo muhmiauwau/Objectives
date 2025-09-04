@@ -47,7 +47,10 @@ export class EventStoreService {
     const storeData = chatMetadata?.data || {}
     const initMesId = chatMetadata?.mesId || 0
 
-    const changeSet:any = []
+
+    // const changeSet:any = []
+    // demo data
+    const changeSet:any = [{mesId:2, changes: {time: "15:05:00; 09/01/2005 (Sunday)"}}]
     ST().chat.forEach((mes:any) => {
       if(mes[this.storeKey]){
         changeSet.push(mes[this.storeKey]) 
