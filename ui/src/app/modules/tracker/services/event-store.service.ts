@@ -48,14 +48,29 @@ export class EventStoreService {
     const initMesId = chatMetadata?.mesId || 0
 
 
-    // const changeSet:any = []
+    const changeSet:any = []
     // demo data
-    const changeSet:any = [{mesId:2, changes: {time: "15:05:00; 09/01/2005 (Sunday)"}}]
-    ST().chat.forEach((mes:any) => {
+    // const changeSet:any = [
+    //   {
+    //     mesId:2, 
+    //     changes: {
+    //       "topics.primarytopic": "juhuu"
+    //     }
+    //   }
+    // ]
+    ST().chat.forEach((mes:any, index:number) => {
       if(mes[this.storeKey]){
-        changeSet.push(mes[this.storeKey]) 
+        const obj: any = {
+            mesId:index, 
+            changes: mes[this.storeKey]
+          }
+        
+
+        changeSet.push(obj) 
       }
     });
+
+    console.warn(" ChronoEventStore changeSet", changeSet)
 
     this.store = new ChronoEventStore(initMesId, storeData, changeSet);
 
@@ -82,11 +97,19 @@ export class EventStoreService {
   delete(mesId:number){
     this.store.deleteChangeSet(mesId);
   }
-
-
   private saveToChat(mesId:number, changes: any){
     const chatEntry = ST().chat.at(mesId);
     chatEntry[this.storeKey] = changes
+  }
+
+
+  updateFromStateSnapshot(stateSnapshot:any){
+    const id = parseInt(stateSnapshot.mesIdQueried)
+    const prev = this.store.resolveState(id - 1)
+    const changes = this.store.compareStateSnapshot(prev, stateSnapshot)
+    console.log("updateFromStateSnapshot",id, changes, this.get(id));
+    
+    this.update(id, changes)
   }
 
 

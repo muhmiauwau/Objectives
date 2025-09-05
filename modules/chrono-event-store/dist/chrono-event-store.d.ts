@@ -49,6 +49,8 @@ declare class ChronoEventStore {
      */
     addChangeSet(changeSet: ChronoChangeSet): void;
     editChangeSet(changeSet: ChronoChangeSet): void;
+    deleteChangeSet(changeSet: ChronoChangeSet): void;
+    compareStateSnapshot(obj1: StateSnapshot, obj2: StateSnapshot): void;
     /**
      * Fügt ein Changeset chronologisch ein (auch zwischen bestehende Events)
      */

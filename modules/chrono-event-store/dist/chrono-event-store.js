@@ -115,17 +115,42 @@ class ChronoEventStore {
         }
     }
     editChangeSet(changeSet) {
-        // if (typeof changeSet.mesId !== 'number' || isNaN(changeSet.mesId)) {
-        //   throw new Error(`Ungültiges Message ID Format für 'mesId': ${changeSet.mesId}.`);
-        // }
-        console.log("editChangeSets", changeSet.mesId);
+        if (typeof changeSet.mesId !== 'number' || isNaN(changeSet.mesId)) {
+            throw new Error(`Ungültiges Message ID Format für 'mesId': ${changeSet.mesId}.`);
+        }
         const orgIdx = this.timeline.findIndex(e => e.mesId == changeSet.mesId);
         if (orgIdx !== -1) {
-            console.log("editChangeSets in ");
-            console.dir(this.timeline[orgIdx]);
             this.timeline[orgIdx].changes = Object.assign(Object.assign({}, this.timeline[orgIdx].changes), changeSet.changes);
-            console.dir(this.timeline[orgIdx]);
         }
+    }
+    deleteChangeSet(changeSet) {
+        if (typeof changeSet.mesId !== 'number' || isNaN(changeSet.mesId)) {
+            throw new Error(`Ungültiges Message ID Format für 'mesId': ${changeSet.mesId}.`);
+        }
+        const orgIdx = this.timeline.findIndex(e => e.mesId == changeSet.mesId);
+        if (orgIdx !== -1) {
+            delete this.timeline[orgIdx];
+        }
+    }
+    compareStateSnapshot(obj1, obj2) {
+        const objA = this.flattenObjectWithArrayNotation(obj1.fields);
+        const objB = this.flattenObjectWithArrayNotation(obj2.fields);
+        objA.blubb = "dddd";
+        const changes = {};
+        const allKeys = new Set([...Object.keys(objA), ...Object.keys(objB)]);
+        for (const key of allKeys) {
+            if (!objA.hasOwnProperty(key)) {
+                changes[key] = objB[key]; // Added
+            }
+            else if (!objB.hasOwnProperty(key)) {
+                // changes[key] = undefined; // Removed  // not sure on arrays
+            }
+            else if (objA[key] !== objB[key]) {
+                changes[key] = objB[key]; // Modified
+            }
+        }
+        console.log("compareChangesets", changes);
+        return changes;
     }
     /**
      * Fügt ein Changeset chronologisch ein (auch zwischen bestehende Events)

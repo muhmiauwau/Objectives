@@ -14,40 +14,81 @@
 </h3>
 
 
+<div class="tabs">
+  <button class="menu_button_icon menu_button interactable" (click)="setActiveTab(1)" [class.active]="activeTab() === 1"><i class="fa-solid fa-file"></i></button>
+  <button class="menu_button_icon menu_button interactable" (click)="setActiveTab(2)" [class.active]="activeTab() === 2"><i class="fa-solid fa-user"></i></button>
+</div>
+<hr>
+
 
 <div class="muhPanel-contentScroll">
     @if(tracker()?.fields) {
         @let trackerData = asArray(tracker().fields);
+        @let mesId = tracker().mesIdQueried;
 
-        <dl>
+        @if(activeTab() == 1){
+
+         
+
+      
             @for (entry of trackerData; track entry.key; ) {
                 @if(entry.key !== "characters" && entry.key !== "characterspresent"){
 
-
-                    @if(entry.type === "array"){
-                        <!-- <tracker-edit-field [(field)]="entry"></tracker-edit-field>     -->
-                    }@else{
-                        <dt>{{ entry.key }}</dt>
-                        <dd>{{ entry.value }}</dd>
+                    @if(entry.type == "object"){
+                        {{entry.key}}
+                        <hr>
+                        <div class="subsection">
+                            @for (childEntry of entry.value; let index = $index; track index; ) {
+                                <tracker-edit-field [mesId]="mesId" [validFrom]="getValidFrom([entry.key,childEntry.key])"  [type]="childEntry.type" [name]="childEntry.key" [(field)]="tracker().fields[entry.key][childEntry.key]"  (fieldChange)="updateField([entry.key, childEntry.key], $event)"></tracker-edit-field>
+                            }
+                        </div>
+                    } @else {
+                        <tracker-edit-field [mesId]="mesId" [validFrom]="getValidFrom([entry.key])"  [type]="entry.type" [name]="entry.key" [field]="tracker().fields[entry.key]" (fieldChange)="updateField([entry.key], $event)">></tracker-edit-field>
+                    
                     }
                 }
-            }
-        </dl> 
+            }     
+    
 
-
+        }@else{
    
 
-        @for (entry of trackerData;track entry.key; ) {
-            @if(entry.key == "characters"){
-                @for (character of asArray(entry.value); let index = $index; track index; ) {
-                    <div class="charName">{{ character.key }}</div>
-                    <hr>
-                    @for (chardata of asArray(character.value); let index = $index; track index; ) {
-                        <dt>{{ chardata.key }}</dt>
-                        <dd>{{ chardata.value }}</dd>
+            @for (entry of trackerData;track entry.key; ) {
+                @if(entry.key == "characters"){
+                    @for (character of entry.value; let index = $index; track index; ) {
+                        <!-- 
+                        <div class="charName">{{ character.key }}</div>
+                        <hr> 
+                        @for (chardata of character.value; let index = $index; track index; ) {
+                            <tracker-edit-field [mesId]="mesId" [validFrom]="getValidFrom([entry.key,character.key,chardata.key])"  [type]="chardata.type" [name]="chardata.key" [(field)]="tracker().fields[entry.key][character.key][chardata.key]"></tracker-edit-field>
+                        } 
+                        -->
+                        <div class="inline-drawer flex-container flexFlowColumn flexNoGap">
+                            <div class="inline-drawer-toggle inline-drawer-header userSettingsInnerExpandable" (click)="toggleDrawers(character.key)" [class.active]="checkDrawer(character.key)">
+                                <div  class="">
+                                    {{ character.key }}
+                                   
+                                </div> 
+                                <div class="inline-drawer-icon fa-solid interactable" [class.fa-circle-chevron-down]="!checkDrawer(character.key)" [class.fa-circle-chevron-up]="checkDrawer(character.key)"></div>
+                            </div>
+                            <div class="inline-drawer-content" [class.active]="checkDrawer(character.key)">
+                                @for (chardata of character.value; let index = $index; track index; ) {
+                                    <tracker-edit-field [mesId]="mesId" [validFrom]="getValidFrom([entry.key,character.key,chardata.key])"  [type]="chardata.type" [name]="chardata.key" [(field)]="tracker().fields[entry.key][character.key][chardata.key]"></tracker-edit-field>
+                                }
+                            </div>
+                        </div>
+
+                      
                     }
                 }
-            }
-        } 
+            } 
+        }
      }
+</div>
+
+<div class="">
+    <button class="menu_button menu_button_icon  interactable" (click)="saveFields()">
+        <i class="fa-solid fa-floppy-disk"></i> 
+        Save
+    </button>
 </div>

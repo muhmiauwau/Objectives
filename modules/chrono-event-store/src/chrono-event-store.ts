@@ -4,6 +4,7 @@
 import jsonpatch from 'fast-json-patch';
 import set from 'lodash-es/set.js';
 import get from 'lodash-es/get.js';
+import { forEach } from 'lodash-es';
 
 export interface ChronoChangeSet {
   mesId: number;
@@ -169,9 +170,7 @@ class ChronoEventStore {
     if(orgIdx !== -1){
       this.timeline[orgIdx].changes = {...this.timeline[orgIdx].changes, ...changeSet.changes}
     }
-
   }
-
 
   deleteChangeSet(changeSet: ChronoChangeSet): void {
     if (typeof changeSet.mesId !== 'number' || isNaN(changeSet.mesId)) {
@@ -182,6 +181,35 @@ class ChronoEventStore {
       delete this.timeline[orgIdx]
     }
   }
+
+
+
+   compareStateSnapshot(obj1: StateSnapshot, obj2: StateSnapshot): void {
+
+    const objA = this.flattenObjectWithArrayNotation(obj1.fields)
+    const objB = this.flattenObjectWithArrayNotation(obj2.fields)
+
+    objA.blubb = "dddd"
+
+    const changes:any = {};
+    const allKeys = new Set([...Object.keys(objA), ...Object.keys(objB)]);
+    
+    for (const key of allKeys) {
+      if (!objA.hasOwnProperty(key)) {
+        changes[key] = objB[key]; // Added
+      } else if (!objB.hasOwnProperty(key)) {
+        // changes[key] = undefined; // Removed  // not sure on arrays
+      } else if (objA[key] !== objB[key]) {
+        changes[key] = objB[key]; // Modified
+      }
+    }
+
+
+    console.log("compareChangesets",changes)
+
+    return changes
+  }
+
 
   
 
